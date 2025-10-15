@@ -1,37 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
-function App() {
-  const [count, setCount] = useState(0)
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Schedule from "./pages/Schedule";
+import Team from "./pages/Team";
+import Roster from "./pages/Roster";
+import Coaches from "./pages/Coaches";
+import Media from "./pages/Media";
+import Join from "./pages/Join";
+import Donate from "./pages/Donate";
+import Contact from "./pages/Contact";
+import NotFound from "./pages/NotFound";
 
+export default function App() {
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1 className="text-4xl text-purple-900 font-bold">
-      JMU Men's Rugby
-      </h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+      <Navbar />
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
 
-export default App
+          {/* Team dropdown targets */}
+          <Route path="/team" element={<Team />} />
+          <Route path="/team/roster" element={<Roster />} />
+          <Route path="/team/coaches" element={<Coaches />} />
+
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/media" element={<Media />} />
+          <Route path="/join" element={<Join />} />
+          <Route path="/donate" element={<Donate />} />
+          <Route path="/contact" element={<Contact />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Footer />
+    </>
+  );
+}
