@@ -19,24 +19,10 @@ export default function App() {
   return (
     <>
       <Navbar />
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-
-          {/* Team dropdown targets */}
-          <Route path="/team" element={<Team />} />
-          <Route path="/team/roster" element={<Roster />} />
-          <Route path="/team/coaches" element={<Coaches />} />
-
-          <Route path="/schedule" element={<Schedule />} />
-          <Route path="/media" element={<Media />} />
-          <Route path="/join" element={<Join />} />
-          <Route path="/donate" element={<Donate />} />
-          <Route path="/contact" element={<Contact />} />
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+      <main className="bg-jmuPurple text-jmuLightGold font-arvo flex flex-col items-center min-h-screen py-10">
+        <div className="bg-jmuOffWhite text-jmuPurple max-w-6xl w-full rounded-md shadow-lg border border-jmuDarkGold p-10">
+          <h1 className="text-3xl font-bold text-center">content placeholder</h1>
+        </div>
       </main>
       <Footer />
     </>

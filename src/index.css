@@ -1,1 +1,13 @@
+@import "@fontsource/arvo/400.css";
+@import "@fontsource/arvo/700.css";
 @import "tailwindcss";
+
+@theme {
+    --font-arvo: "Arvo", serif;
+
+    --color-jmuPurple: #450084;
+    --color-jmuGold: #CBB677;
+    --color-jmuDarkGold: #AD9C65;
+    --color-jmuLightGold: #F4EFE1;
+    --color-jmuOffWhite: #f7f6f4;
+}
