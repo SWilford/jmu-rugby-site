@@ -9,12 +9,17 @@ export default function CoachList({ expandedId, setExpandedId }) {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from("coaches")
-        .select("*")
-        .order("position", { ascending: true });
-      if (error) console.error("Coach fetch error:", error);
-      else setCoaches(data);
+        const { data, error } = await supabase.from("coaches").select("*");
+        if (error) {
+        console.error("Coach fetch error:", error);
+        } else {
+        // always list Head Coach first
+        const sorted = [
+            ...data.filter((c) => c.position.toLowerCase().includes("head coach")),
+            ...data.filter((c) => !c.position.toLowerCase().includes("head coach")),
+        ];
+        setCoaches(sorted);
+        }
     })();
   }, []);
 
