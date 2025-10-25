@@ -19,10 +19,18 @@ export default function App() {
   return (
     <>
       <Navbar />
-      <main className="bg-jmuPurple text-jmuLightGold font-arvo flex flex-col items-center min-h-screen py-10">
-        <div className="bg-jmuOffWhite text-jmuPurple max-w-6xl w-full rounded-md shadow-lg border border-jmuDarkGold p-10">
-          <h1 className="text-3xl font-bold text-center">content placeholder</h1>
-        </div>
+      <main className="bg-jmuPurple text-jmuLightGold font-arvo min-h-screen flex flex-col items-center">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/media" element={<Media />} />
+          <Route path="/join" element={<Join />} />
+          <Route path="/donate" element={<Donate />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </main>
       <Footer />
     </>

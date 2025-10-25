@@ -1,6 +1,6 @@
 import { FaInstagram } from "react-icons/fa";
 import logoGold from "../assets/jmu-gold-logo.png";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 export default function Navbar() {
   const links = [
@@ -52,12 +52,18 @@ export default function Navbar() {
           <div className="flex flex-wrap justify-center sm:justify-start px-6">
             {links.map(([label, path], i) => (
               <div key={label} className="flex items-center">
-                <Link
+                <NavLink
                   to={path}
-                  className="text-jmuLightGold hover:text-jmuPurple hover:bg-jmuGold transition-colors duration-200 px-4 py-2.5 text-lg font-semibold rounded-sm"
+                  className={({ isActive }) =>
+                    `text-lg font-semibold px-4 py-2.5 rounded-sm transition-colors duration-200 ${
+                      isActive
+                        ? "text-jmuPurple bg-jmuGold"
+                        : "text-jmuLightGold hover:text-jmuPurple hover:bg-jmuGold"
+                    }`
+                  }
                 >
                   {label}
-                </Link>
+                </NavLink>
                 {i < links.length - 1 && (
                   <span className="h-5 border-l border-jmuDarkGold mx-2" />
                 )}
