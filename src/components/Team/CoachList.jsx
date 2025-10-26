@@ -23,8 +23,9 @@ export default function CoachList({ expandedId, setExpandedId }) {
     })();
   }, []);
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
+  const toggleExpand = (type, id) => {
+    const key = `${type}-${id}`;
+    setExpandedId((prev) => (prev === key ? null : key));
   };
 
   return (
@@ -47,17 +48,17 @@ export default function CoachList({ expandedId, setExpandedId }) {
 
             <tbody>
               {coaches.map((coach) => (
-                <Fragment key={coach.id}>
+                <Fragment key={`coach-${coach.id}`}>
                   <tr
                     className="border-b border-jmuDarkGold hover:bg-jmuLightGold hover:cursor-pointer transition-colors"
-                    onClick={() => toggleExpand(coach.id)}
+                    onClick={() => toggleExpand("coach", coach.id)}
                   >
                     <td className="p-2 font-semibold">{coach.name}</td>
                     <td className="p-2">{coach.position}</td>
                   </tr>
 
                   <AnimatePresence initial={false}>
-                    {expandedId === coach.id && (
+                    {expandedId === `coach-${coach.id}` && (
                       <motion.tr
                         key={coach.id}
                         className="border-b border-jmuDarkGold bg-jmuLightGold/20 overflow-hidden"

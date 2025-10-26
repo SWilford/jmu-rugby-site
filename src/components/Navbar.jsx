@@ -15,7 +15,7 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="bg-jmuPurple text-jmuGold font-arvo shadow-md">
+    <header className="bg-jmuPurple text-jmuGold font-arvo">
       {/* top bar */}
       <div className="max-w-6xl mx-auto flex justify-start items-center px-6 py-2 text-sm text-jmuLightGold">
         <a

@@ -15,11 +15,11 @@ import Donate from "./pages/Donate";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
-export default function App() {
+/*export default function App() {
   return (
     <>
       <Navbar />
-      <main className="bg-jmuPurple text-jmuLightGold font-arvo min-h-screen flex flex-col items-center">
+      <main className="bg-jmuPurple text-jmuLightGold font-arvo grow flex flex-col items-center pb-4">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -34,5 +34,28 @@ export default function App() {
       </main>
       <Footer />
     </>
+  );
+}*/
+
+export default function App() {
+  return (
+    <div className="flex flex-col min-h-screen bg-jmuPurple text-jmuLightGold font-arvo">
+      <Navbar />
+      {/* Hard Gentlemen */}
+      <main className="flex-1 flex flex-col items-center pb-4">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/media" element={<Media />} />
+          <Route path="/join" element={<Join />} />
+          <Route path="/donate" element={<Donate />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
   );
 }

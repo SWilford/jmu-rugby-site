@@ -14,8 +14,9 @@ export default function RosterTable({ expandedId, setExpandedId }) {
     })();
   }, []);
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
+  const toggleExpand = (type, id) => {
+    const key = `${type}-${id}`;
+    setExpandedId((prev) => (prev === key ? null : key));
   };
 
   return (
@@ -41,10 +42,10 @@ export default function RosterTable({ expandedId, setExpandedId }) {
 
             <tbody>
               {roster.map((player) => (
-                <Fragment key={player.id}>
+                <Fragment key={`player-${player.id}`}>
                   <tr
                     className="border-b border-jmuDarkGold hover:bg-jmuLightGold hover:cursor-pointer transition-colors"
-                    onClick={() => toggleExpand(player.id)}
+                    onClick={() => toggleExpand("player", player.id)}
                   >
                     <td className="p-2 font-semibold">{player.name}</td>
                     <td className="p-2">{player.position}</td>
@@ -54,7 +55,7 @@ export default function RosterTable({ expandedId, setExpandedId }) {
                   </tr>
 
                   <AnimatePresence initial={false}>
-                    {expandedId === player.id && (
+                    {expandedId === `player-${player.id}` && (
                       <motion.tr
                         key={player.id}
                         className="border-b border-jmuDarkGold bg-jmuLightGold/20 overflow-hidden"
