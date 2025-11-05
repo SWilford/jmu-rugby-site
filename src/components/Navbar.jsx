@@ -1,4 +1,4 @@
-import { FaInstagram } from "react-icons/fa";
+import { FaFacebook, FaInstagram } from "react-icons/fa";
 import logoGold from "../assets/jmu-gold-logo.png";
 import { NavLink } from "react-router-dom";
 
@@ -25,7 +25,13 @@ export default function Navbar() {
           className="flex items-center gap-2 hover:text-jmuGold transition"
         >
           <FaInstagram size={18} />
-          <span>@jmumensrugby</span>
+        </a>
+        <a href="https://www.facebook.com/JMURugby/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 ml-2 hover:text-jmuGold transition"
+        >
+          <FaFacebook size={18} />
         </a>
       </div>
 
