@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 import img0 from "../assets/home/image0.jpeg";
 import img1 from "../assets/home/image1.jpeg";
 import img2 from "../assets/home/image2.jpeg";
 import img4 from "../assets/home/image4.jpeg";
+import img5 from "../assets/home/image5.jpg";
 
 
-const images = [img1, img4, img2, img0];
+const images = [img1, img4, img5, img2, img0];
 
 export default function Home() {
   const [current, setCurrent] = useState(0);
   const [nextMatch, setNextMatch] = useState(null);
+  const navigate = useNavigate();
+  const [featuredImages, setFeaturedImages] = useState([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % images.length);
-    }, 10000);
+    }, 6000);
 
     (async () => {
       const today = new Date();
@@ -42,7 +46,21 @@ export default function Home() {
 
       if (error) console.error("Next match fetch error:", error);
       else setNextMatch(data?.[0] || null);
-    })();
+
+
+      const { data: mediaData, error: mediaError } = await supabase
+        .from("media")
+        .select("id, album, season_id, file_path")
+        .eq("featured", true);
+
+      if (mediaError) {
+        console.error("Featured fetch error:", mediaError);
+      } else if (mediaData?.length) {
+        const shuffled = mediaData.sort(() => 0.5 - Math.random());
+        setFeaturedImages(shuffled.slice(0, 6));
+      }
+
+      })();
 
     return () => clearInterval(interval);
 
@@ -59,7 +77,7 @@ export default function Home() {
             key={i}
             src={img}
             alt={`Slide ${i + 1}`}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-2s ${
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-2000 ${
               i === current ? "opacity-100" : "opacity-0"
             }`}
           />
@@ -166,17 +184,23 @@ export default function Home() {
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8 mb-4">
         <h2 className="text-2xl font-bold mb-4">Gallery</h2>
 
-        {/* TODO: Replace this static gallery with Supabase fetch */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-          {images.slice(0, 5).map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              alt={`Gallery ${i + 1}`}
-              className="w-full h-32 sm:h-40 object-cover rounded-md border border-jmuDarkGold hover:opacity-80 transition"
-            />
-          ))}
-        </div>
+        {featuredImages.length === 0 ? (
+          <p className="text-center text-jmuDarkGold italic">
+            No featured photos yet.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {featuredImages.map((photo) => (
+              <img
+                key={photo.id}
+                src={photo.file_path}
+                alt={photo.album}
+                onClick={() => navigate(`/media?album=${encodeURIComponent(photo.album)}&season=${photo.season_id}&photo=${photo.id}`)}
+                className="w-full h-40 sm:h-48 object-cover rounded-md border border-jmuDarkGold hover:opacity-80 hover:cursor-pointer transition"
+              />
+            ))}
+          </div>
+        )}
 
         <div className="text-center mt-6">
           <Link
