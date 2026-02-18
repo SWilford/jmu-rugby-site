@@ -46,7 +46,7 @@ export default function About() {
           on respect, consistency, and competitive pride.
         </p>
         <p className="leading-relaxed">
-          Our history is more than results—it&apos;s the standard each class leaves behind for
+          Our history is more than results and competition; it's the standard each class leaves behind for
           the next. Every season adds to that legacy.
         </p>
       </section>
