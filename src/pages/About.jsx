@@ -86,13 +86,13 @@ export default function About() {
         <div className="flex flex-wrap gap-4">
           <Link
             to="/join"
-            className="border-2 border-jmuPurple text-jmuPurple px-6 py-3 rounded-md font-semibold hover:bg-jmuPurple hover:text-jmuLightGold transition-colors"
+            className="border-2 border-jmuPurple text-jmuPurple px-6 py-3 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
           >
             Join the Team
           </Link>
           <Link
             to="/schedule"
-            className="border-2 border-jmuDarkGold text-jmuDarkGold px-6 py-3 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+            className="border-2 border-jmuPurple text-jmuPurple px-6 py-3 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
           >
             View Schedule
           </Link>
