@@ -5,6 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRef } from "react";
 
 
+const parseDateOnly = (dateString) => {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
 export default function Schedule() {
   const [matches, setMatches] = useState([]);
   const [seasons, setSeasons] = useState([]);
@@ -198,7 +203,7 @@ export default function Schedule() {
                     onClick={() => toggleExpand(m.id)}
                   >
                     <td className="p-2 font-semibold">
-                      {new Date(m.date).toLocaleDateString("en-US", {
+                      {parseDateOnly(m.date).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                       })}
