@@ -116,7 +116,7 @@ export default function Home() {
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
         <h2 className="text-2xl font-bold mb-4">About the Dukes</h2>
         <p className="leading-relaxed mb-6">
-          Founded in 1976, JMU Men's Rugby is a tight knit brotherhood competing
+          Founded in 1974, JMU Men's Rugby is a tight knit brotherhood competing
           in the National Collegiate Rugby D1-AA division. We pride ourselves on
           grit, discipline, and a strong culture of camaraderie both on and
           off the pitch.
