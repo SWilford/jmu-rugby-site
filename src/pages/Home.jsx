@@ -9,12 +9,23 @@ import img2 from "../assets/home/image2.jpeg";
 import img4 from "../assets/home/image4.jpeg";
 import img5 from "../assets/home/image5.JPG";
 
-
 const images = [img1, img4, img5, img2, img0];
+
+const parseDateOnly = (dateString) => {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const getSideOrder = (seasonId) => {
+  const isSpring = (seasonId || "").toLowerCase().includes("spring");
+  return isSpring
+    ? { "7s": 1, "15s": 2 }
+    : { A: 1, B: 2, C: 3, Combined: 4 };
+};
 
 export default function Home() {
   const [current, setCurrent] = useState(0);
-  const [nextMatch, setNextMatch] = useState(null);
+  const [nextMatches, setNextMatches] = useState([]);
   const navigate = useNavigate();
   const [featuredImages, setFeaturedImages] = useState([]);
 
@@ -29,7 +40,7 @@ export default function Home() {
       const year = today.getFullYear();
 
       let seasonPrefix;
-      if (month <= 1) seasonPrefix = "spring"; // Jan or earlier
+      if (month <= 1) seasonPrefix = "spring";
       else if (month >= 2 && month <= 5) seasonPrefix = "spring";
       else if (month >= 6 && month <= 11) seasonPrefix = "fall";
 
@@ -41,12 +52,21 @@ export default function Home() {
         .select("*")
         .eq("season_id", currentSeason)
         .gte("date", today.toISOString().split("T")[0])
-        .order("date", { ascending: true })
-        .limit(1);
+        .order("date", { ascending: true });
 
-      if (error) console.error("Next match fetch error:", error);
-      else setNextMatch(data?.[0] || null);
+      if (error) {
+        console.error("Next matches fetch error:", error);
+      } else if (data?.length) {
+        const nextDate = data[0].date;
+        const sideOrder = getSideOrder(currentSeason);
+        const matchesForNextDate = data
+          .filter((match) => match.date === nextDate)
+          .sort((a, b) => (sideOrder[a.side] || 99) - (sideOrder[b.side] || 99));
 
+        setNextMatches(matchesForNextDate);
+      } else {
+        setNextMatches([]);
+      }
 
       const { data: mediaData, error: mediaError } = await supabase
         .from("media")
@@ -59,12 +79,9 @@ export default function Home() {
         const shuffled = mediaData.sort(() => 0.5 - Math.random());
         setFeaturedImages(shuffled.slice(0, 6));
       }
-
-      })();
+    })();
 
     return () => clearInterval(interval);
-
-
   }, []);
 
   return (
@@ -118,8 +135,8 @@ export default function Home() {
         <p className="leading-relaxed mb-6">
           Founded in 1974, JMU Men's Rugby is a tight knit brotherhood competing
           in the National Collegiate Rugby D1-AA division. We pride ourselves on
-          grit, discipline, and a strong culture of camaraderie both on and
-          off the pitch.
+          grit, discipline, and a strong culture of camaraderie both on and off
+          the pitch.
         </p>
         <Link
           to="/about"
@@ -129,49 +146,49 @@ export default function Home() {
         </Link>
       </section>
 
-
-
       {/* Next Match Widget */}
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
         <h2 className="text-2xl font-bold mb-4">Next Match</h2>
 
-        {nextMatch ? (
+        {nextMatches.length > 0 ? (
           <Link
             to="/schedule"
             className="block border border-jmuDarkGold rounded-md bg-jmuLightGold/10 hover:bg-jmuLightGold/30 transition-colors duration-200"
           >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4">
-              {/* Left side info */}
-              <div>
-                <p className="text-2xl font-bold text-jmuPurple mb-1">
-                  {nextMatch.opponent}
-                </p>
-                <p className="text-jmuDarkGold font-medium">
-                  {new Date(nextMatch.date).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  })}{" "}
-                  • {nextMatch.home ? "Home" : "Away"} • {nextMatch.side}
-                </p>
-              </div>
+            {nextMatches.map((match, index) => (
+              <div
+                key={match.id}
+                className={`${index > 0 ? "border-t border-jmuDarkGold" : ""} p-4`}
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                  <div>
+                    <p className="text-2xl font-bold text-jmuPurple mb-1">
+                      {match.opponent}
+                    </p>
+                    <p className="text-jmuDarkGold font-medium">
+                      {parseDateOnly(match.date).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}{" "}
+                      • {match.home ? "Home" : "Away"} • {match.side}
+                    </p>
+                  </div>
 
-              {/* Right side result */}
-              {nextMatch.show_result && nextMatch.result && (
-                <div className="mt-3 sm:mt-0">
-                  <p className="text-xl font-bold text-jmuPurple">
-                    {nextMatch.result}
-                  </p>
+                  {match.show_result && match.result && (
+                    <div className="mt-3 sm:mt-0">
+                      <p className="text-xl font-bold text-jmuPurple">{match.result}</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Optional notes preview */}
-            {nextMatch.notes && (
-              <div className="border-t border-jmuDarkGold p-4 text-sm text-jmuPurple/90">
-                <p className="italic line-clamp-2">{nextMatch.notes}</p>
+                {match.notes && (
+                  <div className="mt-3 pt-3 border-t border-jmuDarkGold text-sm text-jmuPurple/90">
+                    <p className="italic line-clamp-2">{match.notes}</p>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </Link>
         ) : (
           <p className="text-jmuDarkGold italic">
@@ -195,7 +212,11 @@ export default function Home() {
                 key={photo.id}
                 src={photo.file_path}
                 alt={photo.album}
-                onClick={() => navigate(`/media?album=${encodeURIComponent(photo.album)}&season=${photo.season_id}&photo=${photo.id}`)}
+                onClick={() =>
+                  navigate(
+                    `/media?album=${encodeURIComponent(photo.album)}&season=${photo.season_id}&photo=${photo.id}`
+                  )
+                }
                 className="w-full h-40 sm:h-48 object-cover rounded-md border border-jmuDarkGold hover:opacity-80 hover:cursor-pointer transition"
               />
             ))}
