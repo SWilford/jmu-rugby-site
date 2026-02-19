@@ -119,7 +119,7 @@ export default function Join() {
             </div>
 
             <div className="border border-jmuDarkGold rounded-md p-4 bg-jmuLightGold/20">
-              <h3 className="text-xl font-bold mb-2">Seasons & Competition</h3>
+              <h3 className="text-xl font-bold mb-2">Seasons</h3>
               <ul className="list-disc pl-5 space-y-1">
                 {joinInfo.seasons.map((item) => (
                   <li key={item}>{item}</li>
