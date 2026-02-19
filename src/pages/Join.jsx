@@ -156,7 +156,7 @@ export default function Join() {
             to="/contact"
             className="inline-flex border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
           >
-            Go to Contact Page
+            Contact
           </Link>
         </div>
       </section>
