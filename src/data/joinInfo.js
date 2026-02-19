@@ -34,9 +34,9 @@ const JOIN_INFO_FALLBACK = {
     "Spring focuses on 7s, and others also play 15s.",
   ],
   gear: [
-    "Mouthguard is required.",
-    "Cleats + rugby shorts recommended.",
-    "Lifting is on your own, but recommended to get stronger.",
+    "Mouthguards are required.",
+    "Cleats and rugby shorts are recommended.",
+    "Lifting is on your own, but is recommended to get stronger.",
   ],
   eligibility:
     "Anyone can join; no experience is required. We will teach fundamentals, build fitness, and help you develop as a rugby player.",
