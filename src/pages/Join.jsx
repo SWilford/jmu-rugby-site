@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import JoinFaqAccordion from "../components/Join/JoinFaqAccordion";
 import JoinMediaPlaceholders from "../components/Join/JoinMediaPlaceholders";
 import { getJoinInfo } from "../data/joinInfo";
@@ -151,23 +152,12 @@ export default function Join() {
 
         <div className="border-t border-jmuDarkGold mt-8 pt-6">
           <h3 className="text-xl font-bold mb-3">Have further questions?</h3>
-          <div className="flex flex-wrap gap-3">
-            {/* TODO: Replace with official club email when confirmed. */}
-            <a
-              href={`mailto:${joinInfo.cta.email}`}
-              className="border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-            >
-              Email Us
-            </a>
-            <a
-              href={joinInfo.cta.instagram}
-              target="_blank"
-              rel="noreferrer"
-              className="border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-            >
-              DM us on Instagram
-            </a>
-          </div>
+          <Link
+            to="/contact"
+            className="inline-flex border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+          >
+            Go to Contact Page
+          </Link>
         </div>
       </section>
     </div>
