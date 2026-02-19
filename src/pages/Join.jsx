@@ -81,12 +81,6 @@ export default function Join() {
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">{joinInfo.title}</h1>
         <p className="leading-relaxed text-lg mb-6">{joinInfo.intro}</p>
 
-        <a
-          href="#practice-schedule"
-          className="inline-flex border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-        >
-          View Practice Schedule
-        </a>
       </section>
 
       <JoinMediaPlaceholders
