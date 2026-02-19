@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AnimatePresence, motion as Motion } from "framer-motion";
 
 export default function JoinFaqAccordion({ faqs }) {
   const [openIndex, setOpenIndex] = useState(0);
@@ -19,11 +20,19 @@ export default function JoinFaqAccordion({ faqs }) {
               <span className="text-jmuDarkGold text-sm">{isOpen ? "▲" : "▼"}</span>
             </button>
 
-            {isOpen && (
-              <div className="px-5 pb-5 text-jmuPurple/90 leading-relaxed">
-                {faq.answer}
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <Motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-5 pb-5 text-jmuPurple/90 leading-relaxed">{faq.answer}</div>
+                </Motion.div>
+              )}
+            </AnimatePresence>
           </article>
         );
       })}

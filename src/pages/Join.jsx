@@ -7,7 +7,7 @@ const faqItems = [
   {
     question: "Do I need experience?",
     answer:
-      "No. Basically anyone can join and no experience is required. We will teach you the game and get you fit.",
+      "No experience is required. JMU Men's Rugby welcomes beginners and experienced players, and our training structure is designed to teach fundamentals while improving fitness.",
   },
   {
     question: "What should I bring?",
@@ -21,32 +21,32 @@ const faqItems = [
   {
     question: "How much time is the commitment?",
     answer:
-      "Practices are Tuesday and Thursday from 5:30 PM to 7:00 PM, with Monday/Wednesday conditioning and Friday walkthroughs before Saturday games.",
+      "The weekly schedule includes Tuesday and Thursday practices from 5:30 PM to 7:00 PM, Monday and Wednesday conditioning sessions, Friday afternoon walkthroughs, and Saturday games.",
   },
   {
     question: "Is lifting required?",
     answer:
-      "Lifting is on your own, but it is recommended if you want to get stronger and improve performance.",
+      "Lifting is not a formal team requirement; however, it is strongly recommended for strength and on-field performance.",
   },
   {
     question: "What if I’ve never played a contact sport?",
     answer:
-      "That is completely fine. We coach fundamentals, support development, and build players up with safe, progressive training.",
+      "That is completely fine. Coaches and veteran players will help you learn techniques and contact fundamentals in a progressive, safe environment.",
   },
   {
     question: "How do games/travel work?",
     answer:
-      "Travel varies: sometimes UREC vans, sometimes player-owned cars, and sometimes overnight hotel stays depending on distance/event.",
+      "Travel depends on the opponent and event location; transportation may be by UREC vans or player-owned cars, and some trips include overnight hotel stays.",
   },
   {
     question: "What’s the difference between fall and spring season?",
     answer:
-      "Fall focuses on 15s with A side, B side, and Developmental. Spring focuses on 7s, and others also play 15s. We compete in NCR, MARC, etc.",
+      "Fall focuses on 15s with A side, B side, and Developmental. Spring focuses on 7s, and others also play 15s. The team competes under National Collegiate Rugby (NCR) in the Mid-Atlantic Rugby Conference (MARC) at the DI-AA level.",
   },
 ];
 
 const mediaSlotConfig = {
-  videoPlaceholderLabel: "Video embed placeholder — add highlight URL when available.",
+  videoPlaceholderLabel: "Video embed placeholder",
   galleryPlaceholders: [
     { id: "gallery-1", label: "Photo Placeholder 1" },
     { id: "gallery-2", label: "Photo Placeholder 2" },
@@ -80,29 +80,12 @@ export default function Join() {
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">{joinInfo.title}</h1>
         <p className="leading-relaxed text-lg mb-6">{joinInfo.intro}</p>
 
-        <div className="flex flex-wrap gap-3">
-          {/* TODO: Replace with official club email when confirmed. */}
-          <a
-            href={`mailto:${joinInfo.cta.email}`}
-            className="border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-          >
-            Email Us
-          </a>
-          <a
-            href={joinInfo.cta.instagram}
-            target="_blank"
-            rel="noreferrer"
-            className="border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-          >
-            DM us on Instagram
-          </a>
-          <a
-            href="#practice-schedule"
-            className="border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-          >
-            Just show up to practice
-          </a>
-        </div>
+        <a
+          href="#practice-schedule"
+          className="inline-flex border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+        >
+          View Practice Schedule
+        </a>
       </section>
 
       <JoinMediaPlaceholders
@@ -165,6 +148,27 @@ export default function Join() {
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8 mb-4">
         <h2 className="text-2xl font-bold mb-5">FAQ</h2>
         <JoinFaqAccordion faqs={faqItems} />
+
+        <div className="border-t border-jmuDarkGold mt-8 pt-6">
+          <h3 className="text-xl font-bold mb-3">Have further questions?</h3>
+          <div className="flex flex-wrap gap-3">
+            {/* TODO: Replace with official club email when confirmed. */}
+            <a
+              href={`mailto:${joinInfo.cta.email}`}
+              className="border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+            >
+              Email Us
+            </a>
+            <a
+              href={joinInfo.cta.instagram}
+              target="_blank"
+              rel="noreferrer"
+              className="border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+            >
+              DM us on Instagram
+            </a>
+          </div>
+        </div>
       </section>
     </div>
   );

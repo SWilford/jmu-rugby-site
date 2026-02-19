@@ -1,7 +1,7 @@
 const JOIN_INFO = {
   title: "Join JMU Men's Rugby",
   intro:
-    "Whether you've played for years or you're brand new to the sport, there's a place for you here. Come train with us, compete at a high level, and be part of a tight-knit team culture.",
+    "JMU Men's Rugby welcomes students at all experience levels who are prepared to train consistently, compete, and contribute to a team-first culture. If you are interested in joining, you can begin by attending practice and introducing yourself to the team.",
   cta: {
     email: "jmurugby@gmail.com",
     instagram: "https://www.instagram.com/jmumensrugby/",
@@ -9,15 +9,15 @@ const JOIN_INFO = {
   schedule: [
     {
       label: "Tuesday/Thursday",
-      detail: "5:30 PM – 7:00 PM",
+      detail: "5:30 PM - 7:00 PM",
     },
     {
       label: "Monday/Wednesday",
-      detail: "Conditioning (players choose morning or afternoon)",
+      detail: "Conditioning sessions; players choose either a morning or afternoon option.",
     },
     {
       label: "Friday",
-      detail: "Player-driven walkthroughs (Friday afternoon)",
+      detail: "Player-driven walkthroughs; Friday afternoon.",
     },
     {
       label: "Saturday",
@@ -25,7 +25,7 @@ const JOIN_INFO = {
     },
   ],
   travel:
-    "Sometimes UREC vans, sometimes player-owned cars; sometimes overnight hotel stays depending on distance/event.",
+    "Travel arrangements vary by match and distance; transportation may include UREC vans or player-owned cars, and certain events may require overnight hotel stays.",
   dues: "$200",
   seasons: [
     "Fall focuses on 15s with A side, B side, and Developmental.",
@@ -38,7 +38,7 @@ const JOIN_INFO = {
     "Lifting is on your own, but recommended to get stronger.",
   ],
   eligibility:
-    "Basically anyone can join. No experience is required — we'll teach you the game and get you fit.",
+    "Anyone can join; no experience is required. We will teach fundamentals, build fitness, and help you develop as a rugby player.",
 };
 
 export async function getJoinInfo() {

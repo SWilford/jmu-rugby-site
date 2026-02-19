@@ -37,11 +37,11 @@ Then open the local URL printed by Vite (usually `http://localhost:5173`).
 
 ## Scripts
 
-- `npm run dev` — start development server
-- `npm run build` — create production build
-- `npm run lint` — run ESLint
-- `npm run preview` — preview production build locally
-- `npm run test` — run test suite
+- `npm run dev` - start development server
+- `npm run build` - create production build
+- `npm run lint` - run ESLint
+- `npm run preview` - preview production build locally
+- `npm run test` - run test suite
 
 ## Project Structure
 
