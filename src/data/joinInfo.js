@@ -1,4 +1,6 @@
-const JOIN_INFO = {
+import { supabase } from "../lib/supabaseClient";
+
+const JOIN_INFO_FALLBACK = {
   title: "Join JMU Men's Rugby",
   intro:
     "JMU Men's Rugby welcomes students at all experience levels who are prepared to train consistently, compete, and contribute to a team-first culture. If you are interested in joining, you can begin by attending practice and introducing yourself to the team.",
@@ -41,9 +43,74 @@ const JOIN_INFO = {
     "Anyone can join; no experience is required. We will teach fundamentals, build fitness, and help you develop as a rugby player.",
 };
 
-export async function getJoinInfo() {
-  // TODO: Replace with Supabase join_settings fetch when admin panel is implemented.
-  return JOIN_INFO;
+const SETTINGS_TO_JOIN_INFO = {
+  dues: "dues",
+  travel: "travel",
+  who_can_join: "eligibility",
+};
+
+function mapSettingsToJoinInfo(settingsRows) {
+  return settingsRows.reduce((joinInfo, row) => {
+    const targetKey = SETTINGS_TO_JOIN_INFO[row.key];
+
+    if (targetKey) {
+      joinInfo[targetKey] = row.value;
+    }
+
+    if (row.key === "fall_season") {
+      joinInfo.seasons[0] = row.value;
+    }
+
+    if (row.key === "spring_season") {
+      joinInfo.seasons[1] = row.value;
+    }
+
+    if (row.key === "conditioning") {
+      const conditioningRow = joinInfo.schedule.find((item) => item.label === "Conditioning");
+
+      if (conditioningRow) {
+        conditioningRow.detail = row.value;
+      }
+    }
+
+    if (row.key === "required_gear") {
+      joinInfo.gear[0] = `${row.value} is required.`;
+    }
+
+    if (row.key === "recommended_gear") {
+      joinInfo.gear[1] = `${row.value} recommended.`;
+    }
+
+    if (row.key === "lifting") {
+      joinInfo.gear[2] = row.value;
+    }
+
+    return joinInfo;
+  }, structuredClone(JOIN_INFO_FALLBACK));
 }
 
-export default JOIN_INFO;
+export async function getJoinInfo() {
+  const [settingsResponse, scheduleResponse] = await Promise.all([
+    supabase.from("join_content_settings").select("key, value"),
+    supabase.from("join_content_schedule").select("label, detail").order("display_order", { ascending: true }),
+  ]);
+
+  if (settingsResponse.error || scheduleResponse.error) {
+    console.error("Failed to load dynamic join content", {
+      settingsError: settingsResponse.error,
+      scheduleError: scheduleResponse.error,
+    });
+
+    return JOIN_INFO_FALLBACK;
+  }
+
+  const joinInfo = mapSettingsToJoinInfo(settingsResponse.data ?? []);
+
+  if (Array.isArray(scheduleResponse.data) && scheduleResponse.data.length > 0) {
+    joinInfo.schedule = scheduleResponse.data;
+  }
+
+  return joinInfo;
+}
+
+export default JOIN_INFO_FALLBACK;
