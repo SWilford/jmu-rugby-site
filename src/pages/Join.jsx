@@ -79,7 +79,7 @@ export default function Join() {
     <div className="w-full flex flex-col items-center px-4 sm:px-6">
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">{joinInfo.title}</h1>
-        <p className="leading-relaxed text-lg mb-6">{joinInfo.intro}</p>
+        <p className="leading-relaxed text-lg">{joinInfo.intro}</p>
 
       </section>
 

@@ -39,9 +39,9 @@ export default function Contact() {
       </section>
 
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8 mb-4">
-        <h2 className="text-2xl font-bold mb-5">Get In Touch</h2>
+        <h2 className="text-2xl font-bold mb-5 text-center">Get In Touch</h2>
 
-        <div className="space-y-4 mb-8">
+        <div className="space-y-4 mb-8 text-center">
           {contacts.map((contact) => (
             <article
               key={contact.value}
@@ -49,7 +49,7 @@ export default function Contact() {
             >
               <p className="font-semibold text-jmuPurple mb-1">{contact.label}</p>
               <p className="break-all text-jmuDarkGold mb-3">{contact.value}</p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap justify-center gap-3">
                 <button
                   type="button"
                   onClick={() => handleCopy(contact.value)}
