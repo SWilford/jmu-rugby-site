@@ -141,7 +141,7 @@ export default function Join() {
       </section>
 
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8 mb-4">
-        <h2 className="text-2xl font-bold mb-5">FAQ</h2>
+        <h2 className="text-2xl font-bold mb-5">FAQ's</h2>
         <JoinFaqAccordion faqs={faqItems} />
 
         <div className="border-t border-jmuDarkGold mt-8 pt-6">
