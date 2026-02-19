@@ -32,7 +32,6 @@ const JOIN_INFO_FALLBACK = {
   seasons: [
     "Fall focuses on 15s with A side, B side, and Developmental.",
     "Spring focuses on 7s, and others also play 15s.",
-    "Compete in NCR, MARC, etc.",
   ],
   gear: [
     "Mouthguard is required.",
