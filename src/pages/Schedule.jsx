@@ -1,7 +1,7 @@
 // src/pages/Schedule.jsx
 import React, { useEffect, useState, Fragment } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { useRef } from "react";
 
 
@@ -125,7 +125,7 @@ export default function Schedule() {
           Season:
           <div className="relative inline-block text-left" ref={menuRef}>
             {/* Dropdown toggle button */}
-            <motion.button
+            <Motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowMenu((prev) => !prev)}
               className="inline-flex justify-between items-center bg-jmuDarkGold text-jmuOffWhite font-semibold rounded-md px-3 py-1 border border-jmuGold hover:bg-jmuGold hover:text-jmuPurple transition whitespace-nowrap min-w-36"
@@ -133,12 +133,12 @@ export default function Schedule() {
               {seasons.find((s) => s.season_id === currentSeason)?.season_name ||
                 "Select Season"}
               <span className="ml-2">▾</span>
-            </motion.button>
+            </Motion.button>
 
             {/* Dropdown menu */}
             <AnimatePresence>
               {showMenu && (
-                <motion.ul
+                <Motion.ul
                   key="season-menu"
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -149,7 +149,7 @@ export default function Schedule() {
                   {seasons
                     .sort((a, b) => {
                       const [sa, sy] = a.season_id.split("-");
-                      const [sb, syb] = b.season_id.split("-");
+                      const [, syb] = b.season_id.split("-");
                       if (sy !== syb) return syb - sy; // newer year first
                       return sa === "fall" ? -1 : 1; // fall before spring
                     })
@@ -169,7 +169,7 @@ export default function Schedule() {
                         {s.season_name}
                       </li>
                     ))}
-                </motion.ul>
+                </Motion.ul>
               )}
             </AnimatePresence>
           </div>
@@ -219,7 +219,7 @@ export default function Schedule() {
                   {/* Expandable Notes Row */}
                   <AnimatePresence initial={false}>
                     {expanded === m.id && (
-                      <motion.tr
+                      <Motion.tr
                         key={`expand-${m.id}`}
                         className="border-b border-jmuDarkGold bg-jmuLightGold/20 overflow-hidden"
                         layout
@@ -229,7 +229,7 @@ export default function Schedule() {
                         }}
                       >
                         <td colSpan="5" className="p-0">
-                          <motion.div
+                          <Motion.div
                             layout
                             initial={{ height: 0 }}
                             animate={{ height: "auto" }}
@@ -249,9 +249,9 @@ export default function Schedule() {
                                 </p>
                               )}
                             </div>
-                          </motion.div>
+                          </Motion.div>
                         </td>
-                      </motion.tr>
+                      </Motion.tr>
                     )}
                   </AnimatePresence>
                 </Fragment>

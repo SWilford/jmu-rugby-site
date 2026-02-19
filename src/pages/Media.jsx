@@ -1,6 +1,6 @@
 import React, { useEffect, useState, Fragment, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 
 export default function Media() {
@@ -127,7 +127,7 @@ export default function Media() {
       <div className="flex items-center gap-3 mt-3 sm:mt-0">
         <span className="text-3xl font-bold text-jmuPurple leading-none">Season:</span>
           <div className="relative inline-block text-left" ref={menuRef}>
-            <motion.button
+            <Motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowMenu((prev) => !prev)}
               className="inline-flex justify-between items-center bg-jmuDarkGold text-jmuOffWhite text-2xl font-semibold leading-none rounded-md px-4 py-1.5 border border-jmuGold hover:bg-jmuGold hover:text-jmuPurple transition whitespace-nowrap min-w-40"
@@ -139,11 +139,11 @@ export default function Media() {
                     .replace(/\b(\d{4})\b/, " $1")
                 : "Select Season"}
               <span className="ml-2">▾</span>
-            </motion.button>
+            </Motion.button>
 
             <AnimatePresence>
               {showMenu && (
-                <motion.ul
+                <Motion.ul
                   key="season-menu"
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -154,7 +154,7 @@ export default function Media() {
                   {seasons
                     .sort((a, b) => {
                       const [sa, sy] = a.split("-");
-                      const [sb, syb] = b.split("-");
+                      const [, syb] = b.split("-");
                       if (sy !== syb) return syb - sy;
                       return sa === "fall" ? -1 : 1;
                     })
@@ -176,7 +176,7 @@ export default function Media() {
                       </li>
 
                     ))}
-                </motion.ul>
+                </Motion.ul>
               )}
             </AnimatePresence>
           </div>
@@ -204,7 +204,7 @@ export default function Media() {
 
             <AnimatePresence initial={false}>
               {expandedAlbum === albumName && (
-                <motion.div
+                <Motion.div
                   layout
                   initial={{ height: 0 }}
                   animate={{ height: "auto" }}
@@ -235,7 +235,7 @@ export default function Media() {
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </Motion.div>
               )}
             </AnimatePresence>
           </Fragment>
@@ -245,14 +245,14 @@ export default function Media() {
       {/* Lightbox */}
       <AnimatePresence>
         {selectedPhoto && (
-          <motion.div
+          <Motion.div
             className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedPhoto(null)}
           >
-            <motion.div
+            <Motion.div
               className="relative bg-jmuOffWhite p-4 rounded-md max-w-4xl w-full"
               onClick={(e) => e.stopPropagation()}
             >
@@ -278,8 +278,8 @@ export default function Media() {
               >
                 ✕
               </button>
-            </motion.div>
-          </motion.div>
+            </Motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
     </section>
