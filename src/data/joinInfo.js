@@ -38,7 +38,7 @@ const JOIN_INFO = {
     "Lifting is on your own, but recommended to get stronger.",
   ],
   eligibility:
-    "Basically anyone can join; no experience is required. We will teach fundamentals, build fitness, and help you develop as a rugby player.",
+    "Anyone can join; no experience is required. We will teach fundamentals, build fitness, and help you develop as a rugby player.",
 };
 
 export async function getJoinInfo() {

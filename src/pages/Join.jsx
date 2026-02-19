@@ -41,7 +41,7 @@ const faqItems = [
   {
     question: "What’s the difference between fall and spring season?",
     answer:
-      "Fall focuses on 15s with A side, B side, and Developmental. Spring focuses on 7s, and others also play 15s. The team competes in NCR, MARC, etc.",
+      "Fall focuses on 15s with A side, B side, and Developmental. Spring focuses on 7s, and others also play 15s. The team competes under National Collegiate Rugby (NCR) in the Mid-Atlantic Rugby Conference (MARC) at the DI-AA level.",
   },
 ];
 
