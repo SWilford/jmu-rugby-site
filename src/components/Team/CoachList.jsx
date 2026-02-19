@@ -1,8 +1,8 @@
 // src/components/Team/CoachList.jsx
-import React, { useEffect, useState, Fragment } from "react";
+import React, { useEffect, Fragment } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import logoPurple from "../../assets/jmu-purple-logo.png";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 
 export default function CoachList({ expandedId, setExpandedId }) {
   const [coaches, setCoaches] = React.useState([]);
@@ -59,14 +59,14 @@ export default function CoachList({ expandedId, setExpandedId }) {
 
                   <AnimatePresence initial={false}>
                     {expandedId === `coach-${coach.id}` && (
-                      <motion.tr
+                      <Motion.tr
                         key={coach.id}
                         className="border-b border-jmuDarkGold bg-jmuLightGold/20 overflow-hidden"
                         layout
                         transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
                       >
                         <td colSpan="2" className="p-0">
-                          <motion.div
+                          <Motion.div
                             layout
                             initial={{ height: 0 }}
                             animate={{ height: "auto" }}
@@ -88,9 +88,9 @@ export default function CoachList({ expandedId, setExpandedId }) {
                                 )}
                               </div>
                             </div>
-                          </motion.div>
+                          </Motion.div>
                         </td>
-                      </motion.tr>
+                      </Motion.tr>
                     )}
                   </AnimatePresence>
                 </Fragment>

@@ -1,7 +1,7 @@
-import React, { useEffect, useState, Fragment } from "react";
+import React, { useEffect, Fragment } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import logoPurple from "../../assets/jmu-purple-logo.png";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 
 export default function RosterTable({ expandedId, setExpandedId }) {
   const [roster, setRoster] = React.useState([]);
@@ -56,14 +56,14 @@ export default function RosterTable({ expandedId, setExpandedId }) {
 
                   <AnimatePresence initial={false}>
                     {expandedId === `player-${player.id}` && (
-                      <motion.tr
+                      <Motion.tr
                         key={player.id}
                         className="border-b border-jmuDarkGold bg-jmuLightGold/20 overflow-hidden"
                         layout
                         transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
                       >
                         <td colSpan="5" className="p-0">
-                          <motion.div
+                          <Motion.div
                             layout
                             initial={{ height: 0 }}
                             animate={{ height: "auto" }}
@@ -97,9 +97,9 @@ export default function RosterTable({ expandedId, setExpandedId }) {
                                 )}
                               </div>
                             </div>
-                          </motion.div>
+                          </Motion.div>
                         </td>
-                      </motion.tr>
+                      </Motion.tr>
                     )}
                   </AnimatePresence>
                 </Fragment>
