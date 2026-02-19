@@ -73,11 +73,11 @@ function mapSettingsToJoinInfo(settingsRows) {
     }
 
     if (row.key === "required_gear") {
-      joinInfo.gear[0] = `${row.value} is required.`;
+      joinInfo.gear[0] = `${row.value} are required.`;
     }
 
     if (row.key === "recommended_gear") {
-      joinInfo.gear[1] = `${row.value} recommended.`;
+      joinInfo.gear[1] = `${row.value} are recommended.`;
     }
 
     if (row.key === "lifting") {
