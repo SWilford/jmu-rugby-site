@@ -2,11 +2,11 @@ import { useState } from "react";
 
 const contacts = [
   {
-    label: "President's Email",
+    label: "Club President",
     value: "madisonrugbypresident@gmail.com",
   },
   {
-    label: "Head Coach Mark Fowler's Email",
+    label: "Head Coach Mark Fowler",
     value: "Fowlerma@alumni.vcu.edu",
   },
 ];
@@ -53,13 +53,13 @@ export default function Contact() {
                 <button
                   type="button"
                   onClick={() => handleCopy(contact.value)}
-                  className="border-2 border-jmuPurple text-jmuPurple px-4 py-2 rounded-md font-semibold hover:bg-jmuPurple hover:text-jmuLightGold transition-colors"
+                  className="border-2 border-jmuPurple text-jmuPurple px-4 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
                 >
                   {copiedEmail === contact.value ? "Copied" : "Copy Email"}
                 </button>
                 <a
                   href={`mailto:${contact.value}`}
-                  className="border-2 border-jmuDarkGold text-jmuDarkGold px-4 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+                  className="border-2 border-jmuPurple text-jmuPurple px-4 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
                 >
                   Open Email
                 </a>
@@ -68,13 +68,13 @@ export default function Contact() {
           ))}
         </div>
 
-        <div className="border-t border-jmuDarkGold pt-6">
+        <div className="border-t border-jmuDarkGold pt-6 text-center">
           <p className="font-semibold mb-3">Instagram</p>
           <a
             href={instagramUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex border-2 border-jmuGold text-jmuPurple bg-jmuGold px-5 py-2 rounded-md font-semibold hover:bg-jmuLightGold transition-colors"
+            className="inline-flex border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
           >
             Visit @jmumensrugby
           </a>
