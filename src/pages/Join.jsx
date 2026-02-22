@@ -44,6 +44,10 @@ const faqItems = [
     answer:
       "Fall focuses on 15s with A side, B side, and Developmental. Spring focuses on 7s, and others also play 15s. The team competes under National Collegiate Rugby (NCR) in the Mid-Atlantic Rugby Conference (MARC) at the DI-AA level.",
   },
+  {
+    question: "What day is Saturday?",
+    answer: "SATURDAYS A RUGBY DAY!",
+  },
 ];
 
 const mediaSlotConfig = {
