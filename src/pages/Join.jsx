@@ -13,7 +13,7 @@ const faqItems = [
   {
     question: "What should I bring?",
     answer:
-      "Bring water and training gear. A mouthguard is required, and cleats plus rugby shorts are recommended.",
+      "Bring water and wear athletic clothing. A mouthguard is required, cleats and rugby shorts are highly recommended.",
   },
   {
     question: "How much does it cost?",
