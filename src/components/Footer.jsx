@@ -26,7 +26,7 @@ export default function Footer() {
                   <img
                     src={sponsor.logo_url}
                     alt={sponsor.alt_text || `${sponsor.name} logo`}
-                    className="h-12 sm:h-14 w-auto object-contain"
+                    className="h-16 sm:h-20 w-auto object-contain"
                     loading="lazy"
                   />
                 ) : (
