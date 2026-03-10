@@ -7,12 +7,11 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Schedule from "./pages/Schedule";
 import Team from "./pages/Team";
-import Roster from "./pages/Roster";
-import Coaches from "./pages/Coaches";
 import Media from "./pages/Media";
 import Join from "./pages/Join";
 import Donate from "./pages/Donate";
 import Contact from "./pages/Contact";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 /*export default function App() {
@@ -29,6 +28,7 @@ import NotFound from "./pages/NotFound";
           <Route path="/join" element={<Join />} />
           <Route path="/donate" element={<Donate />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -52,6 +52,7 @@ export default function App() {
           <Route path="/join" element={<Join />} />
           <Route path="/donate" element={<Donate />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

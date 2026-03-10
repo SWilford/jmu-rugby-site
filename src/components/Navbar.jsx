@@ -55,7 +55,7 @@ export default function Navbar() {
       {/* nav bar */}
       <nav className="bg-jmuPurple">
         <div className="max-w-6xl mx-auto border-b border-jmuDarkGold">
-          <div className="flex flex-wrap justify-center sm:justify-start px-6">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start px-6">
             {links.map(([label, path], i) => (
               <div key={label} className="flex items-center">
                 <NavLink
@@ -75,6 +75,21 @@ export default function Navbar() {
                 )}
               </div>
             ))}
+
+            <div className="ml-0 sm:ml-auto py-2 sm:py-0 sm:pl-4">
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  `inline-flex rounded border px-3 py-1.5 text-sm font-semibold transition-colors duration-200 ${
+                    isActive
+                      ? "border-jmuGold bg-jmuGold text-jmuPurple"
+                      : "border-jmuLightGold text-jmuLightGold hover:border-jmuGold hover:bg-jmuGold hover:text-jmuPurple"
+                  }`
+                }
+              >
+                Admin Login
+              </NavLink>
+            </div>
           </div>
         </div>
       </nav>
