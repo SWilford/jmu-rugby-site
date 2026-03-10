@@ -4,51 +4,6 @@ import JoinFaqAccordion from "../components/Join/JoinFaqAccordion";
 import JoinMediaPlaceholders from "../components/Join/JoinMediaPlaceholders";
 import { getJoinInfo } from "../data/joinInfo";
 
-const faqItems = [
-  {
-    question: "Do I need experience?",
-    answer:
-      "No experience is required. JMU Men's Rugby welcomes beginners and experienced players, and our training structure is designed to teach fundamentals while improving fitness.",
-  },
-  {
-    question: "What should I bring?",
-    answer:
-      "Bring water and wear athletic clothing. A mouthguard is required, cleats and rugby shorts are highly recommended.",
-  },
-  {
-    question: "How much does it cost?",
-    answer: "Team dues are $200.",
-  },
-  {
-    question: "How much time is the commitment?",
-    answer:
-      "The weekly schedule includes Tuesday and Thursday practices from 5:30 PM to 7:00 PM, Monday and Wednesday conditioning sessions, Friday afternoon walkthroughs, and Saturday games.",
-  },
-  {
-    question: "Is lifting required?",
-    answer:
-      "Lifting is not a formal team requirement; however, it is strongly recommended for strength and on-field performance.",
-  },
-  {
-    question: "What if I’ve never played a contact sport?",
-    answer:
-      "That is completely fine. Coaches and veteran players will help you learn techniques and contact fundamentals in a progressive, safe environment.",
-  },
-  {
-    question: "How do games/travel work?",
-    answer:
-      "Travel depends on the opponent and event location; transportation may be by UREC vans or player-owned cars, and some trips include overnight hotel stays.",
-  },
-  {
-    question: "What’s the difference between fall and spring season?",
-    answer:
-      "Fall focuses on 15s with A side, B side, and Developmental. Spring focuses on 7s, and others also play 15s. The team competes under National Collegiate Rugby (NCR) in the Mid-Atlantic Rugby Conference (MARC) at the DI-AA level.",
-  },
-  {
-    question: "What day is Saturday?",
-    answer: "SATURDAYS A RUGBY DAY!",
-  },
-];
 
 const mediaSlotConfig = {
   videoPlaceholderLabel: "Video embed placeholder",
@@ -146,7 +101,7 @@ export default function Join() {
 
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8 mb-4">
         <h2 className="text-2xl font-bold mb-5">FAQ's</h2>
-        <JoinFaqAccordion faqs={faqItems} />
+        <JoinFaqAccordion faqs={joinInfo.faqs} />
 
         <div className="border-t border-jmuDarkGold mt-8 pt-6">
           <h3 className="text-xl font-bold mb-3">Have further questions?</h3>

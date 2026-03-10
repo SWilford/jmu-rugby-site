@@ -40,6 +40,51 @@ const JOIN_INFO_FALLBACK = {
   ],
   eligibility:
     "Anyone can join; no experience is required. We will teach fundamentals, build fitness, and help you develop as a rugby player.",
+  faqs: [
+    {
+      question: "Do I need experience?",
+      answer:
+        "No experience is required. JMU Men's Rugby welcomes beginners and experienced players, and our training structure is designed to teach fundamentals while improving fitness.",
+    },
+    {
+      question: "What should I bring?",
+      answer:
+        "Bring water and wear athletic clothing. A mouthguard is required, cleats and rugby shorts are highly recommended.",
+    },
+    {
+      question: "How much does it cost?",
+      answer: "Team dues are $200.",
+    },
+    {
+      question: "How much time is the commitment?",
+      answer:
+        "The weekly schedule includes Tuesday and Thursday practices from 5:30 PM to 7:00 PM, Monday and Wednesday conditioning sessions, Friday afternoon walkthroughs, and Saturday games.",
+    },
+    {
+      question: "Is lifting required?",
+      answer:
+        "Lifting is not a formal team requirement; however, it is strongly recommended for strength and on-field performance.",
+    },
+    {
+      question: "What if I’ve never played a contact sport?",
+      answer:
+        "That is completely fine. Coaches and veteran players will help you learn techniques and contact fundamentals in a progressive, safe environment.",
+    },
+    {
+      question: "How do games/travel work?",
+      answer:
+        "Travel depends on the opponent and event location; transportation may be by UREC vans or player-owned cars, and some trips include overnight hotel stays.",
+    },
+    {
+      question: "What’s the difference between fall and spring season?",
+      answer:
+        "Fall focuses on 15s with A side, B side, and Developmental. Spring focuses on 7s, and others also play 15s. The team competes under National Collegiate Rugby (NCR) in the Mid-Atlantic Rugby Conference (MARC) at the DI-AA level.",
+    },
+    {
+      question: "What day is Saturday?",
+      answer: "SATURDAYS A RUGBY DAY!",
+    },
+  ],
 };
 
 const SETTINGS_TO_JOIN_INFO = {
@@ -89,15 +134,21 @@ function mapSettingsToJoinInfo(settingsRows) {
 }
 
 export async function getJoinInfo() {
-  const [settingsResponse, scheduleResponse] = await Promise.all([
+  const [settingsResponse, scheduleResponse, faqResponse] = await Promise.all([
     supabase.from("join_content_settings").select("key, value"),
     supabase.from("join_content_schedule").select("label, detail").order("display_order", { ascending: true }),
+    supabase
+      .from("join_content_faq")
+      .select("question, answer")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
   ]);
 
-  if (settingsResponse.error || scheduleResponse.error) {
+  if (settingsResponse.error || scheduleResponse.error || faqResponse.error) {
     console.error("Failed to load dynamic join content", {
       settingsError: settingsResponse.error,
       scheduleError: scheduleResponse.error,
+      faqError: faqResponse.error,
     });
 
     return JOIN_INFO_FALLBACK;
@@ -107,6 +158,10 @@ export async function getJoinInfo() {
 
   if (Array.isArray(scheduleResponse.data) && scheduleResponse.data.length > 0) {
     joinInfo.schedule = scheduleResponse.data;
+  }
+
+  if (Array.isArray(faqResponse.data) && faqResponse.data.length > 0) {
+    joinInfo.faqs = faqResponse.data;
   }
 
   return joinInfo;

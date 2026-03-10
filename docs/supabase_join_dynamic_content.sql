@@ -197,3 +197,87 @@ for all
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
+
+-- 10) Join FAQ rows (ordered list)
+create table if not exists public.join_content_faq (
+  id uuid primary key default gen_random_uuid(),
+  question text not null,
+  answer text not null,
+  display_order integer not null default 0,
+  is_active boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists join_content_faq_order_idx
+  on public.join_content_faq (display_order);
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'join_content_faq_question_unique'
+  ) then
+    alter table public.join_content_faq
+      add constraint join_content_faq_question_unique unique (question);
+  end if;
+end $$;
+
+-- 11) Sponsors for footer (ordered list)
+create table if not exists public.sponsors (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  website_url text,
+  logo_url text,
+  logo_object_path text,
+  alt_text text,
+  display_order integer not null default 0,
+  is_active boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists sponsors_order_idx
+  on public.sponsors (display_order);
+
+-- 12) Triggers for new ordered content tables
+drop trigger if exists trg_join_content_faq_updated_at on public.join_content_faq;
+create trigger trg_join_content_faq_updated_at
+before update on public.join_content_faq
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists trg_sponsors_updated_at on public.sponsors;
+create trigger trg_sponsors_updated_at
+before update on public.sponsors
+for each row
+execute function public.set_updated_at();
+
+-- 13) Seed FAQ defaults (idempotent)
+insert into public.join_content_faq (question, answer, display_order)
+values
+  ('Do I need experience?', 'No experience is required. JMU Men''s Rugby welcomes beginners and experienced players, and our training structure is designed to teach fundamentals while improving fitness.', 1),
+  ('What should I bring?', 'Bring water and wear athletic clothing. A mouthguard is required, cleats and rugby shorts are highly recommended.', 2),
+  ('How much does it cost?', 'Team dues are $200.', 3),
+  ('How much time is the commitment?', 'The weekly schedule includes Tuesday and Thursday practices from 5:30 PM to 7:00 PM, Monday and Wednesday conditioning sessions, Friday afternoon walkthroughs, and Saturday games.', 4),
+  ('Is lifting required?', 'Lifting is not a formal team requirement; however, it is strongly recommended for strength and on-field performance.', 5),
+  ('What if I’ve never played a contact sport?', 'That is completely fine. Coaches and veteran players will help you learn techniques and contact fundamentals in a progressive, safe environment.', 6),
+  ('How do games/travel work?', 'Travel depends on the opponent and event location; transportation may be by UREC vans or player-owned cars, and some trips include overnight hotel stays.', 7),
+  ('What’s the difference between fall and spring season?', 'Fall focuses on 15s with A side, B side, and Developmental. Spring focuses on 7s, and others also play 15s. The team competes under National Collegiate Rugby (NCR) in the Mid-Atlantic Rugby Conference (MARC) at the DI-AA level.', 8),
+  ('What day is Saturday?', 'SATURDAYS A RUGBY DAY!', 9)
+on conflict (question) do update
+set answer = excluded.answer,
+    display_order = excluded.display_order,
+    is_active = true,
+    updated_at = now();
+
+-- 14) Note on RLS/policies for FAQ and sponsors
+-- Policies are intentionally omitted here so you can configure them manually in Supabase.
+-- If you enable RLS on these tables, be sure to add at least a public read policy
+-- for your website client and authenticated write policies for admins.
+
+-- 15) Storage guidance for sponsor logos
+-- You can use EITHER approach below:
+-- A) Direct URL: set sponsors.logo_url to the full public URL
+--    (for example: https://...supabase.co/storage/v1/object/public/rugby-media/sponsors/jcmrf.jpg)
+-- B) Object path: set sponsors.logo_object_path to sponsors/<sponsor-file-name>
+--    and the app will call storage.from('rugby-media').getPublicUrl(logo_object_path).
