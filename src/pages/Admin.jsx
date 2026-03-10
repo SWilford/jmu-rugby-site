@@ -20,6 +20,39 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [scheduleMatches, setScheduleMatches] = useState([]);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleError, setScheduleError] = useState("");
+  const [formState, setFormState] = useState({
+    season_id: "",
+    season_name: "",
+    date: "",
+    opponent: "",
+    side: "A",
+    home: true,
+    show_result: false,
+    result: "",
+    notes: "",
+  });
+
+  const loadScheduleMatches = async () => {
+    setScheduleLoading(true);
+    setScheduleError("");
+
+    const { data, error } = await supabase
+      .from("matches")
+      .select("id, season_name, season_id, date, opponent, side, home")
+      .order("date", { ascending: true });
+
+    if (error) {
+      setScheduleError(error.message || "Unable to load schedule matches.");
+      setScheduleLoading(false);
+      return;
+    }
+
+    setScheduleMatches(data || []);
+    setScheduleLoading(false);
+  };
 
   const [activeEditor, setActiveEditor] = useState("schedule");
   const [scheduleMatches, setScheduleMatches] = useState([]);
