@@ -25,12 +25,30 @@ export default function Admin() {
 
       if (!isMounted) return;
 
-      if (error) {
-        setErrorMessage("Unable to verify admin access right now. Please try again.");
-        setIsAdmin(false);
-      } else {
+      if (!error) {
         setErrorMessage("");
         setIsAdmin(Boolean(data));
+        setIsLoading(false);
+        return;
+      }
+
+      // Fallback check by UID in case the RPC or DB function is misconfigured.
+      const { data: adminRows, error: adminError } = await supabase
+        .from("admins")
+        .select("user_id")
+        .eq("user_id", nextSession.user.id)
+        .limit(1);
+
+      if (!isMounted) return;
+
+      if (!adminError) {
+        setErrorMessage("");
+        setIsAdmin((adminRows?.length ?? 0) > 0);
+      } else {
+        setIsAdmin(false);
+        setErrorMessage(
+          "Unable to verify admin access. Please run docs/supabase_admin_auth_fix.sql in Supabase SQL Editor, then try again."
+        );
       }
 
       setIsLoading(false);

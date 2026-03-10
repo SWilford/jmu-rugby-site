@@ -53,6 +53,17 @@ src/
   pages/           # Route-level pages
 ```
 
+## Admin Auth Setup (Supabase)
+
+If you are using the `/admin` login, make sure your database function/policies are configured for admin checks:
+
+```bash
+# In Supabase SQL Editor, run:
+# docs/supabase_admin_auth_fix.sql
+```
+
+This ensures `public.is_admin()` and `public.admins` RLS policies work correctly for checking whether a signed-in user UID is in the `admins` table.
+
 ## Notes for Maintainers
 
 - Schedule, media, and roster content are designed around Supabase tables.
