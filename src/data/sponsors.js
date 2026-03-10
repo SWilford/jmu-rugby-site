@@ -1,6 +1,28 @@
 import { supabase } from "../lib/supabaseClient";
 
 const SPONSORS_FALLBACK = [];
+const DEFAULT_LOGO_BUCKET = "rugby-media";
+
+function resolveStorageLocation(logoObjectPath) {
+  const normalizedPath = logoObjectPath.replace(/^\/+/, "");
+  const pathParts = normalizedPath.split("/").filter(Boolean);
+
+  if (pathParts.length >= 2) {
+    const [possibleBucket, ...objectPathParts] = pathParts;
+
+    if (possibleBucket === "rugby-media" || possibleBucket === "media") {
+      return {
+        bucket: possibleBucket,
+        objectPath: objectPathParts.join("/"),
+      };
+    }
+  }
+
+  return {
+    bucket: DEFAULT_LOGO_BUCKET,
+    objectPath: normalizedPath,
+  };
+}
 
 function withPublicLogoUrl(row) {
   if (!row.logo_object_path) {
@@ -10,7 +32,8 @@ function withPublicLogoUrl(row) {
     };
   }
 
-  const { data } = supabase.storage.from("media").getPublicUrl(row.logo_object_path);
+  const { bucket, objectPath } = resolveStorageLocation(row.logo_object_path);
+  const { data } = supabase.storage.from(bucket).getPublicUrl(objectPath);
 
   return {
     ...row,
