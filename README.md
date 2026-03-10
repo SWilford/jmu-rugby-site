@@ -55,14 +55,15 @@ src/
 
 ## Admin Auth Setup (Supabase)
 
-If you are using the `/admin` login, make sure your database function/policies are configured for admin checks:
+If you are using the `/admin` login and schedule editor, make sure your database function/policies are configured for admin checks and schedule write protection:
 
 ```bash
-# In Supabase SQL Editor, run:
+# In Supabase SQL Editor, run in this order:
 # docs/supabase_admin_auth_fix.sql
+# docs/supabase_schedule_admin_rls.sql
 ```
 
-This ensures `public.is_admin()` and `public.admins` RLS policies work correctly for checking whether a signed-in user UID is in the `admins` table.
+This ensures `public.is_admin()` and `public.admins` RLS policies work correctly for checking whether a signed-in user UID is in the `admins` table, and ensures only admins can insert/update/delete `matches` rows.
 
 ## Notes for Maintainers
 
