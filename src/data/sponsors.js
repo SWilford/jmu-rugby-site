@@ -25,10 +25,17 @@ function resolveStorageLocation(logoObjectPath) {
 }
 
 function withPublicLogoUrl(row) {
+  if (row.logo_url?.trim()) {
+    return {
+      ...row,
+      logo_url: row.logo_url.trim(),
+    };
+  }
+
   if (!row.logo_object_path) {
     return {
       ...row,
-      logo_url: row.logo_url ?? "",
+      logo_url: "",
     };
   }
 
