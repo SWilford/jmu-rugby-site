@@ -222,6 +222,21 @@ export default function Admin() {
     });
   };
 
+  const getNextMatchId = async () => {
+    const { data, error } = await supabase
+      .from("matches")
+      .select("id")
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return (data?.id ?? 0) + 1;
+  };
+
   const handleSaveMatch = async (event) => {
     event.preventDefault();
 
@@ -245,11 +260,18 @@ export default function Admin() {
       notes: formState.notes.trim() || null,
     };
 
-    const query = editingMatchId
-      ? supabase.from("matches").update(payload).eq("id", editingMatchId)
-      : supabase.from("matches").insert(payload);
+    let error;
 
-    const { error } = await query;
+    if (editingMatchId) {
+      ({ error } = await supabase.from("matches").update(payload).eq("id", editingMatchId));
+    } else {
+      try {
+        const nextMatchId = await getNextMatchId();
+        ({ error } = await supabase.from("matches").insert({ ...payload, id: nextMatchId }));
+      } catch (nextIdError) {
+        error = nextIdError;
+      }
+    }
 
     if (error) {
       setScheduleError(error.message || "Unable to save this match.");
