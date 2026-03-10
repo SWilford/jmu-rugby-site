@@ -20,40 +20,6 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [scheduleMatches, setScheduleMatches] = useState([]);
-  const [scheduleLoading, setScheduleLoading] = useState(false);
-  const [scheduleError, setScheduleError] = useState("");
-  const [formState, setFormState] = useState({
-    season_id: "",
-    season_name: "",
-    date: "",
-    opponent: "",
-    side: "A",
-    home: true,
-    show_result: false,
-    result: "",
-    notes: "",
-  });
-
-  const loadScheduleMatches = async () => {
-    setScheduleLoading(true);
-    setScheduleError("");
-
-    const { data, error } = await supabase
-      .from("matches")
-      .select("id, season_name, season_id, date, opponent, side, home")
-      .order("date", { ascending: true });
-
-    if (error) {
-      setScheduleError(error.message || "Unable to load schedule matches.");
-      setScheduleLoading(false);
-      return;
-    }
-
-    setScheduleMatches(data || []);
-    setScheduleLoading(false);
-  };
-
   const [activeEditor, setActiveEditor] = useState("schedule");
   const [scheduleMatches, setScheduleMatches] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -256,6 +222,21 @@ export default function Admin() {
     });
   };
 
+  const getNextMatchId = async () => {
+    const { data, error } = await supabase
+      .from("matches")
+      .select("id")
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return (data?.id ?? 0) + 1;
+  };
+
   const handleSaveMatch = async (event) => {
     event.preventDefault();
 
@@ -279,11 +260,18 @@ export default function Admin() {
       notes: formState.notes.trim() || null,
     };
 
-    const query = editingMatchId
-      ? supabase.from("matches").update(payload).eq("id", editingMatchId)
-      : supabase.from("matches").insert(payload);
+    let error;
 
-    const { error } = await query;
+    if (editingMatchId) {
+      ({ error } = await supabase.from("matches").update(payload).eq("id", editingMatchId));
+    } else {
+      try {
+        const nextMatchId = await getNextMatchId();
+        ({ error } = await supabase.from("matches").insert({ ...payload, id: nextMatchId }));
+      } catch (nextIdError) {
+        error = nextIdError;
+      }
+    }
 
     if (error) {
       setScheduleError(error.message || "Unable to save this match.");
