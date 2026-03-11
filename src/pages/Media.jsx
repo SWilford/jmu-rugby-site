@@ -2,6 +2,7 @@ import React, { useEffect, useState, Fragment, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
+import { getMediaFilePath } from "../lib/mediaUtils";
 
 export default function Media() {
   const [media, setMedia] = useState([]);
@@ -67,7 +68,7 @@ export default function Media() {
       const { data, error } = await supabase
         .from("media")
         .select("*")
-        .order("upload_date", { ascending: false });
+        .order("id", { ascending: false });
 
       if (error) console.error("Media fetch error:", error);
       else {
@@ -222,7 +223,7 @@ export default function Media() {
                         className="relative group overflow-hidden rounded-md border border-jmuDarkGold bg-jmuLightGold/10 hover:bg-jmuLightGold/30 transition"
                       >
                         <img
-                          src={photo.file_path}
+                          src={getMediaFilePath(photo)}
                           alt={photo.caption || "JMU Rugby"}
                           className="object-cover w-full h-48 cursor-pointer"
                           onClick={() => setSelectedPhoto(photo)}
@@ -257,7 +258,7 @@ export default function Media() {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={selectedPhoto.file_path}
+                src={getMediaFilePath(selectedPhoto)}
                 alt={selectedPhoto.caption || "JMU Rugby"}
                 className="max-h-[80vh] w-full object-contain rounded-md"
               />
@@ -266,7 +267,7 @@ export default function Media() {
                   {selectedPhoto.caption || ""}
                 </p>
                 <button
-                  onClick={() => handleDownload(selectedPhoto.file_path)}
+                  onClick={() => handleDownload(getMediaFilePath(selectedPhoto))}
                   className="border border-jmuDarkGold text-jmuPurple font-semibold px-3 py-1 rounded hover:bg-jmuGold hover:text-jmuPurple transition"
                 >
                   Download

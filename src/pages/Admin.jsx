@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import MediaEditor from "../components/Admin/MediaEditor";
 
 const INITIAL_FORM = {
   season_id: "",
@@ -401,9 +402,7 @@ export default function Admin() {
                   <option value="roster" disabled>
                     Roster editor (coming soon)
                   </option>
-                  <option value="media" disabled>
-                    Media editor (coming soon)
-                  </option>
+                  <option value="media">Media editor</option>
                 </select>
               </div>
 
@@ -592,6 +591,8 @@ export default function Admin() {
                   </div>
                 </>
               )}
+
+              {activeEditor === "media" && <MediaEditor />}
             </div>
           </div>
         )}

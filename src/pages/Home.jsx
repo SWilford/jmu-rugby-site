@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { getMediaFilePath } from "../lib/mediaUtils";
 
 import img0 from "../assets/home/image0.jpeg";
 import img1 from "../assets/home/image1.jpeg";
@@ -70,7 +71,7 @@ export default function Home() {
 
       const { data: mediaData, error: mediaError } = await supabase
         .from("media")
-        .select("id, album, season_id, file_path")
+        .select("*")
         .eq("featured", true);
 
       if (mediaError) {
@@ -210,7 +211,7 @@ export default function Home() {
             {featuredImages.map((photo) => (
               <img
                 key={photo.id}
-                src={photo.file_path}
+                src={getMediaFilePath(photo)}
                 alt={photo.album}
                 onClick={() =>
                   navigate(

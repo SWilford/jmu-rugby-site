@@ -61,9 +61,10 @@ If you are using the `/admin` login and schedule editor, make sure your database
 # In Supabase SQL Editor, run in this order:
 # docs/supabase_admin_auth_fix.sql
 # docs/supabase_schedule_admin_rls.sql
+# docs/supabase_media_admin_rls.sql
 ```
 
-This ensures `public.is_admin()` and `public.admins` RLS policies work correctly for checking whether a signed-in user UID is in the `admins` table, and ensures only admins can insert/update/delete `matches` rows.
+This ensures `public.is_admin()` and `public.admins` RLS policies work correctly for checking whether a signed-in user UID is in the `admins` table, ensures only admins can insert/update/delete `matches` rows, and ensures only admins can write media rows and `rugby-media` storage objects.
 
 ## Notes for Maintainers
 
