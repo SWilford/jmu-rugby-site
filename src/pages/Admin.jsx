@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import MediaEditor from "../components/Admin/MediaEditor";
 import RosterEditor from "../components/Admin/RosterEditor";
+import ContactEditor from "../components/Admin/ContactEditor";
+import SponsorsEditor from "../components/Admin/SponsorsEditor";
 
 const INITIAL_FORM = {
   season_id: "",
@@ -402,6 +404,8 @@ export default function Admin() {
                   <option value="schedule">Schedule editor</option>
                   <option value="roster">Roster editor</option>
                   <option value="media">Media editor</option>
+                  <option value="contact">Contact editor</option>
+                  <option value="sponsors">Sponsors editor</option>
                 </select>
               </div>
 
@@ -593,6 +597,8 @@ export default function Admin() {
 
               {activeEditor === "roster" && <RosterEditor />}
               {activeEditor === "media" && <MediaEditor />}
+              {activeEditor === "contact" && <ContactEditor />}
+              {activeEditor === "sponsors" && <SponsorsEditor />}
             </div>
           </div>
         )}

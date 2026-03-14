@@ -1,30 +1,147 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
-const contacts = [
+const FALLBACK_CONTACT_CARDS = [
   {
+    id: "fallback-president",
     label: "Club President",
     value: "madisonrugbypresident@gmail.com",
+    contact_type: "email",
+    cta_label: "",
+    display_order: 1,
+    is_active: true,
   },
   {
+    id: "fallback-coach",
     label: "Head Coach Mark Fowler",
     value: "Fowlerma@alumni.vcu.edu",
+    contact_type: "email",
+    cta_label: "",
+    display_order: 2,
+    is_active: true,
+  },
+  {
+    id: "fallback-instagram",
+    label: "Instagram",
+    value: "https://www.instagram.com/jmumensrugby/",
+    contact_type: "url",
+    cta_label: "Visit @jmumensrugby",
+    display_order: 3,
+    is_active: true,
   },
 ];
 
-const instagramUrl = "https://www.instagram.com/jmumensrugby/";
+const normalizeText = (value) => String(value || "").trim();
+
+const normalizeContactType = (value) => {
+  const normalized = normalizeText(value).toLowerCase();
+  return ["email", "url", "phone", "text"].includes(normalized) ? normalized : "text";
+};
+
+const normalizeUrl = (value) => {
+  const raw = normalizeText(value);
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `https://${raw}`;
+};
+
+const buildCardAction = (card) => {
+  const contactType = normalizeContactType(card.contact_type);
+  const ctaLabel = normalizeText(card.cta_label);
+
+  if (contactType === "email") {
+    return {
+      href: `mailto:${card.value}`,
+      label: ctaLabel || "Open Email",
+      isExternal: false,
+    };
+  }
+
+  if (contactType === "url") {
+    const href = normalizeUrl(card.value);
+    if (!href) return null;
+    return {
+      href,
+      label: ctaLabel || "Open Link",
+      isExternal: true,
+    };
+  }
+
+  if (contactType === "phone") {
+    return {
+      href: `tel:${card.value}`,
+      label: ctaLabel || "Call",
+      isExternal: false,
+    };
+  }
+
+  return null;
+};
 
 export default function Contact() {
-  const [copiedEmail, setCopiedEmail] = useState("");
+  const [cards, setCards] = useState(FALLBACK_CONTACT_CARDS);
+  const [loading, setLoading] = useState(true);
+  const [copiedValue, setCopiedValue] = useState("");
   const [copyError, setCopyError] = useState("");
 
-  const handleCopy = async (email) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadContactCards = async () => {
+      const { data, error } = await supabase
+        .from("contact_cards")
+        .select("id, label, value, contact_type, cta_label, display_order, is_active")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (!isMounted) return;
+
+      if (error) {
+        console.error("Contact page fallback: failed to load contact_cards", error);
+        setCards(FALLBACK_CONTACT_CARDS);
+        setLoading(false);
+        return;
+      }
+
+      if (Array.isArray(data) && data.length > 0) {
+        setCards(data);
+      } else {
+        setCards(FALLBACK_CONTACT_CARDS);
+      }
+
+      setLoading(false);
+    };
+
+    loadContactCards();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const visibleCards = useMemo(
+    () =>
+      cards
+        .filter((card) => Boolean(card.is_active))
+        .map((card) => ({
+          ...card,
+          label: normalizeText(card.label),
+          value: normalizeText(card.value),
+          contact_type: normalizeContactType(card.contact_type),
+          cta_label: normalizeText(card.cta_label),
+        })),
+    [cards]
+  );
+
+  const handleCopy = async (value) => {
     try {
-      await navigator.clipboard.writeText(email);
-      setCopiedEmail(email);
+      await navigator.clipboard.writeText(value);
+      setCopiedValue(value);
       setCopyError("");
-      setTimeout(() => setCopiedEmail(""), 2000);
+      setTimeout(() => setCopiedValue(""), 2000);
     } catch {
-      setCopyError("Copy failed. Please copy the email manually.");
+      setCopyError("Copy failed. Please copy this value manually.");
     }
   };
 
@@ -41,44 +158,46 @@ export default function Contact() {
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8 mb-4">
         <h2 className="text-2xl font-bold mb-5 text-center">Get In Touch</h2>
 
-        <div className="space-y-4 mb-8 text-center">
-          {contacts.map((contact) => (
-            <article
-              key={contact.value}
-              className="border border-jmuDarkGold rounded-md p-4 bg-jmuLightGold/20"
-            >
-              <p className="font-semibold text-jmuPurple mb-1">{contact.label}</p>
-              <p className="break-all text-jmuDarkGold mb-3">{contact.value}</p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleCopy(contact.value)}
-                  className="border-2 border-jmuPurple text-jmuPurple px-4 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+        {loading ? (
+          <p className="text-center text-jmuDarkGold">Loading contact cards...</p>
+        ) : visibleCards.length === 0 ? (
+          <p className="text-center text-jmuDarkGold">Contact options will appear here soon.</p>
+        ) : (
+          <div className="space-y-4 text-center">
+            {visibleCards.map((card) => {
+              const action = buildCardAction(card);
+              return (
+                <article
+                  key={card.id}
+                  className="border border-jmuDarkGold rounded-md p-4 bg-jmuLightGold/20"
                 >
-                  {copiedEmail === contact.value ? "Copied" : "Copy Email"}
-                </button>
-                <a
-                  href={`mailto:${contact.value}`}
-                  className="border-2 border-jmuPurple text-jmuPurple px-4 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-                >
-                  Open Email
-                </a>
-              </div>
-            </article>
-          ))}
-        </div>
+                  <p className="font-semibold text-jmuPurple mb-1">{card.label}</p>
+                  <p className="break-all text-jmuDarkGold mb-3">{card.value}</p>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(card.value)}
+                      className="border-2 border-jmuPurple text-jmuPurple px-4 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+                    >
+                      {copiedValue === card.value ? "Copied" : "Copy"}
+                    </button>
 
-        <div className="border-t border-jmuDarkGold pt-6 text-center">
-          <p className="font-semibold mb-3">Instagram</p>
-          <a
-            href={instagramUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-          >
-            Visit @jmumensrugby
-          </a>
-        </div>
+                    {action && (
+                      <a
+                        href={action.href}
+                        target={action.isExternal ? "_blank" : undefined}
+                        rel={action.isExternal ? "noreferrer" : undefined}
+                        className="border-2 border-jmuPurple text-jmuPurple px-4 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+                      >
+                        {action.label}
+                      </a>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
 
         {copyError && <p className="mt-4 text-red-700 font-semibold">{copyError}</p>}
       </section>
