@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import MediaEditor from "../components/Admin/MediaEditor";
+import RosterEditor from "../components/Admin/RosterEditor";
 
 const INITIAL_FORM = {
   season_id: "",
@@ -399,9 +400,7 @@ export default function Admin() {
                   className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2"
                 >
                   <option value="schedule">Schedule editor</option>
-                  <option value="roster" disabled>
-                    Roster editor (coming soon)
-                  </option>
+                  <option value="roster">Roster editor</option>
                   <option value="media">Media editor</option>
                 </select>
               </div>
@@ -592,6 +591,7 @@ export default function Admin() {
                 </>
               )}
 
+              {activeEditor === "roster" && <RosterEditor />}
               {activeEditor === "media" && <MediaEditor />}
             </div>
           </div>
