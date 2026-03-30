@@ -2,6 +2,7 @@ import React, { useEffect, Fragment } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import logoPurple from "../../assets/jmu-purple-logo.png";
 import { motion as Motion, AnimatePresence } from "framer-motion";
+import { buildStoragePublicUrl } from "../../lib/storageUtils";
 
 export default function RosterTable({ expandedId, setExpandedId }) {
   const [roster, setRoster] = React.useState([]);
@@ -73,7 +74,7 @@ export default function RosterTable({ expandedId, setExpandedId }) {
                           >
                             <div className="p-4 flex flex-col sm:flex-row items-start gap-6">
                               <img
-                                src={player.headshot_url || logoPurple}
+                                src={buildStoragePublicUrl(player.headshot_url) || logoPurple}
                                 alt={player.name}
                                 className="w-40 h-56 object-cover rounded-md border border-jmuDarkGold"
                               />

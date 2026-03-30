@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { extractStorageObjectPath, sanitizeFileName } from "../../lib/mediaUtils";
+import { buildStoragePublicUrl, deleteR2Objects, uploadFileToR2 } from "../../lib/storageUtils";
 
 const MEDIA_BUCKET = "rugby-media";
 const HEADSHOT_ROOT = "headshots";
@@ -291,19 +292,9 @@ export default function RosterEditor() {
   const uploadHeadshot = async (file, folderName, rowId, label) => {
     const safeLabel = sanitizeFileName(label || `${folderName}-${rowId}.jpg`);
     const objectPath = `${HEADSHOT_ROOT}/${folderName}/${rowId}-${Date.now()}-${safeLabel}`;
-
-    const { error: uploadError } = await supabase.storage.from(MEDIA_BUCKET).upload(objectPath, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type || undefined,
-    });
-
-    if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(objectPath);
+    const uploadResult = await uploadFileToR2(file, objectPath);
     return {
-      objectPath,
-      publicUrl: data.publicUrl,
+      objectPath: uploadResult.objectPath,
     };
   };
 
@@ -333,8 +324,9 @@ export default function RosterEditor() {
       return `Saved changes but skipped cleanup for a previous ${context} outside ${HEADSHOT_ROOT}/.`;
     }
 
-    const { error: removeError } = await supabase.storage.from(MEDIA_BUCKET).remove([objectPath]);
-    if (removeError) {
+    try {
+      await deleteR2Objects([objectPath]);
+    } catch (removeError) {
       if (required) throw removeError;
       return `Saved changes but failed to remove the previous ${context} from storage.`;
     }
@@ -404,8 +396,8 @@ export default function RosterEditor() {
     let uploadedObjectPath = "";
     let cleanupNotice = "";
     const existingPlayer = players.find((row) => row.id === editingPlayerId) || null;
-    const previousHeadshotUrl = normalizeText(existingPlayer?.headshot_url);
-    let nextHeadshotUrl = removePlayerHeadshot ? "" : normalizeText(playerForm.headshot_url);
+    const previousHeadshotPath = normalizeText(existingPlayer?.headshot_url);
+    let nextHeadshotPath = removePlayerHeadshot ? "" : normalizeText(playerForm.headshot_url);
 
     try {
       if (!editingPlayerId) {
@@ -415,12 +407,12 @@ export default function RosterEditor() {
       if (playerHeadshotFile) {
         const uploadResult = await uploadHeadshot(playerHeadshotFile, "players", rowId, payload.name);
         uploadedObjectPath = uploadResult.objectPath;
-        nextHeadshotUrl = uploadResult.publicUrl;
+        nextHeadshotPath = uploadResult.objectPath;
       }
 
       const writePayload = {
         ...payload,
-        headshot_url: nextHeadshotUrl || null,
+        headshot_url: nextHeadshotPath || null,
       };
 
       let writeError;
@@ -433,12 +425,12 @@ export default function RosterEditor() {
       if (writeError) throw writeError;
 
       const shouldRemoveOldHeadshot =
-        Boolean(previousHeadshotUrl) &&
-        previousHeadshotUrl !== nextHeadshotUrl &&
+        Boolean(previousHeadshotPath) &&
+        previousHeadshotPath !== nextHeadshotPath &&
         (Boolean(playerHeadshotFile) || removePlayerHeadshot);
 
       if (shouldRemoveOldHeadshot) {
-        cleanupNotice = await removeHeadshotFromStorage(previousHeadshotUrl, {
+        cleanupNotice = await removeHeadshotFromStorage(previousHeadshotPath, {
           required: false,
           context: "player headshot",
         });
@@ -452,7 +444,7 @@ export default function RosterEditor() {
       await loadRosterData();
     } catch (saveError) {
       if (uploadedObjectPath) {
-        await supabase.storage.from(MEDIA_BUCKET).remove([uploadedObjectPath]);
+        await deleteR2Objects([uploadedObjectPath]);
       }
       setError(toUserFriendlyRosterError(saveError, "Unable to save this player."));
     } finally {
@@ -482,8 +474,8 @@ export default function RosterEditor() {
     let uploadedObjectPath = "";
     let cleanupNotice = "";
     const existingCoach = coaches.find((row) => row.id === editingCoachId) || null;
-    const previousHeadshotUrl = normalizeText(existingCoach?.headshot_url);
-    let nextHeadshotUrl = removeCoachHeadshot ? "" : normalizeText(coachForm.headshot_url);
+    const previousHeadshotPath = normalizeText(existingCoach?.headshot_url);
+    let nextHeadshotPath = removeCoachHeadshot ? "" : normalizeText(coachForm.headshot_url);
 
     try {
       if (!editingCoachId) {
@@ -493,12 +485,12 @@ export default function RosterEditor() {
       if (coachHeadshotFile) {
         const uploadResult = await uploadHeadshot(coachHeadshotFile, "coaches", rowId, payload.name);
         uploadedObjectPath = uploadResult.objectPath;
-        nextHeadshotUrl = uploadResult.publicUrl;
+        nextHeadshotPath = uploadResult.objectPath;
       }
 
       const writePayload = {
         ...payload,
-        headshot_url: nextHeadshotUrl || null,
+        headshot_url: nextHeadshotPath || null,
       };
 
       let writeError;
@@ -511,12 +503,12 @@ export default function RosterEditor() {
       if (writeError) throw writeError;
 
       const shouldRemoveOldHeadshot =
-        Boolean(previousHeadshotUrl) &&
-        previousHeadshotUrl !== nextHeadshotUrl &&
+        Boolean(previousHeadshotPath) &&
+        previousHeadshotPath !== nextHeadshotPath &&
         (Boolean(coachHeadshotFile) || removeCoachHeadshot);
 
       if (shouldRemoveOldHeadshot) {
-        cleanupNotice = await removeHeadshotFromStorage(previousHeadshotUrl, {
+        cleanupNotice = await removeHeadshotFromStorage(previousHeadshotPath, {
           required: false,
           context: "coach headshot",
         });
@@ -530,7 +522,7 @@ export default function RosterEditor() {
       await loadRosterData();
     } catch (saveError) {
       if (uploadedObjectPath) {
-        await supabase.storage.from(MEDIA_BUCKET).remove([uploadedObjectPath]);
+        await deleteR2Objects([uploadedObjectPath]);
       }
       setError(toUserFriendlyRosterError(saveError, "Unable to save this coach."));
     } finally {
@@ -804,7 +796,9 @@ export default function RosterEditor() {
                       busy={busy}
                       selectedFile={playerHeadshotFile}
                       previewUrl={playerHeadshotPreviewUrl}
-                      existingUrl={removePlayerHeadshot ? "" : normalizeText(playerForm.headshot_url)}
+                      existingUrl={
+                        removePlayerHeadshot ? "" : buildStoragePublicUrl(normalizeText(playerForm.headshot_url))
+                      }
                       removeOnSave={removePlayerHeadshot}
                       onToggleRemove={setRemovePlayerHeadshot}
                       label="player"
@@ -945,7 +939,9 @@ export default function RosterEditor() {
                     busy={busy}
                     selectedFile={coachHeadshotFile}
                     previewUrl={coachHeadshotPreviewUrl}
-                    existingUrl={removeCoachHeadshot ? "" : normalizeText(coachForm.headshot_url)}
+                    existingUrl={
+                      removeCoachHeadshot ? "" : buildStoragePublicUrl(normalizeText(coachForm.headshot_url))
+                    }
                     removeOnSave={removeCoachHeadshot}
                     onToggleRemove={setRemoveCoachHeadshot}
                     label="coach"

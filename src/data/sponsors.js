@@ -1,54 +1,48 @@
 import { supabase } from "../lib/supabaseClient";
+import { buildStoragePublicUrl, isAbsoluteUrl, normalizeObjectPath } from "../lib/storageUtils";
 
 const SPONSORS_FALLBACK = [];
-const DEFAULT_LOGO_BUCKET = "rugby-media";
 const BASE_SPONSOR_SELECT = "id, name, website_url, logo_url, alt_text, display_order, is_active";
 const SPONSOR_SELECT_WITH_OBJECT_PATH = `${BASE_SPONSOR_SELECT}, logo_object_path`;
 
 let supportsLogoObjectPathColumn = null;
 
-function resolveStorageLocation(logoObjectPath) {
-  const normalizedPath = logoObjectPath.replace(/^\/+/, "");
-  const pathParts = normalizedPath.split("/").filter(Boolean);
+function resolveLogoPath(row) {
+  const logoUrlValue = String(row.logo_url || "").trim();
+  const normalizeLegacyBucketPrefix = (value) => {
+    const normalized = normalizeObjectPath(value);
+    if (normalized.startsWith("rugby-media/")) return normalized.slice("rugby-media/".length);
+    if (normalized.startsWith("media/")) return normalized.slice("media/".length);
+    return normalized;
+  };
 
-  if (pathParts.length >= 2) {
-    const [possibleBucket, ...objectPathParts] = pathParts;
-
-    if (possibleBucket === "rugby-media" || possibleBucket === "media") {
-      return {
-        bucket: possibleBucket,
-        objectPath: objectPathParts.join("/"),
-      };
-    }
+  if (logoUrlValue && !isAbsoluteUrl(logoUrlValue)) {
+    return normalizeLegacyBucketPrefix(logoUrlValue);
   }
 
-  return {
-    bucket: DEFAULT_LOGO_BUCKET,
-    objectPath: normalizedPath,
-  };
+  return normalizeLegacyBucketPrefix(row.logo_object_path);
 }
 
 function withPublicLogoUrl(row) {
-  if (row.logo_url?.trim()) {
+  const logoUrlValue = String(row.logo_url || "").trim();
+  if (logoUrlValue && isAbsoluteUrl(logoUrlValue)) {
     return {
       ...row,
-      logo_url: row.logo_url.trim(),
+      logo_url: logoUrlValue,
     };
   }
 
-  if (!row.logo_object_path) {
+  const objectPath = resolveLogoPath(row);
+  if (!objectPath) {
     return {
       ...row,
       logo_url: "",
     };
   }
 
-  const { bucket, objectPath } = resolveStorageLocation(row.logo_object_path);
-  const { data } = supabase.storage.from(bucket).getPublicUrl(objectPath);
-
   return {
     ...row,
-    logo_url: data.publicUrl,
+    logo_url: buildStoragePublicUrl(objectPath),
   };
 }
 

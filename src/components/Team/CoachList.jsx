@@ -3,6 +3,7 @@ import React, { useEffect, Fragment } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import logoPurple from "../../assets/jmu-purple-logo.png";
 import { motion as Motion, AnimatePresence } from "framer-motion";
+import { buildStoragePublicUrl } from "../../lib/storageUtils";
 
 export default function CoachList({ expandedId, setExpandedId }) {
   const [coaches, setCoaches] = React.useState([]);
@@ -76,7 +77,7 @@ export default function CoachList({ expandedId, setExpandedId }) {
                           >
                             <div className="p-4 flex flex-col sm:flex-row items-start gap-6">
                               <img
-                                src={coach.headshot_url || logoPurple}
+                                src={buildStoragePublicUrl(coach.headshot_url) || logoPurple}
                                 alt={coach.name}
                                 className="w-40 h-56 object-cover rounded-md border border-jmuDarkGold"
                               />

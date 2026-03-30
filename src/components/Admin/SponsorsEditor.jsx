@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { extractStorageObjectPath, sanitizeFileName } from "../../lib/mediaUtils";
+import { buildStoragePublicUrl, deleteR2Objects, uploadFileToR2 } from "../../lib/storageUtils";
 
 const MEDIA_BUCKET = "rugby-media";
 const SPONSOR_ROOT = "sponsors";
@@ -172,19 +173,9 @@ export default function SponsorsEditor() {
   const uploadLogo = async (file, rowId, sponsorName) => {
     const safeName = sanitizeFileName(file.name || `${sponsorName || "sponsor"}-logo.png`);
     const objectPath = `${SPONSOR_ROOT}/${rowId}-${Date.now()}-${safeName}`;
-
-    const { error: uploadError } = await supabase.storage.from(MEDIA_BUCKET).upload(objectPath, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type || undefined,
-    });
-
-    if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(objectPath);
+    const uploadResult = await uploadFileToR2(file, objectPath);
     return {
-      objectPath,
-      publicUrl: data.publicUrl,
+      objectPath: uploadResult.objectPath,
     };
   };
 
@@ -214,8 +205,9 @@ export default function SponsorsEditor() {
       return `Saved changes but skipped cleanup for a previous ${context} outside ${SPONSOR_ROOT}/.`;
     }
 
-    const { error: removeError } = await supabase.storage.from(MEDIA_BUCKET).remove([objectPath]);
-    if (removeError) {
+    try {
+      await deleteR2Objects([objectPath]);
+    } catch (removeError) {
       if (required) throw removeError;
       return `Saved changes but failed to remove the previous ${context} from storage.`;
     }
@@ -281,9 +273,9 @@ export default function SponsorsEditor() {
     }
 
     const existingRow = rows.find((row) => row.id === editingId) || null;
-    const previousLogoUrl = normalizeText(existingRow?.logo_url);
+    const previousLogoPath = normalizeText(existingRow?.logo_url);
     const rowId = editingId || crypto.randomUUID();
-    let nextLogoUrl = removeLogo ? "" : normalizeText(formState.logo_url);
+    let nextLogoPath = removeLogo ? "" : normalizeText(formState.logo_url);
     let uploadedObjectPath = "";
     let cleanupNotice = "";
 
@@ -291,12 +283,12 @@ export default function SponsorsEditor() {
       if (logoFile) {
         const uploadResult = await uploadLogo(logoFile, rowId, payload.name);
         uploadedObjectPath = uploadResult.objectPath;
-        nextLogoUrl = uploadResult.publicUrl;
+        nextLogoPath = uploadResult.objectPath;
       }
 
       const writePayload = {
         ...payload,
-        logo_url: nextLogoUrl || null,
+        logo_url: nextLogoPath || null,
       };
 
       let writeError;
@@ -309,12 +301,12 @@ export default function SponsorsEditor() {
       if (writeError) throw writeError;
 
       const shouldRemoveOldLogo =
-        Boolean(previousLogoUrl) &&
-        previousLogoUrl !== nextLogoUrl &&
+        Boolean(previousLogoPath) &&
+        previousLogoPath !== nextLogoPath &&
         (Boolean(logoFile) || removeLogo);
 
       if (shouldRemoveOldLogo) {
-        cleanupNotice = await removeLogoFromStorage(previousLogoUrl, {
+        cleanupNotice = await removeLogoFromStorage(previousLogoPath, {
           required: false,
           context: "sponsor logo",
         });
@@ -329,7 +321,7 @@ export default function SponsorsEditor() {
       await loadRows();
     } catch (saveError) {
       if (uploadedObjectPath) {
-        await supabase.storage.from(MEDIA_BUCKET).remove([uploadedObjectPath]);
+        await deleteR2Objects([uploadedObjectPath]);
       }
       setError(toUserFriendlySponsorsError(saveError, "Unable to save this sponsor."));
     } finally {
@@ -469,7 +461,7 @@ export default function SponsorsEditor() {
                         <div className="flex items-start gap-3">
                           {row.logo_url ? (
                             <img
-                              src={row.logo_url}
+                              src={buildStoragePublicUrl(row.logo_url)}
                               alt={row.alt_text || `${row.name} logo`}
                               className="h-12 w-12 rounded border border-jmuDarkGold/80 bg-jmuPurple/20 object-contain p-1"
                             />
@@ -644,7 +636,7 @@ export default function SponsorsEditor() {
                       {logoPreviewUrl ? "New preview" : "Current logo"}
                     </p>
                     <img
-                      src={logoPreviewUrl || formState.logo_url}
+                      src={logoPreviewUrl || buildStoragePublicUrl(formState.logo_url)}
                       alt={formState.alt_text || `${formState.name || "Sponsor"} logo preview`}
                       className="mt-1 h-20 w-auto max-w-full rounded border border-jmuDarkGold bg-jmuPurple/20 object-contain p-1"
                     />

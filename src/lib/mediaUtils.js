@@ -1,3 +1,5 @@
+import { buildStoragePublicUrl } from "./storageUtils";
+
 const FALL_PRIORITY = 0;
 const SPRING_PRIORITY = 1;
 const OTHER_PRIORITY = 2;
@@ -5,9 +7,13 @@ const OTHER_PRIORITY = 2;
 export const MEDIA_FILE_URL_COLUMNS = ["file_path", "filepath"];
 export const MEDIA_UPLOAD_TIMESTAMP_COLUMNS = ["upload_date", "uploaded_at", "uploaded"];
 
-export function getMediaFilePath(row) {
+export function getMediaStoredPath(row) {
   if (!row || typeof row !== "object") return "";
   return String(row.file_path || row.filepath || "").trim();
+}
+
+export function getMediaFilePath(row) {
+  return buildStoragePublicUrl(getMediaStoredPath(row));
 }
 
 export function normalizeSeasonId(value) {
@@ -95,6 +101,10 @@ export function extractStorageObjectPath(filePath, bucket) {
     const bucketIndex = pathParts.indexOf(bucket);
     if (bucketIndex >= 0 && bucketIndex < pathParts.length - 1) {
       return decodeURIComponent(pathParts.slice(bucketIndex + 1).join("/"));
+    }
+
+    if (pathParts.length > 0) {
+      return decodeURIComponent(pathParts.join("/"));
     }
   } catch {
     return "";

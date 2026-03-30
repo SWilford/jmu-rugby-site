@@ -6,11 +6,13 @@ import {
   extractStorageObjectPath,
   formatSeasonLabel,
   getMediaFilePath,
+  getMediaStoredPath,
   normalizeSeasonId,
   sanitizeAlbumName,
   sanitizeFileName,
   sortSeasonIdsDesc,
 } from "../../lib/mediaUtils";
+import { deleteR2Objects, moveR2Object, uploadFileToR2 } from "../../lib/storageUtils";
 
 const MEDIA_BUCKET = "rugby-media";
 
@@ -290,18 +292,9 @@ export default function MediaEditor() {
         const file = queuedFiles[index];
         const objectPath = `${resolvedAlbum}/${Date.now()}-${index}-${sanitizeFileName(file.name)}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from(MEDIA_BUCKET)
-          .upload(objectPath, file, {
-            cacheControl: "3600",
-            upsert: false,
-            contentType: file.type || undefined,
-          });
-
-        if (uploadError) throw uploadError;
+        await uploadFileToR2(file, objectPath);
 
         uploadedObjectPaths.push(objectPath);
-        const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(objectPath);
 
         const row = {
           id: nextId + index,
@@ -310,7 +303,7 @@ export default function MediaEditor() {
           featured: uploadFeatured,
         };
 
-        row[filePathColumn] = data.publicUrl;
+        row[filePathColumn] = objectPath;
         if (uploadTimestampColumn) {
           row[uploadTimestampColumn] = new Date().toISOString();
         }
@@ -334,7 +327,7 @@ export default function MediaEditor() {
       await loadMediaData();
     } catch (error) {
       if (uploadedObjectPaths.length) {
-        await supabase.storage.from(MEDIA_BUCKET).remove(uploadedObjectPaths);
+        await deleteR2Objects(uploadedObjectPaths);
       }
       setMediaError(toUserFriendlyMediaError(error, "Unable to upload selected images."));
     } finally {
@@ -350,7 +343,7 @@ export default function MediaEditor() {
     setMediaStatus("");
 
     try {
-      const filePath = getMediaFilePath(photo);
+      const filePath = getMediaStoredPath(photo);
       const objectPath = extractStorageObjectPath(filePath, MEDIA_BUCKET);
       if (!objectPath) {
         throw new Error(
@@ -358,8 +351,7 @@ export default function MediaEditor() {
         );
       }
 
-      const { error: removeError } = await supabase.storage.from(MEDIA_BUCKET).remove([objectPath]);
-      if (removeError) throw removeError;
+      await deleteR2Objects([objectPath]);
 
       const { error } = await supabase.from("media").delete().eq("id", photo.id);
       if (error) throw error;
@@ -390,7 +382,7 @@ export default function MediaEditor() {
     try {
       const objectPathRows = activeManagedAlbum.rows.map((row) => ({
         id: row.id,
-        objectPath: extractStorageObjectPath(getMediaFilePath(row), MEDIA_BUCKET),
+        objectPath: extractStorageObjectPath(getMediaStoredPath(row), MEDIA_BUCKET),
       }));
       const unresolvedRows = objectPathRows.filter((row) => !row.objectPath);
       if (unresolvedRows.length > 0) {
@@ -402,8 +394,7 @@ export default function MediaEditor() {
       const objectPaths = objectPathRows.map((row) => row.objectPath);
 
       if (objectPaths.length) {
-        const { error: removeError } = await supabase.storage.from(MEDIA_BUCKET).remove(objectPaths);
-        if (removeError) throw removeError;
+        await deleteR2Objects(objectPaths);
       }
 
       const { error: deleteError } = await supabase.from("media").delete().eq("album", activeManagedAlbum.album);
@@ -448,19 +439,15 @@ export default function MediaEditor() {
         };
 
         if (albumChanged) {
-          const currentPath = extractStorageObjectPath(getMediaFilePath(row), MEDIA_BUCKET);
+          const currentPath = extractStorageObjectPath(getMediaStoredPath(row), MEDIA_BUCKET);
           if (currentPath) {
             const baseName = sanitizeFileName(currentPath.split("/").pop() || `${row.id}.jpg`);
             const nextPath = `${nextAlbumName}/${row.id}-${baseName}`;
             if (currentPath !== nextPath) {
-              const { error: moveError } = await supabase.storage
-                .from(MEDIA_BUCKET)
-                .move(currentPath, nextPath);
-              if (moveError) throw moveError;
+              await moveR2Object(currentPath, nextPath);
 
               if (filePathColumn) {
-                const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(nextPath);
-                payload[filePathColumn] = data.publicUrl;
+                payload[filePathColumn] = nextPath;
               }
             }
           }
