@@ -61,7 +61,7 @@ export default function Navbar() {
         <img
           src={logoGold}
           alt="JMU Rugby Logo"
-          className="brand-crest mb-3 h-20 w-auto object-contain sm:mb-0 sm:mr-5 sm:h-24"
+          className="brand-crest mb-3 h-24 w-auto object-contain sm:mb-0 sm:mr-5 sm:h-28"
         />
         <div className="text-center leading-tight sm:text-left">
           <h1 className="site-title text-4xl font-bold tracking-tight text-jmuGold sm:text-5xl lg:text-6xl">

@@ -72,64 +72,6 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
-
-    const animatedSelector = [
-      ".hero-banner",
-      ".surface-card",
-      ".surface-card-soft",
-      ".data-table tbody tr",
-      ".footer-panel",
-      ".sponsor-item",
-    ].join(", ");
-
-    let revealIndex = 0;
-    let registerRaf = null;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.16, rootMargin: "0px 0px -8% 0px" }
-    );
-
-    const registerAnimatedElements = () => {
-      document.querySelectorAll(animatedSelector).forEach((element) => {
-        if (element.dataset.revealRegistered === "true") return;
-        element.dataset.revealRegistered = "true";
-        element.style.setProperty("--reveal-order", `${revealIndex % 8}`);
-        revealIndex += 1;
-        element.classList.add("reveal-on-scroll");
-        observer.observe(element);
-      });
-    };
-
-    const queueRegister = () => {
-      if (registerRaf !== null) return;
-      registerRaf = window.requestAnimationFrame(() => {
-        registerRaf = null;
-        registerAnimatedElements();
-      });
-    };
-
-    queueRegister();
-    const mutationObserver = new MutationObserver(queueRegister);
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      mutationObserver.disconnect();
-      observer.disconnect();
-      if (registerRaf !== null) {
-        window.cancelAnimationFrame(registerRaf);
-      }
-    };
-  }, [location.pathname]);
-
   return (
     <div className="site-shell flex min-h-screen flex-col text-jmuLightGold font-arvo">
       <div className="scroll-progress" aria-hidden="true">

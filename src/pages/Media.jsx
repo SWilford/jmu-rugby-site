@@ -1,6 +1,7 @@
 import React, { useEffect, useState, Fragment, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { motion as Motion, AnimatePresence } from "framer-motion";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
 import { getMediaFilePath } from "../lib/mediaUtils";
 
@@ -126,7 +127,9 @@ export default function Media() {
                     .replace(/^\w/, (c) => c.toUpperCase())
                     .replace(/\b(\d{4})\b/, " $1")
                 : "Select Season"}
-              <span className="ml-2">v</span>
+              <span className="ml-2 text-sm" aria-hidden="true">
+                {showMenu ? <FaChevronUp /> : <FaChevronDown />}
+              </span>
             </Motion.button>
 
             <AnimatePresence>
@@ -181,7 +184,9 @@ export default function Media() {
               className="mt-1 flex cursor-pointer items-center justify-between border-b border-jmuDarkGold/70 py-3 transition hover:bg-jmuLightGold/40"
             >
               <h3 className="text-xl font-bold">{albumName}</h3>
-              <span className="text-jmuDarkGold text-lg">{expandedAlbum === albumName ? "^" : "v"}</span>
+              <span className="text-jmuDarkGold text-base" aria-hidden="true">
+                {expandedAlbum === albumName ? <FaChevronUp /> : <FaChevronDown />}
+              </span>
             </div>
 
             <AnimatePresence initial={false}>

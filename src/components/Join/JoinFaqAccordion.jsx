@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion as Motion } from "framer-motion";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 export default function JoinFaqAccordion({ faqs }) {
   const [openIndex, setOpenIndex] = useState(0);
@@ -17,7 +18,9 @@ export default function JoinFaqAccordion({ faqs }) {
               className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-jmuLightGold/35"
             >
               <span className="text-lg font-semibold">{faq.question}</span>
-              <span className="text-sm text-jmuDarkGold">{isOpen ? "^" : "v"}</span>
+              <span className="text-sm text-jmuDarkGold" aria-hidden="true">
+                {isOpen ? <FaChevronUp /> : <FaChevronDown />}
+              </span>
             </button>
 
             <AnimatePresence initial={false}>

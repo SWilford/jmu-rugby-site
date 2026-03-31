@@ -89,7 +89,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    animation: route-enter 520ms var(--ease-standard);
+    animation: route-enter 280ms var(--ease-standard);
 }
 
 .page-shell {
@@ -98,23 +98,6 @@ body {
     flex-direction: column;
     align-items: center;
     padding-inline: 1rem;
-}
-
-.reveal-on-scroll {
-    opacity: 0;
-    transform: translateY(26px) scale(0.985);
-    filter: blur(2px);
-    transition:
-        opacity 620ms var(--ease-standard),
-        transform 700ms var(--ease-standard),
-        filter 700ms var(--ease-standard);
-    transition-delay: calc(var(--reveal-order, 0) * 55ms);
-}
-
-.reveal-on-scroll.is-visible {
-    opacity: 1;
-    transform: none;
-    filter: none;
 }
 
 .surface-card {
@@ -306,7 +289,7 @@ body {
 }
 
 .brand-crest {
-    animation: crest-float 5s ease-in-out infinite;
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25));
 }
 
 .site-title {
@@ -359,8 +342,28 @@ body {
     transform: scale(1.05);
 }
 
-.hero-slide.is-active {
-    animation: hero-zoom 6.8s ease-in-out both;
+.hero-slide.zoom-in {
+    transform: scale(1.05);
+}
+
+.hero-slide.zoom-out {
+    transform: scale(1.1);
+}
+
+.hero-slide.is-active.zoom-in {
+    animation: hero-zoom-in var(--carousel-cycle-ms, 6000ms) ease-in-out both;
+}
+
+.hero-slide.is-active.zoom-out {
+    animation: hero-zoom-out var(--carousel-cycle-ms, 6000ms) ease-in-out both;
+}
+
+.hero-slide.is-exiting.zoom-in {
+    transform: scale(1.1);
+}
+
+.hero-slide.is-exiting.zoom-out {
+    transform: scale(1.05);
 }
 
 .hero-content {
@@ -444,7 +447,7 @@ body {
 @keyframes route-enter {
     from {
         opacity: 0;
-        transform: translateY(18px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
@@ -458,16 +461,6 @@ body {
     }
     to {
         transform: translateX(140%);
-    }
-}
-
-@keyframes crest-float {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-3px);
     }
 }
 
@@ -499,12 +492,21 @@ body {
     }
 }
 
-@keyframes hero-zoom {
+@keyframes hero-zoom-in {
     from {
-        transform: scale(1.04);
+        transform: scale(1.05);
     }
     to {
-        transform: scale(1.12);
+        transform: scale(1.1);
+    }
+}
+
+@keyframes hero-zoom-out {
+    from {
+        transform: scale(1.1);
+    }
+    to {
+        transform: scale(1.05);
     }
 }
 
@@ -554,10 +556,6 @@ body {
     .surface-card {
         border-radius: 0.85rem;
     }
-
-    .reveal-on-scroll {
-        transition-delay: calc(var(--reveal-order, 0) * 35ms);
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -568,12 +566,6 @@ body {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
-    }
-
-    .reveal-on-scroll {
-        opacity: 1;
-        transform: none;
-        filter: none;
     }
 
     .scroll-progress {

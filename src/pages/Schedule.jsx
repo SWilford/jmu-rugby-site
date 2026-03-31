@@ -1,6 +1,7 @@
 import React, { useEffect, useState, Fragment, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { motion as Motion, AnimatePresence } from "framer-motion";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 const parseDateOnly = (dateString) => {
   const [year, month, day] = dateString.split("-").map(Number);
@@ -111,7 +112,9 @@ export default function Schedule() {
               className="inline-flex min-w-40 items-center justify-between rounded-lg border border-jmuDarkGold bg-jmuDarkGold px-3 py-2 font-semibold text-jmuOffWhite transition hover:bg-jmuGold hover:text-jmuPurple"
             >
               {seasons.find((s) => s.season_id === currentSeason)?.season_name || "Select Season"}
-              <span className="ml-2">v</span>
+              <span className="ml-2 text-sm" aria-hidden="true">
+                {showMenu ? <FaChevronUp /> : <FaChevronDown />}
+              </span>
             </Motion.button>
 
             <AnimatePresence>

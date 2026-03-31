@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FaArrowRight } from "react-icons/fa";
 import { supabase } from "../lib/supabaseClient";
 import { getMediaFilePath, MEDIA_HOME_CAROUSEL_COLUMNS } from "../lib/mediaUtils";
 
@@ -11,6 +12,8 @@ import img4 from "../assets/home/image4.jpeg";
 import img5 from "../assets/home/image5.JPG";
 
 const MAX_CAROUSEL_IMAGES = 6;
+const CAROUSEL_CYCLE_MS = 6000;
+const CAROUSEL_FADE_MS = 1200;
 const STATIC_CAROUSEL_IMAGES = [
   { key: "static-0", src: img0, alt: "Home carousel static image 0" },
   { key: "static-1", src: img1, alt: "Home carousel static image 1" },
@@ -45,19 +48,22 @@ const getSideOrder = (seasonId) => {
 
 export default function Home() {
   const [current, setCurrent] = useState(0);
+  const [exitingIndex, setExitingIndex] = useState(null);
   const [nextMatches, setNextMatches] = useState([]);
   const navigate = useNavigate();
+  const previousIndexRef = useRef(0);
   const [featuredImages, setFeaturedImages] = useState([]);
   const [carouselImages, setCarouselImages] = useState(() =>
     getStaticCarouselFallback(MAX_CAROUSEL_IMAGES)
   );
+  const [loadedCarouselIndexes, setLoadedCarouselIndexes] = useState(new Set([0, 1]));
 
   useEffect(() => {
     if (!carouselImages.length) return undefined;
 
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % carouselImages.length);
-    }, 6000);
+    }, CAROUSEL_CYCLE_MS);
 
     return () => clearInterval(interval);
   }, [carouselImages.length]);
@@ -65,6 +71,53 @@ export default function Home() {
   useEffect(() => {
     setCurrent((prev) => (carouselImages.length ? prev % carouselImages.length : 0));
   }, [carouselImages.length]);
+
+  useEffect(() => {
+    previousIndexRef.current = 0;
+    setExitingIndex(null);
+  }, [carouselImages.length]);
+
+  useEffect(() => {
+    if (!carouselImages.length) {
+      setLoadedCarouselIndexes(new Set());
+      return;
+    }
+
+    const initialIndexes = [0, carouselImages.length > 1 ? 1 : null].filter((value) => value !== null);
+    setLoadedCarouselIndexes(new Set(initialIndexes));
+  }, [carouselImages.length]);
+
+  useEffect(() => {
+    if (!carouselImages.length) return;
+
+    const nextIndex = (current + 1) % carouselImages.length;
+
+    setLoadedCarouselIndexes((prev) => {
+      if (prev.has(current) && prev.has(nextIndex)) return prev;
+      const nextSet = new Set(prev);
+      nextSet.add(current);
+      nextSet.add(nextIndex);
+      return nextSet;
+    });
+  }, [current, carouselImages.length]);
+
+  useEffect(() => {
+    if (!carouselImages.length) return undefined;
+
+    const previousIndex = previousIndexRef.current;
+    if (previousIndex === current) return undefined;
+
+    setExitingIndex(previousIndex);
+    previousIndexRef.current = current;
+
+    const timeoutId = window.setTimeout(() => {
+      setExitingIndex((value) => (value === previousIndex ? null : value));
+    }, CAROUSEL_FADE_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [current, carouselImages.length]);
 
   useEffect(() => {
     (async () => {
@@ -155,21 +208,38 @@ export default function Home() {
 
   return (
     <div className="page-shell min-h-full justify-between pt-6 sm:pt-8">
-      <section className="hero-banner relative mt-2 flex h-[52vh] w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-2xl border border-jmuDarkGold/80 shadow-[0_18px_36px_rgba(24,0,46,0.34)] sm:h-[64vh]">
-        {carouselImages.map((slide, i) => (
-          <img
-            key={slide.key}
-            src={slide.src}
-            alt={slide.alt || `Slide ${i + 1}`}
-            className={`hero-slide absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ${
-              i === current ? "is-active opacity-100" : "opacity-0"
-            }`}
-          />
-        ))}
+      <section
+        className="hero-banner relative mt-2 flex h-[52vh] w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-2xl border border-jmuDarkGold/80 shadow-[0_18px_36px_rgba(24,0,46,0.34)] sm:h-[64vh]"
+        style={{ "--carousel-cycle-ms": `${CAROUSEL_CYCLE_MS}ms` }}
+      >
+        {carouselImages.map((slide, i) => {
+          if (!loadedCarouselIndexes.has(i)) return null;
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-jmuPurple/55 to-jmuPurple/85" />
+          const isActive = i === current;
+          const isExiting = i === exitingIndex;
+          const visibilityClass = isActive ? "is-active z-10 opacity-100" : "";
+          const exitingClass = isExiting ? "is-exiting z-0 opacity-0" : "";
+          const zoomDirectionClass = i % 2 === 0 ? "zoom-in" : "zoom-out";
 
-        <div className="hero-content relative z-10 flex max-w-3xl flex-col items-center justify-center px-4 text-center">
+          return (
+            <img
+              key={slide.key}
+              src={slide.src}
+              alt={slide.alt || `Slide ${i + 1}`}
+              loading={i === 0 ? "eager" : "lazy"}
+              fetchPriority={i === 0 ? "high" : "auto"}
+              decoding="async"
+              className={`hero-slide ${zoomDirectionClass} absolute inset-0 h-full w-full object-cover transition-opacity ease-linear ${
+                visibilityClass || exitingClass || "z-0 opacity-0"
+              }`}
+              style={{ transitionDuration: `${CAROUSEL_FADE_MS}ms` }}
+            />
+          );
+        })}
+
+        <div className="absolute inset-0 z-20 bg-gradient-to-b from-black/35 via-jmuPurple/55 to-jmuPurple/85" />
+
+        <div className="hero-content relative z-30 flex max-w-3xl flex-col items-center justify-center px-4 text-center">
           <h1 className="text-4xl font-bold text-jmuGold drop-shadow-md sm:text-6xl lg:text-7xl">
             JMU Men's Rugby
           </h1>
@@ -193,7 +263,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="absolute bottom-5 z-20 flex items-center gap-2 rounded-full border border-jmuGold/55 bg-jmuPurple/45 px-3 py-1.5 backdrop-blur-sm">
+        <div className="absolute bottom-5 z-40 flex items-center gap-2 rounded-full border border-jmuGold/55 bg-jmuPurple/45 px-3 py-1.5 backdrop-blur-sm">
           {carouselImages.map((slide, i) => (
             <button
               key={`dot-${slide.key}`}
@@ -215,9 +285,9 @@ export default function Home() {
         </p>
         <Link
           to="/about"
-          className="inline-flex items-center font-semibold text-jmuPurple transition hover:text-jmuDarkGold"
+          className="inline-flex items-center gap-2 font-semibold text-jmuPurple transition hover:text-jmuDarkGold"
         >
-          Learn More -&gt;
+          Learn More <FaArrowRight aria-hidden="true" />
         </Link>
       </section>
 
@@ -288,9 +358,9 @@ export default function Home() {
         <div className="mt-6 text-center">
           <Link
             to="/media"
-            className="inline-flex items-center font-semibold text-jmuPurple transition hover:text-jmuDarkGold"
+            className="inline-flex items-center gap-2 font-semibold text-jmuPurple transition hover:text-jmuDarkGold"
           >
-            View More -&gt;
+            View More <FaArrowRight aria-hidden="true" />
           </Link>
         </div>
       </section>
