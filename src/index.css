@@ -10,4 +10,157 @@
     --color-jmuDarkGold: #AD9C65;
     --color-jmuLightGold: #F4EFE1;
     --color-jmuOffWhite: #f7f6f4;
+    --color-jmuSlate: #333333;
+    --color-jmuDarkGray: #595959;
+    --color-jmuMediumGray: #B2B2B2;
+    --color-jmuLightGray: #D6D6D6;
+}
+
+:root {
+    color-scheme: light;
+}
+
+html,
+body,
+#root {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: "Arvo", serif;
+    background:
+        radial-gradient(circle at 10% -10%, rgba(203, 182, 119, 0.22), transparent 38%),
+        radial-gradient(circle at 85% 0%, rgba(173, 156, 101, 0.2), transparent 42%),
+        linear-gradient(180deg, #3f0078 0%, #450084 42%, #2f0059 100%);
+    color: #F4EFE1;
+}
+
+::selection {
+    background: rgba(203, 182, 119, 0.4);
+    color: #2f0059;
+}
+
+.site-shell {
+    position: relative;
+    isolation: isolate;
+}
+
+.site-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(244, 239, 225, 0.05), transparent 30%),
+        radial-gradient(circle at 70% 10%, rgba(203, 182, 119, 0.08), transparent 28%);
+}
+
+.page-shell {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-inline: 1rem;
+}
+
+.surface-card {
+    width: min(100%, 72rem);
+    border: 1px solid rgba(173, 156, 101, 0.8);
+    border-radius: 1rem;
+    color: #2f0059;
+    background:
+        linear-gradient(140deg, rgba(247, 246, 244, 0.98), rgba(244, 239, 225, 0.96));
+    box-shadow:
+        0 14px 36px rgba(24, 0, 46, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.surface-card-soft {
+    border: 1px solid rgba(173, 156, 101, 0.45);
+    border-radius: 0.875rem;
+    background: linear-gradient(180deg, rgba(244, 239, 225, 0.62), rgba(244, 239, 225, 0.34));
+}
+
+.brand-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border-radius: 0.7rem;
+    border: 2px solid #450084;
+    color: #450084;
+    background: rgba(255, 255, 255, 0.25);
+    font-weight: 700;
+    transition: all 200ms ease;
+}
+
+.brand-button:hover {
+    background: #450084;
+    color: #F4EFE1;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(69, 0, 132, 0.2);
+}
+
+.brand-button-gold {
+    border-color: #CBB677;
+    color: #F4EFE1;
+    background: rgba(69, 0, 132, 0.52);
+}
+
+.brand-button-gold:hover {
+    background: #CBB677;
+    color: #450084;
+    box-shadow: 0 10px 22px rgba(203, 182, 119, 0.28);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    overflow: hidden;
+    border-radius: 0.75rem;
+}
+
+.data-table thead {
+    background: linear-gradient(90deg, #876e2f 0%, #AD9C65 100%);
+    color: #f7f6f4;
+}
+
+.data-table th,
+.data-table td {
+    text-align: left;
+    padding: 0.65rem;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid rgba(173, 156, 101, 0.75);
+}
+
+.data-table tbody tr:hover {
+    background: rgba(244, 239, 225, 0.48);
+}
+
+.glass-nav {
+    backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(45, 0, 85, 0.94), rgba(69, 0, 132, 0.9));
+    border-bottom: 1px solid rgba(173, 156, 101, 0.8);
+}
+
+@media (max-width: 768px) {
+    .surface-card {
+        border-radius: 0.85rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

@@ -146,17 +146,17 @@ export default function Contact() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center px-4 sm:px-6">
-      <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-3">Contact JMU Men&apos;s Rugby</h1>
-        <p className="text-lg leading-relaxed">
-          If you have questions about the team, recruiting, matches, or anything else,
-          reach out using the contact options below.
+    <div className="page-shell pt-8">
+      <section className="surface-card p-6 sm:p-8">
+        <h1 className="mb-3 text-3xl font-bold sm:text-4xl">Contact JMU Men&apos;s Rugby</h1>
+        <p className="text-lg leading-relaxed text-jmuSlate">
+          If you have questions about the team, recruiting, matches, or anything else, reach out using
+          the contact options below.
         </p>
       </section>
 
-      <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8 mb-4">
-        <h2 className="text-2xl font-bold mb-5 text-center">Get In Touch</h2>
+      <section className="surface-card mb-4 mt-8 p-6 sm:p-8">
+        <h2 className="mb-5 text-center text-2xl font-bold">Get In Touch</h2>
 
         {loading ? (
           <p className="text-center text-jmuDarkGold">Loading contact cards...</p>
@@ -167,18 +167,11 @@ export default function Contact() {
             {visibleCards.map((card) => {
               const action = buildCardAction(card);
               return (
-                <article
-                  key={card.id}
-                  className="border border-jmuDarkGold rounded-md p-4 bg-jmuLightGold/20"
-                >
-                  <p className="font-semibold text-jmuPurple mb-1">{card.label}</p>
-                  <p className="break-all text-jmuDarkGold mb-3">{card.value}</p>
+                <article key={card.id} className="surface-card-soft rounded-lg p-4">
+                  <p className="mb-1 font-semibold text-jmuPurple">{card.label}</p>
+                  <p className="mb-3 break-all text-jmuDarkGold">{card.value}</p>
                   <div className="flex flex-wrap justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(card.value)}
-                      className="border-2 border-jmuPurple text-jmuPurple px-4 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-                    >
+                    <button type="button" onClick={() => handleCopy(card.value)} className="brand-button px-4 py-2">
                       {copiedValue === card.value ? "Copied" : "Copy"}
                     </button>
 
@@ -187,7 +180,7 @@ export default function Contact() {
                         href={action.href}
                         target={action.isExternal ? "_blank" : undefined}
                         rel={action.isExternal ? "noreferrer" : undefined}
-                        className="border-2 border-jmuPurple text-jmuPurple px-4 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
+                        className="brand-button px-4 py-2"
                       >
                         {action.label}
                       </a>
@@ -199,7 +192,7 @@ export default function Contact() {
           </div>
         )}
 
-        {copyError && <p className="mt-4 text-red-700 font-semibold">{copyError}</p>}
+        {copyError && <p className="mt-4 font-semibold text-red-700">{copyError}</p>}
       </section>
     </div>
   );

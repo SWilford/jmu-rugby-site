@@ -15,7 +15,6 @@ export default function Media() {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
-  // auto-detect current season
   useEffect(() => {
     const today = new Date();
     const month = today.getMonth();
@@ -28,7 +27,6 @@ export default function Media() {
     setSeason(`${seasonPrefix}-${seasonYear}`);
   }, []);
 
-  // handle URL params for album, season, and photo
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const targetAlbum = params.get("album");
@@ -51,7 +49,6 @@ export default function Media() {
     }
   }, [location.search, media]);
 
-  // close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -62,13 +59,9 @@ export default function Media() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // fetch all media
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from("media")
-        .select("*")
-        .order("id", { ascending: false });
+      const { data, error } = await supabase.from("media").select("*").order("id", { ascending: false });
 
       if (error) console.error("Media fetch error:", error);
       else {
@@ -112,26 +105,20 @@ export default function Media() {
         return acc;
       }, {});
 
-  if (loading)
-    return (
-      <p className="text-center mt-12 text-jmuLightGold">Loading media...</p>
-    );
+  if (loading) return <p className="mt-12 text-center text-jmuLightGold">Loading media...</p>;
 
   return (
-    <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-6 mt-8 mb-4">
-      {/* Header (inline layout) */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-        {/* Left: title */}
-        <h2 className="text-3xl font-bold text-jmuPurple">Media Gallery</h2>
+    <section className="surface-card mb-4 mt-8 p-5 sm:p-6">
+      <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+        <h2 className="text-3xl font-bold">Media Gallery</h2>
 
-        {/* Right: season dropdown */}
-      <div className="flex items-center gap-3 mt-3 sm:mt-0">
-        <span className="text-3xl font-bold text-jmuPurple leading-none">Season:</span>
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-semibold text-jmuDarkGold">Season:</span>
           <div className="relative inline-block text-left" ref={menuRef}>
             <Motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowMenu((prev) => !prev)}
-              className="inline-flex justify-between items-center bg-jmuDarkGold text-jmuOffWhite text-2xl font-semibold leading-none rounded-md px-4 py-1.5 border border-jmuGold hover:bg-jmuGold hover:text-jmuPurple transition whitespace-nowrap min-w-40"
+              className="inline-flex min-w-44 items-center justify-between rounded-lg border border-jmuDarkGold bg-jmuDarkGold px-4 py-2 font-semibold text-jmuOffWhite transition hover:bg-jmuGold hover:text-jmuPurple"
             >
               {season
                 ? season
@@ -139,7 +126,7 @@ export default function Media() {
                     .replace(/^\w/, (c) => c.toUpperCase())
                     .replace(/\b(\d{4})\b/, " $1")
                 : "Select Season"}
-              <span className="ml-2">▾</span>
+              <span className="ml-2">v</span>
             </Motion.button>
 
             <AnimatePresence>
@@ -150,7 +137,7 @@ export default function Media() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute z-20 mt-1 w-full bg-jmuGold text-jmuPurple rounded-md shadow-lg border border-jmuDarkGold overflow-y-auto max-h-48 whitespace-nowrap"
+                  className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-jmuDarkGold bg-jmuGold text-jmuPurple shadow-lg"
                 >
                   {seasons
                     .sort((a, b) => {
@@ -166,8 +153,8 @@ export default function Media() {
                           setSeason(s);
                           setShowMenu(false);
                         }}
-                        className={`px-4 py-1.5 text-2xl cursor-pointer hover:bg-jmuLightGold/40 transition ${
-                          s === season ? "bg-jmuLightGold/50 font-semibold" : ""
+                        className={`cursor-pointer px-4 py-2 transition hover:bg-jmuLightGold/40 ${
+                          s === season ? "bg-jmuLightGold/55 font-semibold" : ""
                         }`}
                       >
                         {s
@@ -175,7 +162,6 @@ export default function Media() {
                           .replace(/^\w/, (c) => c.toUpperCase())
                           .replace(/\b(\d{4})\b/, " $1")}
                       </li>
-
                     ))}
                 </Motion.ul>
               )}
@@ -184,23 +170,18 @@ export default function Media() {
         </div>
       </div>
 
-      {/* Album display */}
       {Object.keys(albums).length === 0 ? (
-        <p className="text-center text-jmuDarkGold mt-6">
-          No photos uploaded for this season.
-        </p>
+        <p className="mt-6 text-center text-jmuDarkGold">No photos uploaded for this season.</p>
       ) : (
         Object.entries(albums).map(([albumName, photos]) => (
           <Fragment key={albumName}>
             <div
               data-album={albumName}
               onClick={() => toggleExpand(albumName)}
-              className="flex justify-between items-center border-b border-jmuDarkGold py-3 hover:bg-jmuLightGold/30 cursor-pointer transition-colors"
+              className="mt-1 flex cursor-pointer items-center justify-between border-b border-jmuDarkGold/70 py-3 transition hover:bg-jmuLightGold/40"
             >
               <h3 className="text-xl font-bold">{albumName}</h3>
-              <span className="text-jmuDarkGold text-lg">
-                {expandedAlbum === albumName ? "▲" : "▼"}
-              </span>
+              <span className="text-jmuDarkGold text-lg">{expandedAlbum === albumName ? "^" : "v"}</span>
             </div>
 
             <AnimatePresence initial={false}>
@@ -210,28 +191,23 @@ export default function Media() {
                   initial={{ height: 0 }}
                   animate={{ height: "auto" }}
                   exit={{ height: 0 }}
-                  transition={{
-                    duration: 0.4,
-                    ease: [0.25, 0.1, 0.25, 1],
-                  }}
+                  transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-3 py-4 sm:grid-cols-3 md:grid-cols-4 md:gap-4">
                     {photos.map((photo) => (
                       <div
                         key={photo.id}
-                        className="relative group overflow-hidden rounded-md border border-jmuDarkGold bg-jmuLightGold/10 hover:bg-jmuLightGold/30 transition"
+                        className="group relative overflow-hidden rounded-lg border border-jmuDarkGold bg-jmuLightGold/20 transition hover:-translate-y-0.5"
                       >
                         <img
                           src={getMediaFilePath(photo)}
                           alt={photo.caption || "JMU Rugby"}
-                          className="object-cover w-full h-48 cursor-pointer"
+                          className="h-44 w-full cursor-pointer object-cover transition duration-200 group-hover:scale-[1.02]"
                           onClick={() => setSelectedPhoto(photo)}
                         />
                         {photo.caption && (
-                          <p className="text-sm text-center text-jmuPurple mt-1 mb-2">
-                            {photo.caption}
-                          </p>
+                          <p className="mb-2 mt-1 px-2 text-center text-sm text-jmuSlate">{photo.caption}</p>
                         )}
                       </div>
                     ))}
@@ -243,41 +219,39 @@ export default function Media() {
         ))
       )}
 
-      {/* Lightbox */}
       <AnimatePresence>
         {selectedPhoto && (
           <Motion.div
-            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedPhoto(null)}
           >
             <Motion.div
-              className="relative bg-jmuOffWhite p-4 rounded-md max-w-4xl w-full"
+              className="relative w-full max-w-4xl rounded-xl border border-jmuDarkGold bg-jmuOffWhite p-4 shadow-[0_18px_36px_rgba(0,0,0,0.34)]"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={getMediaFilePath(selectedPhoto)}
                 alt={selectedPhoto.caption || "JMU Rugby"}
-                className="max-h-[80vh] w-full object-contain rounded-md"
+                className="max-h-[80vh] w-full rounded-lg object-contain"
               />
-              <div className="flex justify-between items-center mt-4">
-                <p className="text-jmuPurple text-sm">
-                  {selectedPhoto.caption || ""}
-                </p>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <p className="text-sm text-jmuSlate">{selectedPhoto.caption || ""}</p>
                 <button
                   onClick={() => handleDownload(getMediaFilePath(selectedPhoto))}
-                  className="border border-jmuDarkGold text-jmuPurple font-semibold px-3 py-1 rounded hover:bg-jmuGold hover:text-jmuPurple transition"
+                  className="brand-button px-3 py-1.5"
                 >
                   Download
                 </button>
               </div>
               <button
                 onClick={() => setSelectedPhoto(null)}
-                className="absolute top-2 right-3 text-3xl text-jmuPurple hover:text-jmuGold"
+                className="absolute right-3 top-2 text-3xl text-jmuPurple transition hover:text-jmuDarkGold"
+                aria-label="Close selected image"
               >
-                ✕
+                x
               </button>
             </Motion.div>
           </Motion.div>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
-import { useNavigate } from "react-router-dom";
 import { getMediaFilePath, MEDIA_HOME_CAROUSEL_COLUMNS } from "../lib/mediaUtils";
 
 import img0 from "../assets/home/image0.jpeg";
@@ -70,7 +69,7 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       const today = new Date();
-      const month = today.getMonth(); // 0-based: Jan = 0
+      const month = today.getMonth();
       const year = today.getFullYear();
 
       let seasonPrefix;
@@ -155,128 +154,103 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="bg-jmuPurple text-jmuLightGold font-arvo flex flex-col items-center min-h-screen justify-between">
-      {/* Hero Section */}
-      <section className="relative w-full h-[50vh] sm:h-[60vh] flex flex-col items-center justify-center overflow-hidden mt-8 rounded-none">
-        {/* Rotating background images */}
+    <div className="page-shell min-h-full justify-between pt-6 sm:pt-8">
+      <section className="relative mt-2 flex h-[52vh] w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-2xl border border-jmuDarkGold/80 shadow-[0_18px_36px_rgba(24,0,46,0.34)] sm:h-[64vh]">
         {carouselImages.map((slide, i) => (
           <img
             key={slide.key}
             src={slide.src}
             alt={slide.alt || `Slide ${i + 1}`}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-2000 ${
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ${
               i === current ? "opacity-100" : "opacity-0"
             }`}
           />
         ))}
 
-        {/* Purple overlay for text readability */}
-        <div className="absolute inset-0 bg-linear-to-b from-black/50 via-jmuPurple/50 to-jmuPurple/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-jmuPurple/55 to-jmuPurple/85" />
 
-        {/* Text overlay */}
-        <div className="relative z-10 flex flex-col items-center justify-center text-center px-4">
-          <h1 className="text-5xl sm:text-7xl font-bold text-jmuGold mb-4 drop-shadow-md">
+        <div className="relative z-10 flex max-w-3xl flex-col items-center justify-center px-4 text-center">
+          <h1 className="text-4xl font-bold text-jmuGold drop-shadow-md sm:text-6xl lg:text-7xl">
             JMU Men's Rugby
           </h1>
-          <p className="text-2xl sm:text-3xl uppercase tracking-widest text-jmuLightGold mb-8 drop-shadow">
-            Fifteen • As • One
+          <p className="mb-8 mt-3 text-base uppercase tracking-[0.4em] text-jmuLightGold/95 drop-shadow sm:text-xl">
+            Fifteen | As | One
           </p>
 
-          <div className="flex justify-center gap-6">
-            <Link
-              to="/schedule"
-              className="border-2 border-jmuGold text-jmuGold px-6 py-3 rounded-md font-semibold hover:bg-jmuGold hover:text-jmuPurple transition-colors"
-            >
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+            <Link to="/schedule" className="brand-button brand-button-gold px-5 py-2.5 sm:px-6 sm:py-3">
               View Schedule
             </Link>
-            <Link
-              to="/join"
-              className="border-2 border-jmuGold text-jmuGold px-6 py-3 rounded-md font-semibold hover:bg-jmuGold hover:text-jmuPurple transition-colors"
-            >
+            <Link to="/join" className="brand-button brand-button-gold px-5 py-2.5 sm:px-6 sm:py-3">
               Join the Team
             </Link>
           </div>
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
-        <h2 className="text-2xl font-bold mb-4">About the Dukes</h2>
-        <p className="leading-relaxed mb-6">
-          Founded in 1974, JMU Men's Rugby is a tight knit brotherhood competing
-          in the National Collegiate Rugby D1-AA division. We pride ourselves on
-          grit, discipline, and a strong culture of camaraderie both on and off
-          the pitch.
+      <section className="surface-card mt-8 p-6 sm:p-8">
+        <h2 className="text-2xl font-bold">About the Dukes</h2>
+        <p className="mb-6 mt-4 leading-relaxed text-jmuSlate">
+          Founded in 1974, JMU Men's Rugby is a tight knit brotherhood competing in the National
+          Collegiate Rugby D1-AA division. We pride ourselves on grit, discipline, and a strong culture
+          of camaraderie both on and off the pitch.
         </p>
         <Link
           to="/about"
-          className="text-jmuPurple font-semibold hover:text-jmuGold transition-colors"
+          className="inline-flex items-center font-semibold text-jmuPurple transition hover:text-jmuDarkGold"
         >
-          Learn More →
+          Learn More -&gt;
         </Link>
       </section>
 
-      {/* Next Match Widget */}
-      <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
-        <h2 className="text-2xl font-bold mb-4">Next Match</h2>
+      <section className="surface-card mt-8 p-6 sm:p-8">
+        <h2 className="text-2xl font-bold">Next Match</h2>
 
         {nextMatches.length > 0 ? (
-          <Link
-            to="/schedule"
-            className="block border border-jmuDarkGold rounded-md bg-jmuLightGold/10 hover:bg-jmuLightGold/30 transition-colors duration-200"
-          >
+          <Link to="/schedule" className="mt-5 block overflow-hidden rounded-xl border border-jmuDarkGold/70">
             {nextMatches.map((match, index) => (
               <div
                 key={match.id}
-                className={`${index > 0 ? "border-t border-jmuDarkGold" : ""} p-4`}
+                className={`${index > 0 ? "border-t border-jmuDarkGold/75" : ""} bg-jmuLightGold/30 px-4 py-4 transition hover:bg-jmuLightGold/55`}
               >
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                   <div>
-                    <p className="text-2xl font-bold text-jmuPurple mb-1">
-                      {match.opponent}
-                    </p>
-                    <p className="text-jmuDarkGold font-medium">
+                    <p className="mb-1 text-2xl font-bold text-jmuPurple">{match.opponent}</p>
+                    <p className="font-medium text-jmuDarkGold">
                       {parseDateOnly(match.date).toLocaleDateString("en-US", {
                         weekday: "short",
                         month: "short",
                         day: "numeric",
                       })}{" "}
-                      • {match.home ? "Home" : "Away"} • {match.side}
+                      | {match.home ? "Home" : "Away"} | {match.side}
                     </p>
                   </div>
 
                   {match.show_result && match.result && (
-                    <div className="mt-3 sm:mt-0">
-                      <p className="text-xl font-bold text-jmuPurple">{match.result}</p>
-                    </div>
+                    <p className="text-xl font-bold text-jmuPurple">{match.result}</p>
                   )}
                 </div>
 
                 {match.notes && (
-                  <div className="mt-3 pt-3 border-t border-jmuDarkGold text-sm text-jmuPurple/90">
-                    <p className="italic line-clamp-2">{match.notes}</p>
+                  <div className="mt-3 border-t border-jmuDarkGold/70 pt-3 text-sm text-jmuPurple/85">
+                    <p className="line-clamp-2 italic">{match.notes}</p>
                   </div>
                 )}
               </div>
             ))}
           </Link>
         ) : (
-          <p className="text-jmuDarkGold italic">
-            No upcoming matches — check back soon.
-          </p>
+          <p className="mt-6 italic text-jmuDarkGold">No upcoming matches - check back soon.</p>
         )}
       </section>
 
-      {/* Gallery Preview */}
-      <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8 mb-4">
-        <h2 className="text-2xl font-bold mb-4">Gallery</h2>
+      <section className="surface-card mb-4 mt-8 p-6 sm:p-8">
+        <h2 className="text-2xl font-bold">Gallery</h2>
 
         {featuredImages.length === 0 ? (
-          <p className="text-center text-jmuDarkGold italic">
-            No featured photos yet.
-          </p>
+          <p className="mt-6 text-center italic text-jmuDarkGold">No featured photos yet.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {featuredImages.map((photo) => (
               <img
                 key={photo.id}
@@ -287,21 +261,22 @@ export default function Home() {
                     `/media?album=${encodeURIComponent(photo.album)}&season=${photo.season_id}&photo=${photo.id}`
                   )
                 }
-                className="w-full h-40 sm:h-48 object-cover rounded-md border border-jmuDarkGold hover:opacity-80 hover:cursor-pointer transition"
+                className="h-40 w-full cursor-pointer rounded-lg border border-jmuDarkGold/80 object-cover transition duration-200 hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md sm:h-48"
               />
             ))}
           </div>
         )}
 
-        <div className="text-center mt-6">
+        <div className="mt-6 text-center">
           <Link
             to="/media"
-            className="text-jmuPurple font-semibold hover:text-jmuGold transition-colors"
+            className="inline-flex items-center font-semibold text-jmuPurple transition hover:text-jmuDarkGold"
           >
-            View More →
+            View More -&gt;
           </Link>
         </div>
       </section>
     </div>
   );
 }
+

@@ -6,8 +6,8 @@ export default function Team() {
   const [expandedId, setExpandedId] = useState(null);
 
   return (
-    <div className="w-full flex flex-col items-center pt-8 grow">
-      <div className="w-full max-w-6xl flex flex-col gap-8">
+    <div className="page-shell grow pt-8">
+      <div className="w-full max-w-6xl space-y-8">
         <RosterTable expandedId={expandedId} setExpandedId={setExpandedId} />
         <CoachList expandedId={expandedId} setExpandedId={setExpandedId} />
       </div>

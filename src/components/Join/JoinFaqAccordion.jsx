@@ -10,14 +10,14 @@ export default function JoinFaqAccordion({ faqs }) {
         const isOpen = openIndex === index;
 
         return (
-          <article key={faq.question} className="border border-jmuDarkGold rounded-md bg-jmuLightGold/20">
+          <article key={faq.question} className="surface-card-soft overflow-hidden">
             <button
               type="button"
               onClick={() => setOpenIndex(isOpen ? -1 : index)}
-              className="w-full px-5 py-4 text-left flex items-center justify-between gap-4"
+              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-jmuLightGold/35"
             >
-              <span className="font-semibold text-lg">{faq.question}</span>
-              <span className="text-jmuDarkGold text-sm">{isOpen ? "▲" : "▼"}</span>
+              <span className="text-lg font-semibold">{faq.question}</span>
+              <span className="text-sm text-jmuDarkGold">{isOpen ? "^" : "v"}</span>
             </button>
 
             <AnimatePresence initial={false}>
@@ -26,10 +26,10 @@ export default function JoinFaqAccordion({ faqs }) {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+                  transition={{ duration: 0.26, ease: [0.25, 0.1, 0.25, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="px-5 pb-5 text-jmuPurple/90 leading-relaxed">{faq.answer}</div>
+                  <div className="px-5 pb-5 leading-relaxed text-jmuSlate">{faq.answer}</div>
                 </Motion.div>
               )}
             </AnimatePresence>

@@ -115,23 +115,22 @@ export default function Join() {
 
   if (joinInfoLoading || !joinInfo) {
     return (
-      <div className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
+      <div className="surface-card mt-8 p-8">
         <p>Loading join information...</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full flex flex-col items-center px-4 sm:px-6">
-      <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-3">{joinInfo.title}</h1>
-        <p className="leading-relaxed text-lg">{joinInfo.intro}</p>
+    <div className="page-shell pt-8">
+      <section className="surface-card p-6 sm:p-8">
+        <h1 className="mb-3 text-3xl font-bold sm:text-4xl">{joinInfo.title}</h1>
+        <p className="text-lg leading-relaxed text-jmuSlate">{joinInfo.intro}</p>
         {joinInfoError && (
           <div className="mt-4 rounded border border-red-300 bg-red-100/20 px-4 py-3 text-sm text-red-800">
             {joinInfoError}
           </div>
         )}
-
       </section>
 
       <JoinMediaPlaceholders
@@ -142,39 +141,36 @@ export default function Join() {
         galleryError={joinGalleryError}
       />
 
-      <section
-        id="practice-schedule"
-        className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8"
-      >
-        <h2 className="text-2xl font-bold mb-5">Practice & Season Details</h2>
+      <section id="practice-schedule" className="surface-card mt-8 p-6 sm:p-8">
+        <h2 className="mb-5 text-2xl font-bold">Practice &amp; Season Details</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <article>
-            <h3 className="text-xl font-bold mb-3">Weekly Schedule</h3>
+            <h3 className="mb-3 text-xl font-bold">Weekly Schedule</h3>
             <ul className="space-y-2">
               {joinInfo.schedule.map((slot) => (
-                <li key={slot.label} className="border border-jmuDarkGold rounded-md p-3 bg-jmuLightGold/20">
+                <li key={slot.label} className="surface-card-soft rounded-lg p-3">
                   <p className="font-semibold">{slot.label}</p>
-                  <p>{slot.detail}</p>
+                  <p className="text-jmuSlate">{slot.detail}</p>
                 </li>
               ))}
             </ul>
           </article>
 
           <article className="space-y-4">
-            <div className="border border-jmuDarkGold rounded-md p-4 bg-jmuLightGold/20">
-              <h3 className="text-xl font-bold mb-1">Dues</h3>
-              <p className="text-lg font-semibold">{joinInfo.dues}</p>
+            <div className="surface-card-soft rounded-lg p-4">
+              <h3 className="mb-1 text-xl font-bold">Dues</h3>
+              <p className="text-lg font-semibold text-jmuSlate">{joinInfo.dues}</p>
             </div>
 
-            <div className="border border-jmuDarkGold rounded-md p-4 bg-jmuLightGold/20">
-              <h3 className="text-xl font-bold mb-1">Travel</h3>
-              <p>{joinInfo.travel}</p>
+            <div className="surface-card-soft rounded-lg p-4">
+              <h3 className="mb-1 text-xl font-bold">Travel</h3>
+              <p className="text-jmuSlate">{joinInfo.travel}</p>
             </div>
 
-            <div className="border border-jmuDarkGold rounded-md p-4 bg-jmuLightGold/20">
-              <h3 className="text-xl font-bold mb-2">Seasons</h3>
-              <ul className="list-disc pl-5 space-y-1">
+            <div className="surface-card-soft rounded-lg p-4">
+              <h3 className="mb-2 text-xl font-bold">Seasons</h3>
+              <ul className="list-disc space-y-1 pl-5 text-jmuSlate">
                 {joinInfo.seasons.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
@@ -184,26 +180,23 @@ export default function Join() {
         </div>
       </section>
 
-      <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
-        <h2 className="text-2xl font-bold mb-4">Gear & Expectations</h2>
-        <ul className="list-disc pl-6 space-y-2 leading-relaxed">
+      <section className="surface-card mt-8 p-6 sm:p-8">
+        <h2 className="mb-4 text-2xl font-bold">Gear &amp; Expectations</h2>
+        <ul className="list-disc space-y-2 pl-6 leading-relaxed text-jmuSlate">
           {joinInfo.gear.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
-        <p className="mt-4 leading-relaxed">{joinInfo.eligibility}</p>
+        <p className="mt-4 leading-relaxed text-jmuSlate">{joinInfo.eligibility}</p>
       </section>
 
-      <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8 mb-4">
-        <h2 className="text-2xl font-bold mb-5">FAQ's</h2>
+      <section className="surface-card mb-4 mt-8 p-6 sm:p-8">
+        <h2 className="mb-5 text-2xl font-bold">FAQs</h2>
         <JoinFaqAccordion faqs={joinInfo.faqs} />
 
-        <div className="border-t border-jmuDarkGold mt-8 pt-6">
-          <h3 className="text-xl font-bold mb-3">Have further questions?</h3>
-          <Link
-            to="/contact"
-            className="inline-flex border-2 border-jmuPurple text-jmuPurple px-5 py-2 rounded-md font-semibold hover:bg-jmuDarkGold hover:text-jmuOffWhite transition-colors"
-          >
+        <div className="mt-8 border-t border-jmuDarkGold/70 pt-6">
+          <h3 className="mb-3 text-xl font-bold">Have further questions?</h3>
+          <Link to="/contact" className="brand-button px-5 py-2">
             Contact
           </Link>
         </div>

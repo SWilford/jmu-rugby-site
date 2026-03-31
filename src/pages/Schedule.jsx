@@ -1,9 +1,6 @@
-// src/pages/Schedule.jsx
-import React, { useEffect, useState, Fragment } from "react";
+import React, { useEffect, useState, Fragment, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { motion as Motion, AnimatePresence } from "framer-motion";
-import { useRef } from "react";
-
 
 const parseDateOnly = (dateString) => {
   const [year, month, day] = dateString.split("-").map(Number);
@@ -19,31 +16,23 @@ export default function Schedule() {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
-
-  // Fetch all seasons
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from("matches")
-        .select("season_id, season_name");
+      const { data, error } = await supabase.from("matches").select("season_id, season_name");
 
       if (error) {
         console.error("Season fetch error:", error);
         return;
       }
 
-      // dedupe
       const unique = Array.from(new Map(data.map((s) => [s.season_id, s])).values());
 
-      // proper custom sort
       unique.sort((a, b) => {
         const [sa, sy] = a.season_id.split("-");
         const [sb, syb] = b.season_id.split("-");
 
-        // sort by year descending first
         if (sy !== syb) return Number(syb) - Number(sy);
 
-        // same year: Fall before Spring
         if (sa === "fall" && sb === "spring") return -1;
         if (sa === "spring" && sb === "fall") return 1;
         return 0;
@@ -51,13 +40,10 @@ export default function Schedule() {
 
       setSeasons(unique);
 
-      // set default to first (newest fall or spring)
       if (unique.length > 0) setCurrentSeason(unique[0].season_id);
     })();
   }, []);
 
-
-  // Fetch matches for the current season
   useEffect(() => {
     if (!currentSeason) return;
 
@@ -75,9 +61,7 @@ export default function Schedule() {
           const dateCompare = new Date(a.date) - new Date(b.date);
           if (dateCompare !== 0) return dateCompare;
 
-          const isSpring = (a.season_id || "")
-            .toLowerCase()
-            .includes("spring");
+          const isSpring = (a.season_id || "").toLowerCase().includes("spring");
 
           const sideOrder = isSpring
             ? { "7s": 1, "15s": 2 }
@@ -92,7 +76,6 @@ export default function Schedule() {
     })();
   }, [currentSeason]);
 
-  // close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -110,32 +93,27 @@ export default function Schedule() {
     setExpanded((prev) => (prev === id ? null : id));
   };
 
-  if (loading)
-    return (
-      <p className="text-center mt-12 text-jmuLightGold">
-        Loading schedule...
-      </p>
-    );
+  if (loading) {
+    return <p className="mt-12 text-center text-jmuLightGold">Loading schedule...</p>;
+  }
 
   return (
-    <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-6 mt-8">
-      {/* Header & Season Dropdown */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold flex items-center gap-3">
-          Season:
+    <section className="surface-card mt-8 p-5 sm:p-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-2xl font-bold">Season Schedule</h2>
+
+        <div className="inline-flex items-center gap-3">
+          <span className="font-semibold text-jmuDarkGold">Season:</span>
           <div className="relative inline-block text-left" ref={menuRef}>
-            {/* Dropdown toggle button */}
             <Motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowMenu((prev) => !prev)}
-              className="inline-flex justify-between items-center bg-jmuDarkGold text-jmuOffWhite font-semibold rounded-md px-3 py-1 border border-jmuGold hover:bg-jmuGold hover:text-jmuPurple transition whitespace-nowrap min-w-36"
+              className="inline-flex min-w-40 items-center justify-between rounded-lg border border-jmuDarkGold bg-jmuDarkGold px-3 py-2 font-semibold text-jmuOffWhite transition hover:bg-jmuGold hover:text-jmuPurple"
             >
-              {seasons.find((s) => s.season_id === currentSeason)?.season_name ||
-                "Select Season"}
-              <span className="ml-2">▾</span>
+              {seasons.find((s) => s.season_id === currentSeason)?.season_name || "Select Season"}
+              <span className="ml-2">v</span>
             </Motion.button>
 
-            {/* Dropdown menu */}
             <AnimatePresence>
               {showMenu && (
                 <Motion.ul
@@ -144,14 +122,14 @@ export default function Schedule() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute z-20 mt-1 w-full bg-jmuGold text-jmuPurple rounded-md shadow-lg border border-jmuDarkGold overflow-y-auto max-h-48 whitespace-nowrap"
+                  className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-jmuDarkGold bg-jmuGold text-jmuPurple shadow-lg"
                 >
                   {seasons
                     .sort((a, b) => {
                       const [sa, sy] = a.season_id.split("-");
                       const [, syb] = b.season_id.split("-");
-                      if (sy !== syb) return syb - sy; // newer year first
-                      return sa === "fall" ? -1 : 1; // fall before spring
+                      if (sy !== syb) return syb - sy;
+                      return sa === "fall" ? -1 : 1;
                     })
                     .map((s) => (
                       <li
@@ -160,10 +138,8 @@ export default function Schedule() {
                           setCurrentSeason(s.season_id);
                           setShowMenu(false);
                         }}
-                        className={`px-3 py-1 cursor-pointer hover:bg-jmuLightGold/40 transition ${
-                          s.season_id === currentSeason
-                            ? "bg-jmuLightGold/50 font-semibold"
-                            : ""
+                        className={`cursor-pointer px-3 py-2 transition hover:bg-jmuLightGold/40 ${
+                          s.season_id === currentSeason ? "bg-jmuLightGold/55 font-semibold" : ""
                         }`}
                       >
                         {s.season_name}
@@ -173,58 +149,48 @@ export default function Schedule() {
               )}
             </AnimatePresence>
           </div>
-        </h2>
+        </div>
       </div>
 
-      {/* Main Table */}
       {matches.length === 0 ? (
-        <p className="text-center text-jmuDarkGold mt-6">
-          Schedule will appear here soon.
-        </p>
+        <p className="mt-6 text-center text-jmuDarkGold">Schedule will appear here soon.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse table-fixed overflow-hidden">
-            <thead className="bg-jmuDarkGold text-jmuOffWhite uppercase tracking-wide">
+        <div className="overflow-x-auto rounded-xl border border-jmuDarkGold/70">
+          <table className="data-table">
+            <thead>
               <tr>
-                <th className="text-left p-2">Date</th>
-                <th className="text-left p-2">Opponent</th>
-                <th className="text-left p-2">Side</th>
-                <th className="text-left p-2">Location</th>
-                <th className="text-left p-2">Result</th>
+                <th>Date</th>
+                <th>Opponent</th>
+                <th>Side</th>
+                <th>Location</th>
+                <th>Result</th>
               </tr>
             </thead>
 
             <tbody>
               {matches.map((m) => (
                 <Fragment key={m.id}>
-                  {/* Clickable Match Row */}
-                  <tr
-                    className="border-b border-jmuDarkGold hover:bg-jmuLightGold/30 hover:cursor-pointer transition-colors"
-                    onClick={() => toggleExpand(m.id)}
-                  >
-                    <td className="p-2 font-semibold">
+                  <tr className="cursor-pointer transition-colors" onClick={() => toggleExpand(m.id)}>
+                    <td className="font-semibold">
                       {parseDateOnly(m.date).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                       })}
                     </td>
-                    <td className="p-2">{m.opponent}</td>
-                    <td className="p-2">{m.side}</td>
-                    <td className="p-2">{m.home ? "Home" : "Away"}</td>
-                    <td className="p-2">
-                      {m.show_result && m.result ? m.result : ""}
-                    </td>
+                    <td>{m.opponent}</td>
+                    <td>{m.side}</td>
+                    <td>{m.home ? "Home" : "Away"}</td>
+                    <td>{m.show_result && m.result ? m.result : ""}</td>
                   </tr>
 
-                  {/* Expandable Notes Row */}
                   <AnimatePresence initial={false}>
                     {expanded === m.id && (
                       <Motion.tr
                         key={`expand-${m.id}`}
-                        className="border-b border-jmuDarkGold bg-jmuLightGold/20 overflow-hidden"
+                        className="overflow-hidden border-b border-jmuDarkGold bg-jmuLightGold/25"
                         layout
                         transition={{
-                          duration: 0.4,
+                          duration: 0.35,
                           ease: [0.25, 0.1, 0.25, 1],
                         }}
                       >
@@ -234,19 +200,14 @@ export default function Schedule() {
                             initial={{ height: 0 }}
                             animate={{ height: "auto" }}
                             exit={{ height: 0 }}
-                            transition={{
-                              duration: 0.4,
-                              ease: [0.25, 0.1, 0.25, 1],
-                            }}
+                            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
                             className="overflow-hidden"
                           >
                             <div className="p-4 text-jmuPurple">
                               {m.notes ? (
-                                <p className="leading-relaxed">{m.notes}</p>
+                                <p className="leading-relaxed text-jmuSlate">{m.notes}</p>
                               ) : (
-                                <p className="italic text-jmuDarkGold">
-                                  No notes or recap available.
-                                </p>
+                                <p className="italic text-jmuDarkGold">No notes or recap available.</p>
                               )}
                             </div>
                           </Motion.div>
