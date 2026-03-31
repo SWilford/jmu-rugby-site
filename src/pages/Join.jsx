@@ -9,7 +9,18 @@ import { getMediaFilePath, MEDIA_JOIN_PAGE_COLUMNS } from "../lib/mediaUtils";
 const MAX_JOIN_MEDIA_IMAGES = 3;
 
 const mediaSlotConfig = {
-  videoPlaceholderLabel: "Video embed placeholder",
+  video: {
+    title: "Highlight Video",
+    src: "/videos/join-highlight.mp4",
+    poster: "/videos/join-highlight.jpg",
+    type: "video/mp4",
+    credit: {
+      label: "Video by Moses Tindall Visual Media",
+      instagram: "https://www.instagram.com/moses_tindallvisualmedia/",
+      linktree:
+        "https://linktr.ee/mtvm?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAGnEkX9euJdqZnVHXoOIbfw3l-j4K-ChLJFUWIeq97l0vw3fRREAsRxzoLXIbw_aem_16Asl3Kx0RnKK9DyNHnheQ",
+    },
+  },
   galleryPlaceholders: [
     { id: "gallery-1", label: "Photo Placeholder 1" },
     { id: "gallery-2", label: "Photo Placeholder 2" },
@@ -122,10 +133,10 @@ export default function Join() {
   }
 
   return (
-    <div className="page-shell pt-8">
-      <section className="surface-card p-6 sm:p-8">
-        <h1 className="mb-3 text-3xl font-bold sm:text-4xl">{joinInfo.title}</h1>
-        <p className="text-lg leading-relaxed text-jmuSlate">{joinInfo.intro}</p>
+    <div className="page-shell pt-6 sm:pt-8">
+      <section className="surface-card p-5 sm:p-8">
+        <h1 className="mb-3 text-2xl font-bold sm:text-4xl">{joinInfo.title}</h1>
+        <p className="text-base leading-relaxed text-jmuSlate sm:text-lg">{joinInfo.intro}</p>
         {joinInfoError && (
           <div className="mt-4 rounded border border-red-300 bg-red-100/20 px-4 py-3 text-sm text-red-800">
             {joinInfoError}
@@ -134,17 +145,52 @@ export default function Join() {
       </section>
 
       <JoinMediaPlaceholders
-        videoPlaceholderLabel={mediaSlotConfig.videoPlaceholderLabel}
+        video={mediaSlotConfig.video}
         galleryPlaceholders={mediaSlotConfig.galleryPlaceholders}
         galleryImages={joinGalleryImages}
         isGalleryLoading={joinGalleryLoading}
         galleryError={joinGalleryError}
       />
 
-      <section id="practice-schedule" className="surface-card mt-8 p-6 sm:p-8">
-        <h2 className="mb-5 text-2xl font-bold">Practice &amp; Season Details</h2>
+      <section id="practice-schedule" className="surface-card mt-8 p-5 sm:p-8">
+        <h2 className="mb-5 text-xl font-bold sm:text-2xl">Practice &amp; Season Details</h2>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="space-y-6 md:hidden">
+          <article>
+            <h3 className="mb-3 text-lg font-bold">Weekly Schedule</h3>
+            <ul className="space-y-2">
+              {joinInfo.schedule.map((slot) => (
+                <li key={slot.label} className="surface-card-soft rounded-lg p-3">
+                  <p className="text-sm font-semibold sm:text-base">{slot.label}</p>
+                  <p className="text-sm text-jmuSlate">{slot.detail}</p>
+                </li>
+              ))}
+            </ul>
+          </article>
+
+          <article className="space-y-3">
+            <div className="surface-card-soft rounded-lg p-4">
+              <h3 className="mb-1 text-lg font-bold">Dues</h3>
+              <p className="text-base font-semibold text-jmuSlate">{joinInfo.dues}</p>
+            </div>
+
+            <div className="surface-card-soft rounded-lg p-4">
+              <h3 className="mb-1 text-lg font-bold">Travel</h3>
+              <p className="text-sm text-jmuSlate">{joinInfo.travel}</p>
+            </div>
+
+            <div className="surface-card-soft rounded-lg p-4">
+              <h3 className="mb-2 text-lg font-bold">Seasons</h3>
+              <ul className="list-disc space-y-1 pl-5 text-sm text-jmuSlate">
+                {joinInfo.seasons.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </article>
+        </div>
+
+        <div className="hidden grid-cols-1 gap-6 md:grid md:grid-cols-2">
           <article>
             <h3 className="mb-3 text-xl font-bold">Weekly Schedule</h3>
             <ul className="space-y-2">
@@ -180,22 +226,22 @@ export default function Join() {
         </div>
       </section>
 
-      <section className="surface-card mt-8 p-6 sm:p-8">
-        <h2 className="mb-4 text-2xl font-bold">Gear &amp; Expectations</h2>
-        <ul className="list-disc space-y-2 pl-6 leading-relaxed text-jmuSlate">
+      <section className="surface-card mt-8 p-5 sm:p-8">
+        <h2 className="mb-4 text-xl font-bold sm:text-2xl">Gear &amp; Expectations</h2>
+        <ul className="list-disc space-y-2 pl-5 leading-relaxed text-sm text-jmuSlate sm:pl-6 sm:text-base">
           {joinInfo.gear.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
-        <p className="mt-4 leading-relaxed text-jmuSlate">{joinInfo.eligibility}</p>
+        <p className="mt-4 text-sm leading-relaxed text-jmuSlate sm:text-base">{joinInfo.eligibility}</p>
       </section>
 
-      <section className="surface-card mb-4 mt-8 p-6 sm:p-8">
-        <h2 className="mb-5 text-2xl font-bold">FAQs</h2>
+      <section className="surface-card mb-4 mt-8 p-5 sm:p-8">
+        <h2 className="mb-5 text-xl font-bold sm:text-2xl">FAQs</h2>
         <JoinFaqAccordion faqs={joinInfo.faqs} />
 
         <div className="mt-8 border-t border-jmuDarkGold/70 pt-6">
-          <h3 className="mb-3 text-xl font-bold">Have further questions?</h3>
+          <h3 className="mb-3 text-lg font-bold sm:text-xl">Have further questions?</h3>
           <Link to="/contact" className="brand-button px-5 py-2">
             Contact
           </Link>

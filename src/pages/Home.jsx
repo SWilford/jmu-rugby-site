@@ -291,6 +291,33 @@ export default function Home() {
         </Link>
       </section>
 
+      <section className="surface-card mt-8 p-5 sm:p-8">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-xl font-bold sm:text-2xl">Follow Us on Instagram</h2>
+          <a
+            href="https://www.instagram.com/jmumensrugby/"
+            target="_blank"
+            rel="noreferrer"
+            className="brand-button px-4 py-2 text-sm"
+          >
+            Open @jmumensrugby
+          </a>
+        </div>
+
+        <div className="instagram-embed-shell mt-5 overflow-hidden rounded-xl border border-jmuDarkGold/70 bg-jmuLightGold/35 shadow-sm">
+          <iframe
+            src="https://www.instagram.com/jmumensrugby/embed"
+            title="JMU Men's Rugby Instagram feed"
+            loading="lazy"
+            className="instagram-embed-frame w-full border-0"
+          />
+        </div>
+
+        <p className="mt-3 text-xs leading-relaxed text-jmuDarkGold">
+          If this embed is blocked by your browser settings, use the button above to open Instagram directly.
+        </p>
+      </section>
+
       <section className="surface-card mt-8 p-6 sm:p-8">
         <h2 className="text-2xl font-bold">Next Match</h2>
 

@@ -484,6 +484,88 @@ body {
     transform: scale(1.22);
 }
 
+.video-hero-fallback-frame {
+    position: relative;
+    isolation: isolate;
+    background:
+        radial-gradient(circle at 10% -10%, rgba(203, 182, 119, 0.2), transparent 40%),
+        radial-gradient(circle at 85% 0%, rgba(173, 156, 101, 0.16), transparent 45%),
+        linear-gradient(180deg, #3f0078 0%, #450084 45%, #2f0059 100%);
+}
+
+.video-hero-fallback-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        -35deg,
+        rgba(255, 255, 255, 0.03) 0,
+        rgba(255, 255, 255, 0.03) 2px,
+        transparent 2px,
+        transparent 14px
+    );
+    background-size: 180px 180px;
+    background-position: 0 0;
+    mix-blend-mode: soft-light;
+    opacity: 0.75;
+    animation: video-stripes-drift 16s linear infinite;
+}
+
+.video-hero-fallback-player {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    max-width: 22rem;
+    margin-inline: auto;
+    aspect-ratio: 9 / 16;
+    max-height: 70svh;
+    object-fit: contain;
+    background: transparent;
+}
+
+@media (min-width: 640px) {
+    .video-hero-fallback-player {
+        max-width: none;
+        margin-inline: 0;
+        aspect-ratio: 16 / 9;
+        max-height: none;
+    }
+}
+
+.instagram-embed-shell {
+    position: relative;
+    isolation: isolate;
+}
+
+.instagram-embed-shell::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 24px;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(244, 239, 225, 0), rgba(244, 239, 225, 0.6));
+}
+
+.instagram-embed-frame {
+    display: block;
+    height: 420px;
+}
+
+@media (min-width: 640px) {
+    .instagram-embed-frame {
+        height: 620px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .instagram-embed-frame {
+        height: 740px;
+    }
+}
+
 .site-footer {
     position: relative;
     overflow: hidden;
@@ -637,6 +719,15 @@ body {
     }
     50% {
         transform: translateY(-2px);
+    }
+}
+
+@keyframes video-stripes-drift {
+    from {
+        background-position: 0 0;
+    }
+    to {
+        background-position: 180px 0;
     }
 }
 

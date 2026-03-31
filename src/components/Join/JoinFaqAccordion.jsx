@@ -15,9 +15,9 @@ export default function JoinFaqAccordion({ faqs }) {
             <button
               type="button"
               onClick={() => setOpenIndex(isOpen ? -1 : index)}
-              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-jmuLightGold/35"
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-jmuLightGold/35 sm:gap-4 sm:px-5 sm:py-4"
             >
-              <span className="text-lg font-semibold">{faq.question}</span>
+              <span className="text-base font-semibold sm:text-lg">{faq.question}</span>
               <span className="text-sm text-jmuDarkGold" aria-hidden="true">
                 {isOpen ? <FaChevronUp /> : <FaChevronDown />}
               </span>
@@ -32,7 +32,9 @@ export default function JoinFaqAccordion({ faqs }) {
                   transition={{ duration: 0.26, ease: [0.25, 0.1, 0.25, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="px-5 pb-5 leading-relaxed text-jmuSlate">{faq.answer}</div>
+                  <div className="px-4 pb-4 text-sm leading-relaxed text-jmuSlate sm:px-5 sm:pb-5 sm:text-base">
+                    {faq.answer}
+                  </div>
                 </Motion.div>
               )}
             </AnimatePresence>
