@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabaseClient";
 
-const JOIN_INFO_FALLBACK = {
+export const JOIN_INFO_FALLBACK = {
   title: "Join JMU Men's Rugby",
   intro:
     "JMU Men's Rugby welcomes students at all experience levels who are prepared to train consistently, compete, and contribute to a team-first culture. If you are interested in joining, you can begin by attending practice and introducing yourself to the team.",
@@ -133,7 +133,9 @@ function mapSettingsToJoinInfo(settingsRows) {
   }, structuredClone(JOIN_INFO_FALLBACK));
 }
 
-export async function getJoinInfo() {
+export async function getJoinInfo(options = {}) {
+  const { throwOnError = false } = options;
+
   const [settingsResponse, scheduleResponse, faqResponse] = await Promise.all([
     supabase.from("join_content_settings").select("key, value"),
     supabase.from("join_content_schedule").select("label, detail").order("display_order", { ascending: true }),
@@ -150,6 +152,14 @@ export async function getJoinInfo() {
       scheduleError: scheduleResponse.error,
       faqError: faqResponse.error,
     });
+
+    if (throwOnError) {
+      const errors = [settingsResponse.error, scheduleResponse.error, faqResponse.error]
+        .filter(Boolean)
+        .map((error) => error.message || "Unknown join content error")
+        .join(" | ");
+      throw new Error(errors || "Failed to load dynamic join content.");
+    }
 
     return JOIN_INFO_FALLBACK;
   }

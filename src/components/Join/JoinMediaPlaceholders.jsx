@@ -2,6 +2,8 @@ export default function JoinMediaPlaceholders({
   videoPlaceholderLabel,
   galleryPlaceholders,
   galleryImages = [],
+  isGalleryLoading = false,
+  galleryError = "",
 }) {
   return (
     <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
@@ -15,7 +17,24 @@ export default function JoinMediaPlaceholders({
         <p className="text-jmuDarkGold mt-2">{videoPlaceholderLabel}</p>
       </div>
 
-      {galleryImages.length > 0 ? (
+      {galleryError && (
+        <div className="mb-4 rounded border border-red-300 bg-red-100/20 px-4 py-3 text-sm text-red-800">
+          {galleryError}
+        </div>
+      )}
+
+      {isGalleryLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {galleryPlaceholders.map((item) => (
+            <div
+              key={item.id}
+              className="h-36 rounded-md border-2 border-dashed border-jmuDarkGold bg-jmuLightGold/30 flex items-center justify-center text-center px-4"
+            >
+              <span className="text-jmuDarkGold font-semibold">Loading photo...</span>
+            </div>
+          ))}
+        </div>
+      ) : galleryImages.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {galleryImages.map((item) => (
             <img
@@ -38,6 +57,7 @@ export default function JoinMediaPlaceholders({
           ))}
         </div>
       )}
+
     </section>
   );
 }

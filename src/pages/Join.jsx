@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import JoinFaqAccordion from "../components/Join/JoinFaqAccordion";
 import JoinMediaPlaceholders from "../components/Join/JoinMediaPlaceholders";
-import { getJoinInfo } from "../data/joinInfo";
+import JOIN_INFO_FALLBACK, { getJoinInfo } from "../data/joinInfo";
 import { supabase } from "../lib/supabaseClient";
 import { getMediaFilePath, MEDIA_JOIN_PAGE_COLUMNS } from "../lib/mediaUtils";
 
@@ -19,19 +19,41 @@ const mediaSlotConfig = {
 
 export default function Join() {
   const [joinInfo, setJoinInfo] = useState(null);
+  const [joinInfoLoading, setJoinInfoLoading] = useState(true);
+  const [joinInfoError, setJoinInfoError] = useState("");
   const [joinGalleryImages, setJoinGalleryImages] = useState([]);
+  const [joinGalleryLoading, setJoinGalleryLoading] = useState(true);
+  const [joinGalleryError, setJoinGalleryError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadJoinInfo() {
-      const info = await getJoinInfo();
-      if (isMounted) {
-        setJoinInfo(info);
+      setJoinInfoLoading(true);
+      setJoinInfoError("");
+
+      try {
+        const info = await getJoinInfo({ throwOnError: true });
+        if (isMounted) {
+          setJoinInfo(info);
+        }
+      } catch (error) {
+        console.error("Join page content fetch error:", error);
+        if (isMounted) {
+          setJoinInfo(JOIN_INFO_FALLBACK);
+          setJoinInfoError("Unable to load latest join details right now. Showing default information.");
+        }
+      } finally {
+        if (isMounted) {
+          setJoinInfoLoading(false);
+        }
       }
     }
 
     async function loadJoinGalleryImages() {
+      setJoinGalleryLoading(true);
+      setJoinGalleryError("");
+
       try {
         let joinPageColumn = "";
 
@@ -44,7 +66,9 @@ export default function Join() {
         }
 
         if (!joinPageColumn) {
-          if (isMounted) setJoinGalleryImages([]);
+          if (isMounted) {
+            setJoinGalleryImages([]);
+          }
           return;
         }
 
@@ -72,6 +96,11 @@ export default function Join() {
         console.error("Join page gallery fetch error:", error);
         if (isMounted) {
           setJoinGalleryImages([]);
+          setJoinGalleryError("Unable to load Join page photos right now.");
+        }
+      } finally {
+        if (isMounted) {
+          setJoinGalleryLoading(false);
         }
       }
     }
@@ -84,7 +113,7 @@ export default function Join() {
     };
   }, []);
 
-  if (!joinInfo) {
+  if (joinInfoLoading || !joinInfo) {
     return (
       <div className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
         <p>Loading join information...</p>
@@ -97,6 +126,11 @@ export default function Join() {
       <section className="w-full max-w-6xl bg-jmuOffWhite text-jmuPurple border border-jmuDarkGold rounded-md p-8 mt-8">
         <h1 className="text-3xl sm:text-4xl font-bold mb-3">{joinInfo.title}</h1>
         <p className="leading-relaxed text-lg">{joinInfo.intro}</p>
+        {joinInfoError && (
+          <div className="mt-4 rounded border border-red-300 bg-red-100/20 px-4 py-3 text-sm text-red-800">
+            {joinInfoError}
+          </div>
+        )}
 
       </section>
 
@@ -104,6 +138,8 @@ export default function Join() {
         videoPlaceholderLabel={mediaSlotConfig.videoPlaceholderLabel}
         galleryPlaceholders={mediaSlotConfig.galleryPlaceholders}
         galleryImages={joinGalleryImages}
+        isGalleryLoading={joinGalleryLoading}
+        galleryError={joinGalleryError}
       />
 
       <section
