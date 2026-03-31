@@ -5,6 +5,8 @@ const configuredR2PublicBaseUrl = String(import.meta.env.VITE_R2_PUBLIC_BASE_URL
   .trim()
   .replace(/\/+$/, "");
 const R2_FALLBACK_HOSTS = new Set(["jmumensrugby.com", "www.jmumensrugby.com"]);
+const LOCALHOST_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+const DEV_R2_PROXY_PREFIX = "/__r2_proxy";
 
 function resolveR2PublicBaseUrl() {
   if (configuredR2PublicBaseUrl) {
@@ -23,6 +25,20 @@ function resolveR2PublicBaseUrl() {
 
 const R2_PUBLIC_BASE_URL = resolveR2PublicBaseUrl();
 const LEGACY_BUCKET_PREFIXES = ["rugby-media/", "media/"];
+const LEGACY_STORAGE_PATH_PREFIXES = [
+  "/storage/v1/object/public/rugby-media/",
+  "/storage/v1/object/public/media/",
+  "/storage/v1/object/sign/rugby-media/",
+  "/storage/v1/object/sign/media/",
+  "/storage/v1/object/authenticated/rugby-media/",
+  "/storage/v1/object/authenticated/media/",
+  "/object/public/rugby-media/",
+  "/object/public/media/",
+  "/object/sign/rugby-media/",
+  "/object/sign/media/",
+  "/object/authenticated/rugby-media/",
+  "/object/authenticated/media/",
+];
 const DEFAULT_MAX_R2_UPLOAD_BYTES = 12 * 1024 * 1024;
 const parsedMaxUploadBytes = Number(import.meta.env.VITE_MAX_R2_UPLOAD_BYTES);
 export const MAX_R2_UPLOAD_BYTES =
@@ -74,13 +90,80 @@ function normalizeStoredObjectPath(value) {
 export function buildStoragePublicUrl(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
-  if (isAbsoluteUrl(raw)) return raw;
+
+  if (isAbsoluteUrl(raw)) {
+    const extractedLegacyPath = extractLegacyObjectPath(raw);
+    if (extractedLegacyPath && R2_PUBLIC_BASE_URL) {
+      if (isLocalhostRuntime()) {
+        return `${DEV_R2_PROXY_PREFIX}/${encodePath(extractedLegacyPath)}`;
+      }
+      return `${R2_PUBLIC_BASE_URL}/${encodePath(extractedLegacyPath)}`;
+    }
+
+    if (isLocalhostRuntime()) {
+      const proxied = tryBuildLocalProxyUrlFromAbsolute(raw);
+      if (proxied) return proxied;
+    }
+    return raw;
+  }
 
   const normalizedPath = normalizeStoredObjectPath(raw);
   if (!normalizedPath) return "";
   if (!R2_PUBLIC_BASE_URL) return normalizedPath;
 
+  if (isLocalhostRuntime()) {
+    return `${DEV_R2_PROXY_PREFIX}/${encodePath(normalizedPath)}`;
+  }
+
   return `${R2_PUBLIC_BASE_URL}/${encodePath(normalizedPath)}`;
+}
+
+function isLocalhostRuntime() {
+  if (typeof window === "undefined") return false;
+  const runtimeHost = String(window.location?.hostname || "").toLowerCase();
+  return LOCALHOST_HOSTS.has(runtimeHost);
+}
+
+function tryBuildLocalProxyUrlFromAbsolute(rawUrl) {
+  const configuredHost = getConfiguredR2Host();
+  if (!configuredHost) return "";
+
+  try {
+    const parsedUrl = new URL(rawUrl);
+    if (parsedUrl.hostname.toLowerCase() !== configuredHost) return "";
+    const normalizedPath = normalizeStoredObjectPath(parsedUrl.pathname);
+    if (!normalizedPath) return "";
+    return `${DEV_R2_PROXY_PREFIX}/${encodePath(normalizedPath)}`;
+  } catch {
+    return "";
+  }
+}
+
+function getConfiguredR2Host() {
+  try {
+    return new URL(R2_PUBLIC_BASE_URL).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function extractLegacyObjectPath(rawUrl) {
+  try {
+    const parsed = new URL(rawUrl);
+    const pathname = String(parsed.pathname || "");
+
+    for (const prefix of LEGACY_STORAGE_PATH_PREFIXES) {
+      const index = pathname.indexOf(prefix);
+      if (index >= 0) {
+        const extracted = decodeURIComponent(pathname.slice(index + prefix.length));
+        return normalizeStoredObjectPath(extracted);
+      }
+    }
+
+    return "";
+  } catch {
+    return "";
+  }
 }
 
 async function invokeR2Media(body) {

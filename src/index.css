@@ -251,6 +251,94 @@ body {
     transform: translateX(4px);
 }
 
+.mobile-data-stack {
+    display: none;
+    gap: 0.65rem;
+}
+
+.mobile-data-card {
+    border: 1px solid rgba(173, 156, 101, 0.72);
+    border-radius: 0.85rem;
+    overflow: hidden;
+    background: linear-gradient(160deg, rgba(250, 247, 238, 0.97), rgba(244, 239, 225, 0.94));
+    box-shadow:
+        0 8px 16px rgba(24, 0, 46, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.mobile-data-trigger {
+    width: 100%;
+    border: 0;
+    padding: 0.78rem 0.8rem;
+    text-align: left;
+    background: transparent;
+    color: inherit;
+}
+
+.mobile-data-trigger:focus-visible {
+    outline: 2px solid #450084;
+    outline-offset: -2px;
+    background: rgba(203, 182, 119, 0.13);
+}
+
+.mobile-data-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.48rem 0.72rem;
+}
+
+.mobile-data-meta p {
+    margin: 0;
+}
+
+.mobile-data-label {
+    display: block;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #7c6d3b;
+}
+
+.mobile-data-value {
+    display: block;
+    margin-top: 0.06rem;
+    font-size: 0.88rem;
+    line-height: 1.25;
+    color: #2f0059;
+}
+
+.mobile-expand-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    height: 1.45rem;
+    border: 1px solid rgba(173, 156, 101, 0.85);
+    border-radius: 999px;
+    font-size: 1rem;
+    line-height: 1;
+    color: #5e4826;
+    transition:
+        transform 220ms var(--ease-standard),
+        background 220ms var(--ease-standard),
+        color 220ms var(--ease-standard);
+}
+
+.mobile-expand-icon.is-open {
+    transform: rotate(45deg);
+    background: rgba(173, 156, 101, 0.25);
+    color: #450084;
+}
+
+.mobile-data-expanded {
+    border-top: 1px solid rgba(173, 156, 101, 0.55);
+    padding: 0.78rem 0.8rem;
+    display: grid;
+    gap: 0.72rem;
+    background: linear-gradient(180deg, rgba(244, 239, 225, 0.55), rgba(244, 239, 225, 0.2));
+}
+
 .glass-nav {
     position: relative;
     backdrop-filter: blur(10px);
@@ -552,9 +640,27 @@ body {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+    .mobile-data-stack {
+        display: grid;
+    }
+
     .surface-card {
         border-radius: 0.85rem;
+    }
+
+    .mobile-data-trigger {
+        padding: 0.72rem 0.74rem;
+    }
+
+    .mobile-data-meta {
+        gap: 0.45rem 0.55rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .mobile-data-meta {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 

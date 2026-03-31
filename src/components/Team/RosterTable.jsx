@@ -27,72 +27,145 @@ export default function RosterTable({ expandedId, setExpandedId }) {
       {roster.length === 0 ? (
         <p className="mt-6 text-center text-jmuDarkGold">Roster will appear here soon.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-jmuDarkGold/70">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Year</th>
-                <th>Major</th>
-                <th>Hometown</th>
-              </tr>
-            </thead>
+        <>
+          <div className="hidden overflow-x-auto rounded-xl border border-jmuDarkGold/70 md:block">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Position</th>
+                  <th>Year</th>
+                  <th>Major</th>
+                  <th>Hometown</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {roster.map((player) => (
-                <Fragment key={`player-${player.id}`}>
-                  <tr className="cursor-pointer transition-colors" onClick={() => toggleExpand("player", player.id)}>
-                    <td className="font-semibold">{player.name}</td>
-                    <td>{player.position}</td>
-                    <td>{player.year}</td>
-                    <td>{player.major}</td>
-                    <td>{player.hometown}</td>
-                  </tr>
+              <tbody>
+                {roster.map((player) => (
+                  <Fragment key={`player-${player.id}`}>
+                    <tr className="cursor-pointer transition-colors" onClick={() => toggleExpand("player", player.id)}>
+                      <td className="font-semibold">{player.name}</td>
+                      <td>{player.position}</td>
+                      <td>{player.year}</td>
+                      <td>{player.major}</td>
+                      <td>{player.hometown}</td>
+                    </tr>
+
+                    <AnimatePresence initial={false}>
+                      {expandedId === `player-${player.id}` && (
+                        <Motion.tr
+                          key={player.id}
+                          className="overflow-hidden border-b border-jmuDarkGold bg-jmuLightGold/25"
+                          layout
+                          transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                        >
+                          <td colSpan="5" className="p-0">
+                            <Motion.div
+                              layout
+                              initial={{ height: 0 }}
+                              animate={{ height: "auto" }}
+                              exit={{ height: 0 }}
+                              transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                              className="overflow-hidden"
+                            >
+                              <div className="flex flex-col items-start gap-5 p-4 sm:flex-row sm:gap-6">
+                                <img
+                                  src={buildStoragePublicUrl(player.headshot_url) || logoPurple}
+                                  alt={player.name}
+                                  className="h-56 w-40 rounded-lg border border-jmuDarkGold object-cover"
+                                />
+                                <div className="flex flex-col justify-center text-jmuPurple">
+                                  <p className="font-semibold text-jmuSlate">
+                                    Height: <span className="font-normal">{player.height}</span>
+                                  </p>
+                                  <p className="font-semibold text-jmuSlate">
+                                    Weight: <span className="font-normal">{player.weight}</span>
+                                  </p>
+                                  {player.bio && <p className="mt-3 leading-relaxed text-jmuSlate">{player.bio}</p>}
+                                </div>
+                              </div>
+                            </Motion.div>
+                          </td>
+                        </Motion.tr>
+                      )}
+                    </AnimatePresence>
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mobile-data-stack md:hidden">
+            {roster.map((player) => {
+              const expandedKey = `player-${player.id}`;
+              const isOpen = expandedId === expandedKey;
+              return (
+                <article key={expandedKey} className="mobile-data-card">
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand("player", player.id)}
+                    aria-expanded={isOpen}
+                    className="mobile-data-trigger"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-base font-bold text-jmuPurple">{player.name}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-jmuDarkGold">{player.position}</p>
+                      </div>
+                      <span className={`mobile-expand-icon ${isOpen ? "is-open" : ""}`} aria-hidden="true">
+                        +
+                      </span>
+                    </div>
+                    <div className="mobile-data-meta mt-2">
+                      <p>
+                        <span className="mobile-data-label">Year</span>
+                        <span className="mobile-data-value">{player.year || "-"}</span>
+                      </p>
+                      <p>
+                        <span className="mobile-data-label">Major</span>
+                        <span className="mobile-data-value">{player.major || "-"}</span>
+                      </p>
+                      <p>
+                        <span className="mobile-data-label">Hometown</span>
+                        <span className="mobile-data-value">{player.hometown || "-"}</span>
+                      </p>
+                    </div>
+                  </button>
 
                   <AnimatePresence initial={false}>
-                    {expandedId === `player-${player.id}` && (
-                      <Motion.tr
-                        key={player.id}
-                        className="overflow-hidden border-b border-jmuDarkGold bg-jmuLightGold/25"
-                        layout
-                        transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                    {isOpen && (
+                      <Motion.div
+                        key={`expand-${expandedKey}`}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.32, ease: [0.25, 0.1, 0.25, 1] }}
+                        className="overflow-hidden"
                       >
-                        <td colSpan="5" className="p-0">
-                          <Motion.div
-                            layout
-                            initial={{ height: 0 }}
-                            animate={{ height: "auto" }}
-                            exit={{ height: 0 }}
-                            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-                            className="overflow-hidden"
-                          >
-                            <div className="flex flex-col items-start gap-5 p-4 sm:flex-row sm:gap-6">
-                              <img
-                                src={buildStoragePublicUrl(player.headshot_url) || logoPurple}
-                                alt={player.name}
-                                className="h-56 w-40 rounded-lg border border-jmuDarkGold object-cover"
-                              />
-                              <div className="flex flex-col justify-center text-jmuPurple">
-                                <p className="font-semibold text-jmuSlate">
-                                  Height: <span className="font-normal">{player.height}</span>
-                                </p>
-                                <p className="font-semibold text-jmuSlate">
-                                  Weight: <span className="font-normal">{player.weight}</span>
-                                </p>
-                                {player.bio && <p className="mt-3 leading-relaxed text-jmuSlate">{player.bio}</p>}
-                              </div>
-                            </div>
-                          </Motion.div>
-                        </td>
-                      </Motion.tr>
+                        <div className="mobile-data-expanded">
+                          <img
+                            src={buildStoragePublicUrl(player.headshot_url) || logoPurple}
+                            alt={player.name}
+                            className="mx-auto h-48 w-32 rounded-lg border border-jmuDarkGold object-cover"
+                          />
+                          <div className="space-y-1.5 text-sm text-jmuSlate">
+                            <p className="leading-snug">
+                              <span className="font-semibold">Height:</span> {player.height || "-"}
+                            </p>
+                            <p className="leading-snug">
+                              <span className="font-semibold">Weight:</span> {player.weight || "-"}
+                            </p>
+                            {player.bio && <p className="pt-0.5 leading-relaxed">{player.bio}</p>}
+                          </div>
+                        </div>
+                      </Motion.div>
                     )}
                   </AnimatePresence>
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
       )}
     </section>
   );

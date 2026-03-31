@@ -158,71 +158,142 @@ export default function Schedule() {
       {matches.length === 0 ? (
         <p className="mt-6 text-center text-jmuDarkGold">Schedule will appear here soon.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-jmuDarkGold/70">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Opponent</th>
-                <th>Side</th>
-                <th>Location</th>
-                <th>Result</th>
-              </tr>
-            </thead>
+        <>
+          <div className="hidden overflow-x-auto rounded-xl border border-jmuDarkGold/70 md:block">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Opponent</th>
+                  <th>Side</th>
+                  <th>Location</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {matches.map((m) => (
-                <Fragment key={m.id}>
-                  <tr className="cursor-pointer transition-colors" onClick={() => toggleExpand(m.id)}>
-                    <td className="font-semibold">
-                      {parseDateOnly(m.date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
-                    <td>{m.opponent}</td>
-                    <td>{m.side}</td>
-                    <td>{m.home ? "Home" : "Away"}</td>
-                    <td>{m.show_result && m.result ? m.result : ""}</td>
-                  </tr>
+              <tbody>
+                {matches.map((m) => (
+                  <Fragment key={m.id}>
+                    <tr className="cursor-pointer transition-colors" onClick={() => toggleExpand(m.id)}>
+                      <td className="font-semibold">
+                        {parseDateOnly(m.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td>{m.opponent}</td>
+                      <td>{m.side}</td>
+                      <td>{m.home ? "Home" : "Away"}</td>
+                      <td>{m.show_result && m.result ? m.result : ""}</td>
+                    </tr>
+
+                    <AnimatePresence initial={false}>
+                      {expanded === m.id && (
+                        <Motion.tr
+                          key={`expand-${m.id}`}
+                          className="overflow-hidden border-b border-jmuDarkGold bg-jmuLightGold/25"
+                          layout
+                          transition={{
+                            duration: 0.35,
+                            ease: [0.25, 0.1, 0.25, 1],
+                          }}
+                        >
+                          <td colSpan="5" className="p-0">
+                            <Motion.div
+                              layout
+                              initial={{ height: 0 }}
+                              animate={{ height: "auto" }}
+                              exit={{ height: 0 }}
+                              transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                              className="overflow-hidden"
+                            >
+                              <div className="p-4 text-jmuPurple">
+                                {m.notes ? (
+                                  <p className="leading-relaxed text-jmuSlate">{m.notes}</p>
+                                ) : (
+                                  <p className="italic text-jmuDarkGold">No notes or recap available.</p>
+                                )}
+                              </div>
+                            </Motion.div>
+                          </td>
+                        </Motion.tr>
+                      )}
+                    </AnimatePresence>
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mobile-data-stack md:hidden">
+            {matches.map((m) => {
+              const isOpen = expanded === m.id;
+              return (
+                <article key={m.id} className="mobile-data-card">
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(m.id)}
+                    aria-expanded={isOpen}
+                    className="mobile-data-trigger"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-jmuDarkGold">
+                          {parseDateOnly(m.date).toLocaleDateString("en-US", {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                        <p className="text-base font-bold text-jmuPurple">{m.opponent}</p>
+                      </div>
+                      <span className={`mobile-expand-icon ${isOpen ? "is-open" : ""}`} aria-hidden="true">
+                        +
+                      </span>
+                    </div>
+                    <div className="mobile-data-meta mt-2">
+                      <p>
+                        <span className="mobile-data-label">Side</span>
+                        <span className="mobile-data-value">{m.side || "-"}</span>
+                      </p>
+                      <p>
+                        <span className="mobile-data-label">Location</span>
+                        <span className="mobile-data-value">{m.home ? "Home" : "Away"}</span>
+                      </p>
+                      {m.show_result && (
+                        <p>
+                          <span className="mobile-data-label">Result</span>
+                          <span className="mobile-data-value">{m.result || "-"}</span>
+                        </p>
+                      )}
+                    </div>
+                  </button>
 
                   <AnimatePresence initial={false}>
-                    {expanded === m.id && (
-                      <Motion.tr
+                    {isOpen && (
+                      <Motion.div
                         key={`expand-${m.id}`}
-                        className="overflow-hidden border-b border-jmuDarkGold bg-jmuLightGold/25"
-                        layout
-                        transition={{
-                          duration: 0.35,
-                          ease: [0.25, 0.1, 0.25, 1],
-                        }}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.32, ease: [0.25, 0.1, 0.25, 1] }}
+                        className="overflow-hidden"
                       >
-                        <td colSpan="5" className="p-0">
-                          <Motion.div
-                            layout
-                            initial={{ height: 0 }}
-                            animate={{ height: "auto" }}
-                            exit={{ height: 0 }}
-                            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-                            className="overflow-hidden"
-                          >
-                            <div className="p-4 text-jmuPurple">
-                              {m.notes ? (
-                                <p className="leading-relaxed text-jmuSlate">{m.notes}</p>
-                              ) : (
-                                <p className="italic text-jmuDarkGold">No notes or recap available.</p>
-                              )}
-                            </div>
-                          </Motion.div>
-                        </td>
-                      </Motion.tr>
+                        <div className="mobile-data-expanded">
+                          {m.notes ? (
+                            <p className="text-sm leading-relaxed text-jmuSlate">{m.notes}</p>
+                          ) : (
+                            <p className="text-sm italic text-jmuDarkGold">No notes or recap available.</p>
+                          )}
+                        </div>
+                      </Motion.div>
                     )}
                   </AnimatePresence>
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
       )}
     </section>
   );
