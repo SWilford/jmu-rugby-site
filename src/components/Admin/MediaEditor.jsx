@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabaseClient";
 import {
   MEDIA_FILE_URL_COLUMNS,
   MEDIA_HOME_CAROUSEL_COLUMNS,
+  MEDIA_JOIN_PAGE_COLUMNS,
   MEDIA_UPLOAD_TIMESTAMP_COLUMNS,
   extractStorageObjectPath,
   formatSeasonLabel,
@@ -16,6 +17,7 @@ import {
 import { deleteR2Objects, moveR2Object, uploadFileToR2 } from "../../lib/storageUtils";
 
 const MEDIA_BUCKET = "rugby-media";
+const MAX_JOIN_PAGE_IMAGES = 3;
 
 const detectExistingColumn = async (tableName, candidates) => {
   for (const columnName of candidates) {
@@ -60,6 +62,7 @@ export default function MediaEditor() {
   const [filePathColumn, setFilePathColumn] = useState("");
   const [uploadTimestampColumn, setUploadTimestampColumn] = useState("");
   const [homeCarouselColumn, setHomeCarouselColumn] = useState("");
+  const [joinPageColumn, setJoinPageColumn] = useState("");
 
   const [uploadAlbumMode, setUploadAlbumMode] = useState("existing");
   const [selectedAlbum, setSelectedAlbum] = useState("");
@@ -69,6 +72,7 @@ export default function MediaEditor() {
   const [newSeason, setNewSeason] = useState("");
   const [uploadFeatured, setUploadFeatured] = useState(false);
   const [uploadHomeCarousel, setUploadHomeCarousel] = useState(false);
+  const [uploadJoinPage, setUploadJoinPage] = useState(false);
   const [queuedFiles, setQueuedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -131,16 +135,23 @@ export default function MediaEditor() {
     [albumGroups, managedAlbum]
   );
 
+  const joinPageSelectedCount = useMemo(() => {
+    if (!joinPageColumn) return 0;
+    return mediaRows.reduce((count, row) => count + (row[joinPageColumn] ? 1 : 0), 0);
+  }, [mediaRows, joinPageColumn]);
+
   const loadMediaData = async () => {
     setMediaLoading(true);
     setMediaError("");
 
     try {
-      const [detectedFilePathColumn, detectedTimestampColumn, detectedCarouselColumn] = await Promise.all([
-        detectExistingColumn("media", MEDIA_FILE_URL_COLUMNS),
-        detectExistingColumn("media", MEDIA_UPLOAD_TIMESTAMP_COLUMNS),
-        detectExistingColumn("media", MEDIA_HOME_CAROUSEL_COLUMNS),
-      ]);
+      const [detectedFilePathColumn, detectedTimestampColumn, detectedCarouselColumn, detectedJoinPageColumn] =
+        await Promise.all([
+          detectExistingColumn("media", MEDIA_FILE_URL_COLUMNS),
+          detectExistingColumn("media", MEDIA_UPLOAD_TIMESTAMP_COLUMNS),
+          detectExistingColumn("media", MEDIA_HOME_CAROUSEL_COLUMNS),
+          detectExistingColumn("media", MEDIA_JOIN_PAGE_COLUMNS),
+        ]);
 
       if (!detectedFilePathColumn) {
         throw new Error(
@@ -151,6 +162,7 @@ export default function MediaEditor() {
       setFilePathColumn(detectedFilePathColumn);
       setUploadTimestampColumn(detectedTimestampColumn);
       setHomeCarouselColumn(detectedCarouselColumn);
+      setJoinPageColumn(detectedJoinPageColumn);
 
       const [{ data: mediaData, error: mediaErrorRes }, { data: seasonData }] = await Promise.all([
         supabase.from("media").select("*").order("id", { ascending: false }),
@@ -241,6 +253,12 @@ export default function MediaEditor() {
     }
   }, [homeCarouselColumn]);
 
+  useEffect(() => {
+    if (!joinPageColumn) {
+      setUploadJoinPage(false);
+    }
+  }, [joinPageColumn]);
+
   const queueFiles = (incomingFileList) => {
     const imageFiles = Array.from(incomingFileList || []).filter((file) => file.type.startsWith("image/"));
     const skippedCount = (incomingFileList?.length || 0) - imageFiles.length;
@@ -291,6 +309,23 @@ export default function MediaEditor() {
       return;
     }
 
+    if (uploadJoinPage) {
+      if (!joinPageColumn) {
+        setMediaError(
+          "Join page column not found on media table. Run docs/supabase_join_page_media.sql, then reload."
+        );
+        return;
+      }
+
+      const nextJoinCount = joinPageSelectedCount + queuedFiles.length;
+      if (nextJoinCount > MAX_JOIN_PAGE_IMAGES) {
+        setMediaError(
+          `Join page is capped at ${MAX_JOIN_PAGE_IMAGES} images. You currently have ${joinPageSelectedCount} selected.`
+        );
+        return;
+      }
+    }
+
     setMediaBusy(true);
 
     const uploadedObjectPaths = [];
@@ -317,6 +352,9 @@ export default function MediaEditor() {
         row[filePathColumn] = objectPath;
         if (homeCarouselColumn) {
           row[homeCarouselColumn] = uploadHomeCarousel;
+        }
+        if (joinPageColumn) {
+          row[joinPageColumn] = uploadJoinPage;
         }
         if (uploadTimestampColumn) {
           row[uploadTimestampColumn] = new Date().toISOString();
@@ -535,6 +573,44 @@ export default function MediaEditor() {
     }
   };
 
+  const handleToggleJoinPage = async (photo) => {
+    if (!joinPageColumn) {
+      setMediaError(
+        "Join page column not found on media table. Run docs/supabase_join_page_media.sql, then reload."
+      );
+      return;
+    }
+
+    const nextValue = !photo[joinPageColumn];
+    if (nextValue && joinPageSelectedCount >= MAX_JOIN_PAGE_IMAGES) {
+      setMediaError(
+        `Join page is capped at ${MAX_JOIN_PAGE_IMAGES} images. Uncheck one first, then select another.`
+      );
+      return;
+    }
+
+    setMediaBusy(true);
+    setMediaError("");
+    setMediaStatus("");
+
+    try {
+      const { error } = await supabase
+        .from("media")
+        .update({ [joinPageColumn]: nextValue })
+        .eq("id", photo.id);
+
+      if (error) throw error;
+
+      setMediaRows((prev) =>
+        prev.map((row) => (row.id === photo.id ? { ...row, [joinPageColumn]: nextValue } : row))
+      );
+    } catch (error) {
+      setMediaError(toUserFriendlyMediaError(error, "Unable to update Join page status."));
+    } finally {
+      setMediaBusy(false);
+    }
+  };
+
   return (
     <>
       <h3 className="text-xl font-semibold text-jmuGold">Media Editor</h3>
@@ -674,6 +750,22 @@ export default function MediaEditor() {
                 {!homeCarouselColumn && (
                   <p className="text-xs text-jmuLightGold/70">
                     Home carousel column not detected. Run docs/supabase_home_carousel.sql to enable
+                    this feature.
+                  </p>
+                )}
+
+                <label className="inline-flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={uploadJoinPage}
+                    onChange={(event) => setUploadJoinPage(event.target.checked)}
+                    disabled={!joinPageColumn}
+                  />
+                  Mark uploaded images for Join page ({joinPageSelectedCount}/{MAX_JOIN_PAGE_IMAGES})
+                </label>
+                {!joinPageColumn && (
+                  <p className="text-xs text-jmuLightGold/70">
+                    Join page column not detected. Run docs/supabase_join_page_media.sql to enable
                     this feature.
                   </p>
                 )}
@@ -906,6 +998,20 @@ export default function MediaEditor() {
                               disabled={mediaBusy || !homeCarouselColumn}
                             />
                             Home Carousel
+                          </label>
+                          <label className="inline-flex items-center gap-1">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(joinPageColumn && photo[joinPageColumn])}
+                              onChange={() => handleToggleJoinPage(photo)}
+                              disabled={
+                                mediaBusy ||
+                                !joinPageColumn ||
+                                (!photo[joinPageColumn] &&
+                                  joinPageSelectedCount >= MAX_JOIN_PAGE_IMAGES)
+                              }
+                            />
+                            Join Page
                           </label>
                         </div>
                         <button

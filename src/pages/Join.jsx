@@ -3,7 +3,10 @@ import { Link } from "react-router-dom";
 import JoinFaqAccordion from "../components/Join/JoinFaqAccordion";
 import JoinMediaPlaceholders from "../components/Join/JoinMediaPlaceholders";
 import { getJoinInfo } from "../data/joinInfo";
+import { supabase } from "../lib/supabaseClient";
+import { getMediaFilePath, MEDIA_JOIN_PAGE_COLUMNS } from "../lib/mediaUtils";
 
+const MAX_JOIN_MEDIA_IMAGES = 3;
 
 const mediaSlotConfig = {
   videoPlaceholderLabel: "Video embed placeholder",
@@ -16,14 +19,69 @@ const mediaSlotConfig = {
 
 export default function Join() {
   const [joinInfo, setJoinInfo] = useState(null);
+  const [joinGalleryImages, setJoinGalleryImages] = useState([]);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function loadJoinInfo() {
       const info = await getJoinInfo();
-      setJoinInfo(info);
+      if (isMounted) {
+        setJoinInfo(info);
+      }
+    }
+
+    async function loadJoinGalleryImages() {
+      try {
+        let joinPageColumn = "";
+
+        for (const columnName of MEDIA_JOIN_PAGE_COLUMNS) {
+          const { error: columnError } = await supabase.from("media").select(columnName).limit(1);
+          if (!columnError) {
+            joinPageColumn = columnName;
+            break;
+          }
+        }
+
+        if (!joinPageColumn) {
+          if (isMounted) setJoinGalleryImages([]);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("media")
+          .select("*")
+          .eq(joinPageColumn, true)
+          .order("id", { ascending: false })
+          .limit(MAX_JOIN_MEDIA_IMAGES);
+
+        if (error) throw error;
+
+        const resolved = (data || [])
+          .map((row) => ({
+            id: row.id,
+            src: getMediaFilePath(row),
+            alt: row.album ? `${row.album} join page photo` : "JMU Rugby join page photo",
+          }))
+          .filter((row) => Boolean(row.src));
+
+        if (isMounted) {
+          setJoinGalleryImages(resolved);
+        }
+      } catch (error) {
+        console.error("Join page gallery fetch error:", error);
+        if (isMounted) {
+          setJoinGalleryImages([]);
+        }
+      }
     }
 
     loadJoinInfo();
+    loadJoinGalleryImages();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (!joinInfo) {
@@ -45,6 +103,7 @@ export default function Join() {
       <JoinMediaPlaceholders
         videoPlaceholderLabel={mediaSlotConfig.videoPlaceholderLabel}
         galleryPlaceholders={mediaSlotConfig.galleryPlaceholders}
+        galleryImages={joinGalleryImages}
       />
 
       <section
