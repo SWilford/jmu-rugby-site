@@ -4,6 +4,7 @@ import MediaEditor from "../components/Admin/MediaEditor";
 import RosterEditor from "../components/Admin/RosterEditor";
 import ContactEditor from "../components/Admin/ContactEditor";
 import SponsorsEditor from "../components/Admin/SponsorsEditor";
+import JoinEditor from "../components/Admin/JoinEditor";
 
 const INITIAL_FORM = {
   season_id: "",
@@ -404,6 +405,7 @@ export default function Admin() {
                   <option value="schedule">Schedule editor</option>
                   <option value="roster">Roster editor</option>
                   <option value="media">Media editor</option>
+                  <option value="join">Join editor</option>
                   <option value="contact">Contact editor</option>
                   <option value="sponsors">Sponsors editor</option>
                 </select>
@@ -597,6 +599,7 @@ export default function Admin() {
 
               {activeEditor === "roster" && <RosterEditor />}
               {activeEditor === "media" && <MediaEditor />}
+              {activeEditor === "join" && <JoinEditor />}
               {activeEditor === "contact" && <ContactEditor />}
               {activeEditor === "sponsors" && <SponsorsEditor />}
             </div>

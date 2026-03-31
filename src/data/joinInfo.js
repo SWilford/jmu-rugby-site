@@ -88,6 +88,8 @@ export const JOIN_INFO_FALLBACK = {
 };
 
 const SETTINGS_TO_JOIN_INFO = {
+  join_title: "title",
+  join_intro: "intro",
   dues: "dues",
   travel: "travel",
   who_can_join: "eligibility",
@@ -110,7 +112,7 @@ function mapSettingsToJoinInfo(settingsRows) {
     }
 
     if (row.key === "conditioning") {
-      const conditioningRow = joinInfo.schedule.find((item) => item.label === "Conditioning");
+      const conditioningRow = joinInfo.schedule.find((item) => /conditioning/i.test(item.label));
 
       if (conditioningRow) {
         conditioningRow.detail = row.value;
