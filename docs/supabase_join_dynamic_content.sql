@@ -112,6 +112,8 @@ create or replace function public.is_admin()
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select exists (
     select 1
@@ -119,6 +121,9 @@ as $$
     where a.user_id = auth.uid()
   );
 $$;
+
+revoke all on function public.is_admin() from public;
+grant execute on function public.is_admin() to authenticated;
 
 -- 9) Policies
 
@@ -188,7 +193,7 @@ create policy "Admins can read admins"
 on public.admins
 for select
 to authenticated
-using (public.is_admin());
+using (user_id = auth.uid() or public.is_admin());
 
 drop policy if exists "Admins can manage admins" on public.admins;
 create policy "Admins can manage admins"
@@ -270,10 +275,67 @@ set answer = excluded.answer,
     is_active = true,
     updated_at = now();
 
--- 14) Note on RLS/policies for FAQ and sponsors
--- Policies are intentionally omitted here so you can configure them manually in Supabase.
--- If you enable RLS on these tables, be sure to add at least a public read policy
--- for your website client and authenticated write policies for admins.
+-- 14) RLS policies for FAQ and sponsors
+alter table public.join_content_faq enable row level security;
+alter table public.sponsors enable row level security;
+
+drop policy if exists "Public read active join_content_faq" on public.join_content_faq;
+create policy "Public read active join_content_faq"
+on public.join_content_faq
+for select
+to anon, authenticated
+using (is_active = true or public.is_admin());
+
+drop policy if exists "Admins insert join_content_faq" on public.join_content_faq;
+create policy "Admins insert join_content_faq"
+on public.join_content_faq
+for insert
+to authenticated
+with check (public.is_admin());
+
+drop policy if exists "Admins update join_content_faq" on public.join_content_faq;
+create policy "Admins update join_content_faq"
+on public.join_content_faq
+for update
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Admins delete join_content_faq" on public.join_content_faq;
+create policy "Admins delete join_content_faq"
+on public.join_content_faq
+for delete
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "Public read active sponsors" on public.sponsors;
+create policy "Public read active sponsors"
+on public.sponsors
+for select
+to anon, authenticated
+using (is_active = true or public.is_admin());
+
+drop policy if exists "Admins insert sponsors" on public.sponsors;
+create policy "Admins insert sponsors"
+on public.sponsors
+for insert
+to authenticated
+with check (public.is_admin());
+
+drop policy if exists "Admins update sponsors" on public.sponsors;
+create policy "Admins update sponsors"
+on public.sponsors
+for update
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Admins delete sponsors" on public.sponsors;
+create policy "Admins delete sponsors"
+on public.sponsors
+for delete
+to authenticated
+using (public.is_admin());
 
 -- 15) Storage guidance for sponsor logos
 -- Keep sponsor logos in a dedicated folder inside the existing `media` bucket:

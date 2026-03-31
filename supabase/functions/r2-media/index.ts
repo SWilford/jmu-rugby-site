@@ -16,6 +16,23 @@ const R2_BUCKET = Deno.env.get("R2_BUCKET") ?? "";
 const R2_ACCESS_KEY_ID = Deno.env.get("R2_ACCESS_KEY_ID") ?? "";
 const R2_SECRET_ACCESS_KEY = Deno.env.get("R2_SECRET_ACCESS_KEY") ?? "";
 const R2_PUBLIC_BASE_URL = (Deno.env.get("R2_PUBLIC_BASE_URL") ?? "").trim().replace(/\/+$/, "");
+const DEFAULT_MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
+const parsedMaxUploadBytes = Number(Deno.env.get("R2_MAX_UPLOAD_BYTES"));
+const R2_MAX_UPLOAD_BYTES = Number.isFinite(parsedMaxUploadBytes) && parsedMaxUploadBytes > 0
+  ? Math.floor(parsedMaxUploadBytes)
+  : DEFAULT_MAX_UPLOAD_BYTES;
+const MAX_DELETE_OBJECTS_PER_REQUEST = 1000;
+
+const ALLOWED_UPLOAD_CONTENT_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif",
+  "image/heic",
+  "image/heif",
+]);
 
 const CORS_ORIGINS = (Deno.env.get("CORS_ORIGINS") ??
   "http://localhost:5173,https://www.jmumensrugby.com")
@@ -77,6 +94,11 @@ function getAllowedOrigin(origin: string | null): string {
   if (!origin) return CORS_ORIGINS[0] || "*";
   if (CORS_ORIGINS.includes(origin)) return origin;
   return CORS_ORIGINS[0] || "*";
+}
+
+function isAllowedRequestOrigin(origin: string | null): boolean {
+  if (!origin) return true;
+  return CORS_ORIGINS.includes(origin);
 }
 
 function corsHeaders(origin: string | null): HeadersInit {
@@ -149,7 +171,7 @@ type SignUploadPayload = {
   action: "sign-upload";
   objectPath: string;
   contentType?: string;
-  cacheControl?: string;
+  fileSize?: number;
 };
 
 type DeleteObjectsPayload = {
@@ -167,6 +189,9 @@ type Payload = SignUploadPayload | DeleteObjectsPayload | MoveObjectPayload;
 
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
+  if (!isAllowedRequestOrigin(origin)) {
+    return jsonResponse({ error: "Origin not allowed." }, 403, origin);
+  }
 
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders(origin) });
@@ -203,13 +228,35 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Invalid objectPath provided." }, 400, origin);
       }
 
-      const contentType = String(payload.contentType || "application/octet-stream").trim();
-      const cacheControl = String(payload.cacheControl || "public, max-age=31536000, immutable").trim();
+      const contentType = String(payload.contentType || "").trim().toLowerCase();
+      if (!ALLOWED_UPLOAD_CONTENT_TYPES.has(contentType)) {
+        return jsonResponse(
+          { error: "Only JPG, PNG, WebP, AVIF, GIF, HEIC, and HEIF uploads are supported." },
+          400,
+          origin
+        );
+      }
+
+      const fileSize = Number(payload.fileSize);
+      if (!Number.isFinite(fileSize) || fileSize <= 0) {
+        return jsonResponse({ error: "Missing or invalid fileSize." }, 400, origin);
+      }
+      if (fileSize > R2_MAX_UPLOAD_BYTES) {
+        return jsonResponse(
+          { error: `File exceeds max upload size of ${R2_MAX_UPLOAD_BYTES} bytes.` },
+          413,
+          origin
+        );
+      }
+
+      // Force immutable caching so public media stays cheap to serve at scale.
+      const cacheControl = "public, max-age=31536000, immutable";
 
       const command = new PutObjectCommand({
         Bucket: R2_BUCKET,
         Key: objectPath,
         ContentType: contentType,
+        ContentLength: Math.floor(fileSize),
         CacheControl: cacheControl,
       });
 
@@ -221,6 +268,7 @@ Deno.serve(async (req) => {
           signedUrl,
           publicUrl: buildPublicUrl(objectPath),
           expiresIn: 90,
+          maxUploadBytes: R2_MAX_UPLOAD_BYTES,
         },
         200,
         origin
@@ -228,9 +276,25 @@ Deno.serve(async (req) => {
     }
 
     if (payload.action === "delete-objects") {
-      const objectPaths = (payload.objectPaths || [])
+      if (!Array.isArray(payload.objectPaths)) {
+        return jsonResponse({ error: "objectPaths must be an array." }, 400, origin);
+      }
+      if (payload.objectPaths.length > MAX_DELETE_OBJECTS_PER_REQUEST) {
+        return jsonResponse(
+          { error: `You can delete at most ${MAX_DELETE_OBJECTS_PER_REQUEST} objects per request.` },
+          400,
+          origin
+        );
+      }
+
+      const normalizedPaths = payload.objectPaths
         .map((path) => normalizeObjectPath(path))
-        .filter((path) => isValidObjectPath(path));
+        .filter(Boolean);
+      const hasInvalidPath = normalizedPaths.some((path) => !isValidObjectPath(path));
+      if (hasInvalidPath) {
+        return jsonResponse({ error: "One or more object paths are invalid." }, 400, origin);
+      }
+      const objectPaths = Array.from(new Set(normalizedPaths));
 
       if (!objectPaths.length) {
         return jsonResponse({ deletedCount: 0 }, 200, origin);

@@ -13,6 +13,7 @@ Set this value in frontend env:
 
 ```bash
 VITE_R2_PUBLIC_BASE_URL=https://media.jmumensrugby.com
+VITE_MAX_R2_UPLOAD_BYTES=12582912
 ```
 
 Set the same value in Supabase function secrets as `R2_PUBLIC_BASE_URL`.
@@ -49,6 +50,7 @@ supabase secrets set \
   R2_ACCESS_KEY_ID=... \
   R2_SECRET_ACCESS_KEY=... \
   R2_PUBLIC_BASE_URL=https://media.jmumensrugby.com \
+  R2_MAX_UPLOAD_BYTES=12582912 \
   CORS_ORIGINS=http://localhost:5173,https://www.jmumensrugby.com
 ```
 
