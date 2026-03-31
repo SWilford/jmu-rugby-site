@@ -2,15 +2,35 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
-import { getMediaFilePath } from "../lib/mediaUtils";
+import { getMediaFilePath, MEDIA_HOME_CAROUSEL_COLUMNS } from "../lib/mediaUtils";
 
 import img0 from "../assets/home/image0.jpeg";
 import img1 from "../assets/home/image1.jpeg";
 import img2 from "../assets/home/image2.jpeg";
+import img3 from "../assets/home/image3.jpeg";
 import img4 from "../assets/home/image4.jpeg";
 import img5 from "../assets/home/image5.JPG";
 
-const images = [img1, img4, img5, img2, img0];
+const MAX_CAROUSEL_IMAGES = 6;
+const STATIC_CAROUSEL_IMAGES = [
+  { key: "static-0", src: img0, alt: "Home carousel static image 0" },
+  { key: "static-1", src: img1, alt: "Home carousel static image 1" },
+  { key: "static-2", src: img2, alt: "Home carousel static image 2" },
+  { key: "static-3", src: img3, alt: "Home carousel static image 3" },
+  { key: "static-4", src: img4, alt: "Home carousel static image 4" },
+  { key: "static-5", src: img5, alt: "Home carousel static image 5" },
+];
+
+const getStaticCarouselFallback = (count = MAX_CAROUSEL_IMAGES) =>
+  STATIC_CAROUSEL_IMAGES.slice(-count).reverse();
+
+const buildCarouselImages = (dynamicSlides = []) => {
+  const dynamic = dynamicSlides.filter((slide) => Boolean(slide?.src)).slice(0, MAX_CAROUSEL_IMAGES);
+  if (dynamic.length >= MAX_CAROUSEL_IMAGES) return dynamic;
+
+  const remainingCount = MAX_CAROUSEL_IMAGES - dynamic.length;
+  return [...dynamic, ...getStaticCarouselFallback(remainingCount)];
+};
 
 const parseDateOnly = (dateString) => {
   const [year, month, day] = dateString.split("-").map(Number);
@@ -29,12 +49,25 @@ export default function Home() {
   const [nextMatches, setNextMatches] = useState([]);
   const navigate = useNavigate();
   const [featuredImages, setFeaturedImages] = useState([]);
+  const [carouselImages, setCarouselImages] = useState(() =>
+    getStaticCarouselFallback(MAX_CAROUSEL_IMAGES)
+  );
 
   useEffect(() => {
+    if (!carouselImages.length) return undefined;
+
     const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % images.length);
+      setCurrent((prev) => (prev + 1) % carouselImages.length);
     }, 6000);
 
+    return () => clearInterval(interval);
+  }, [carouselImages.length]);
+
+  useEffect(() => {
+    setCurrent((prev) => (carouselImages.length ? prev % carouselImages.length : 0));
+  }, [carouselImages.length]);
+
+  useEffect(() => {
     (async () => {
       const today = new Date();
       const month = today.getMonth(); // 0-based: Jan = 0
@@ -69,6 +102,44 @@ export default function Home() {
         setNextMatches([]);
       }
 
+      try {
+        let carouselColumn = "";
+
+        for (const columnName of MEDIA_HOME_CAROUSEL_COLUMNS) {
+          const { error: columnError } = await supabase.from("media").select(columnName).limit(1);
+          if (!columnError) {
+            carouselColumn = columnName;
+            break;
+          }
+        }
+
+        if (!carouselColumn) {
+          setCarouselImages(getStaticCarouselFallback(MAX_CAROUSEL_IMAGES));
+        } else {
+          const { data: carouselRows, error: carouselError } = await supabase
+            .from("media")
+            .select("*")
+            .eq(carouselColumn, true)
+            .order("id", { ascending: false })
+            .limit(MAX_CAROUSEL_IMAGES);
+
+          if (carouselError) {
+            throw carouselError;
+          }
+
+          const dynamicSlides = (carouselRows || []).map((row) => ({
+            key: `media-${row.id}`,
+            src: getMediaFilePath(row),
+            alt: row.album ? `${row.album} carousel photo` : "JMU Rugby carousel photo",
+          }));
+
+          setCarouselImages(buildCarouselImages(dynamicSlides));
+        }
+      } catch (carouselError) {
+        console.error("Home carousel fetch error:", carouselError);
+        setCarouselImages(getStaticCarouselFallback(MAX_CAROUSEL_IMAGES));
+      }
+
       const { data: mediaData, error: mediaError } = await supabase
         .from("media")
         .select("*")
@@ -81,8 +152,6 @@ export default function Home() {
         setFeaturedImages(shuffled.slice(0, 6));
       }
     })();
-
-    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -90,11 +159,11 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative w-full h-[50vh] sm:h-[60vh] flex flex-col items-center justify-center overflow-hidden mt-8 rounded-none">
         {/* Rotating background images */}
-        {images.map((img, i) => (
+        {carouselImages.map((slide, i) => (
           <img
-            key={i}
-            src={img}
-            alt={`Slide ${i + 1}`}
+            key={slide.key}
+            src={slide.src}
+            alt={slide.alt || `Slide ${i + 1}`}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-2000 ${
               i === current ? "opacity-100" : "opacity-0"
             }`}

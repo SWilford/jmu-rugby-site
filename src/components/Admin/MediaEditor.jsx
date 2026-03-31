@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import {
   MEDIA_FILE_URL_COLUMNS,
+  MEDIA_HOME_CAROUSEL_COLUMNS,
   MEDIA_UPLOAD_TIMESTAMP_COLUMNS,
   extractStorageObjectPath,
   formatSeasonLabel,
@@ -58,6 +59,7 @@ export default function MediaEditor() {
 
   const [filePathColumn, setFilePathColumn] = useState("");
   const [uploadTimestampColumn, setUploadTimestampColumn] = useState("");
+  const [homeCarouselColumn, setHomeCarouselColumn] = useState("");
 
   const [uploadAlbumMode, setUploadAlbumMode] = useState("existing");
   const [selectedAlbum, setSelectedAlbum] = useState("");
@@ -66,6 +68,7 @@ export default function MediaEditor() {
   const [selectedSeason, setSelectedSeason] = useState("");
   const [newSeason, setNewSeason] = useState("");
   const [uploadFeatured, setUploadFeatured] = useState(false);
+  const [uploadHomeCarousel, setUploadHomeCarousel] = useState(false);
   const [queuedFiles, setQueuedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -133,9 +136,10 @@ export default function MediaEditor() {
     setMediaError("");
 
     try {
-      const [detectedFilePathColumn, detectedTimestampColumn] = await Promise.all([
+      const [detectedFilePathColumn, detectedTimestampColumn, detectedCarouselColumn] = await Promise.all([
         detectExistingColumn("media", MEDIA_FILE_URL_COLUMNS),
         detectExistingColumn("media", MEDIA_UPLOAD_TIMESTAMP_COLUMNS),
+        detectExistingColumn("media", MEDIA_HOME_CAROUSEL_COLUMNS),
       ]);
 
       if (!detectedFilePathColumn) {
@@ -146,6 +150,7 @@ export default function MediaEditor() {
 
       setFilePathColumn(detectedFilePathColumn);
       setUploadTimestampColumn(detectedTimestampColumn);
+      setHomeCarouselColumn(detectedCarouselColumn);
 
       const [{ data: mediaData, error: mediaErrorRes }, { data: seasonData }] = await Promise.all([
         supabase.from("media").select("*").order("id", { ascending: false }),
@@ -230,6 +235,12 @@ export default function MediaEditor() {
     setAlbumEditSeason(primarySeason);
   }, [activeManagedAlbum]);
 
+  useEffect(() => {
+    if (!homeCarouselColumn) {
+      setUploadHomeCarousel(false);
+    }
+  }, [homeCarouselColumn]);
+
   const queueFiles = (incomingFileList) => {
     const imageFiles = Array.from(incomingFileList || []).filter((file) => file.type.startsWith("image/"));
     const skippedCount = (incomingFileList?.length || 0) - imageFiles.length;
@@ -304,6 +315,9 @@ export default function MediaEditor() {
         };
 
         row[filePathColumn] = objectPath;
+        if (homeCarouselColumn) {
+          row[homeCarouselColumn] = uploadHomeCarousel;
+        }
         if (uploadTimestampColumn) {
           row[uploadTimestampColumn] = new Date().toISOString();
         }
@@ -484,7 +498,38 @@ export default function MediaEditor() {
         prev.map((row) => (row.id === photo.id ? { ...row, featured: !row.featured } : row))
       );
     } catch (error) {
-      setMediaError(toUserFriendlyMediaError(error, "Unable to update featured status."));
+      setMediaError(toUserFriendlyMediaError(error, "Unable to update featured gallery status."));
+    } finally {
+      setMediaBusy(false);
+    }
+  };
+
+  const handleToggleHomeCarousel = async (photo) => {
+    if (!homeCarouselColumn) {
+      setMediaError(
+        "Home carousel column not found on media table. Run docs/supabase_home_carousel.sql, then reload."
+      );
+      return;
+    }
+
+    setMediaBusy(true);
+    setMediaError("");
+    setMediaStatus("");
+
+    try {
+      const nextValue = !photo[homeCarouselColumn];
+      const { error } = await supabase
+        .from("media")
+        .update({ [homeCarouselColumn]: nextValue })
+        .eq("id", photo.id);
+
+      if (error) throw error;
+
+      setMediaRows((prev) =>
+        prev.map((row) => (row.id === photo.id ? { ...row, [homeCarouselColumn]: nextValue } : row))
+      );
+    } catch (error) {
+      setMediaError(toUserFriendlyMediaError(error, "Unable to update home carousel status."));
     } finally {
       setMediaBusy(false);
     }
@@ -614,8 +659,24 @@ export default function MediaEditor() {
                     checked={uploadFeatured}
                     onChange={(event) => setUploadFeatured(event.target.checked)}
                   />
-                  Mark uploaded images as featured
+                  Mark uploaded images as featured gallery photos
                 </label>
+
+                <label className="inline-flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={uploadHomeCarousel}
+                    onChange={(event) => setUploadHomeCarousel(event.target.checked)}
+                    disabled={!homeCarouselColumn}
+                  />
+                  Mark uploaded images for homepage carousel
+                </label>
+                {!homeCarouselColumn && (
+                  <p className="text-xs text-jmuLightGold/70">
+                    Home carousel column not detected. Run docs/supabase_home_carousel.sql to enable
+                    this feature.
+                  </p>
+                )}
 
                 <div
                   onDragOver={(event) => {
@@ -835,7 +896,16 @@ export default function MediaEditor() {
                               onChange={() => handleToggleFeatured(photo)}
                               disabled={mediaBusy}
                             />
-                            Featured
+                            Featured Gallery
+                          </label>
+                          <label className="inline-flex items-center gap-1">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(homeCarouselColumn && photo[homeCarouselColumn])}
+                              onChange={() => handleToggleHomeCarousel(photo)}
+                              disabled={mediaBusy || !homeCarouselColumn}
+                            />
+                            Home Carousel
                           </label>
                         </div>
                         <button

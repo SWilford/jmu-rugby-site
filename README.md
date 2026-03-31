@@ -104,6 +104,7 @@ SQL and policy files:
 - `docs/supabase_admin_auth_fix.sql`
 - `docs/supabase_schedule_admin_rls.sql`
 - `docs/supabase_media_admin_rls.sql`
+- `docs/supabase_home_carousel.sql`
 - `docs/supabase_roster_admin_rls.sql`
 - `docs/supabase_contact_admin_rls.sql`
 - `docs/supabase_sponsors_admin_rls.sql`

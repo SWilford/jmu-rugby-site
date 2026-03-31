@@ -477,7 +477,7 @@ export default function SponsorsEditor() {
                             </p>
                             <p className="text-xs text-jmuLightGold/75">
                               Order: {Number(row.display_order || 0)} -{" "}
-                              {Boolean(row.is_active) ? "Active" : "Hidden"}
+                              {row.is_active ? "Active" : "Hidden"}
                             </p>
                           </div>
                         </div>

@@ -6,6 +6,7 @@ const OTHER_PRIORITY = 2;
 
 export const MEDIA_FILE_URL_COLUMNS = ["file_path", "filepath"];
 export const MEDIA_UPLOAD_TIMESTAMP_COLUMNS = ["upload_date", "uploaded_at", "uploaded"];
+export const MEDIA_HOME_CAROUSEL_COLUMNS = ["home_carousel", "carousel_featured", "featured_carousel"];
 
 export function getMediaStoredPath(row) {
   if (!row || typeof row !== "object") return "";
