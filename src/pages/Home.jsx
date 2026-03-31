@@ -155,21 +155,21 @@ export default function Home() {
 
   return (
     <div className="page-shell min-h-full justify-between pt-6 sm:pt-8">
-      <section className="relative mt-2 flex h-[52vh] w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-2xl border border-jmuDarkGold/80 shadow-[0_18px_36px_rgba(24,0,46,0.34)] sm:h-[64vh]">
+      <section className="hero-banner relative mt-2 flex h-[52vh] w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-2xl border border-jmuDarkGold/80 shadow-[0_18px_36px_rgba(24,0,46,0.34)] sm:h-[64vh]">
         {carouselImages.map((slide, i) => (
           <img
             key={slide.key}
             src={slide.src}
             alt={slide.alt || `Slide ${i + 1}`}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ${
-              i === current ? "opacity-100" : "opacity-0"
+            className={`hero-slide absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ${
+              i === current ? "is-active opacity-100" : "opacity-0"
             }`}
           />
         ))}
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-jmuPurple/55 to-jmuPurple/85" />
 
-        <div className="relative z-10 flex max-w-3xl flex-col items-center justify-center px-4 text-center">
+        <div className="hero-content relative z-10 flex max-w-3xl flex-col items-center justify-center px-4 text-center">
           <h1 className="text-4xl font-bold text-jmuGold drop-shadow-md sm:text-6xl lg:text-7xl">
             JMU Men's Rugby
           </h1>
@@ -178,13 +178,31 @@ export default function Home() {
           </p>
 
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-            <Link to="/schedule" className="brand-button brand-button-gold px-5 py-2.5 sm:px-6 sm:py-3">
+            <Link
+              to="/schedule"
+              className="brand-button brand-button-gold hero-cta px-5 py-2.5 sm:px-6 sm:py-3"
+            >
               View Schedule
             </Link>
-            <Link to="/join" className="brand-button brand-button-gold px-5 py-2.5 sm:px-6 sm:py-3">
+            <Link
+              to="/join"
+              className="brand-button brand-button-gold hero-cta px-5 py-2.5 sm:px-6 sm:py-3"
+            >
               Join the Team
             </Link>
           </div>
+        </div>
+
+        <div className="absolute bottom-5 z-20 flex items-center gap-2 rounded-full border border-jmuGold/55 bg-jmuPurple/45 px-3 py-1.5 backdrop-blur-sm">
+          {carouselImages.map((slide, i) => (
+            <button
+              key={`dot-${slide.key}`}
+              type="button"
+              onClick={() => setCurrent(i)}
+              className={`carousel-dot ${i === current ? "is-active" : ""}`}
+              aria-label={`View slide ${i + 1}`}
+            />
+          ))}
         </div>
       </section>
 

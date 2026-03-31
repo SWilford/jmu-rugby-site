@@ -21,7 +21,7 @@ export default function RosterTable({ expandedId, setExpandedId }) {
   };
 
   return (
-    <section className="surface-card p-5 sm:p-6">
+    <section className="surface-card surface-card-no-lift p-5 sm:p-6">
       <h2 className="mb-4 text-2xl font-bold">Roster</h2>
 
       {roster.length === 0 ? (
@@ -97,3 +97,4 @@ export default function RosterTable({ expandedId, setExpandedId }) {
     </section>
   );
 }
+

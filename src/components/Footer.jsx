@@ -3,6 +3,7 @@ import { getSponsors } from "../data/sponsors";
 
 export default function Footer() {
   const [sponsors, setSponsors] = useState([]);
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     async function loadSponsors() {
@@ -14,9 +15,9 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="mt-8 w-full bg-jmuPurple/50 text-jmuGold font-arvo">
+    <footer className="site-footer mt-8 w-full bg-jmuPurple/50 text-jmuGold font-arvo">
       <div className="mx-auto w-full max-w-6xl border-t border-jmuDarkGold/85 px-4 pb-6 pt-5 text-center sm:px-6">
-        <section className="mb-5 rounded-xl border border-jmuDarkGold/60 bg-jmuPurple/30 px-4 py-4">
+        <section className="footer-panel mb-5 rounded-xl border border-jmuDarkGold/60 bg-jmuPurple/30 px-4 py-4">
           <p className="mb-4 text-sm font-semibold text-jmuLightGold sm:text-base">
             JMU Men's Rugby is proudly sponsored by
           </p>
@@ -41,7 +42,7 @@ export default function Footer() {
                     href={sponsor.website_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center rounded-lg border border-transparent px-2 py-1 transition hover:border-jmuDarkGold/60 hover:bg-jmuPurple/35"
+                    className="sponsor-item inline-flex items-center rounded-lg border border-transparent px-2 py-1 transition hover:border-jmuDarkGold/60 hover:bg-jmuPurple/35"
                   >
                     {content}
                   </a>
@@ -49,7 +50,7 @@ export default function Footer() {
               }
 
               return (
-                <div key={sponsor.id} className="inline-flex items-center rounded-lg px-2 py-1">
+                <div key={sponsor.id} className="sponsor-item inline-flex items-center rounded-lg px-2 py-1">
                   {content}
                 </div>
               );
@@ -61,10 +62,10 @@ export default function Footer() {
           )}
         </section>
 
-        <p className="text-sm text-jmuLightGold/90"> © JMU Men's Rugby | Fifteen as One</p>
+        <p className="text-sm text-jmuLightGold/90">
+          &copy; {currentYear} JMU Men&apos;s Rugby | Fifteen as One
+        </p>
       </div>
     </footer>
   );
 }
-
-

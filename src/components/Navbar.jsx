@@ -1,8 +1,24 @@
+import { useEffect, useState } from "react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
 import logoGold from "../assets/jmu-gold-logo.png";
 import { NavLink } from "react-router-dom";
 
 export default function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 24);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   const links = [
     ["Home", "/"],
     ["About", "/about"],
@@ -15,13 +31,17 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="glass-nav sticky top-0 z-40 text-jmuGold font-arvo shadow-[0_8px_24px_rgba(15,0,32,0.25)]">
+    <header
+      className={`glass-nav sticky top-0 z-40 text-jmuGold font-arvo shadow-[0_8px_24px_rgba(15,0,32,0.25)] ${
+        isScrolled ? "nav-scrolled" : ""
+      }`}
+    >
       <div className="mx-auto flex w-full max-w-6xl items-center justify-start gap-1 px-4 py-2 text-sm text-jmuLightGold sm:px-6">
         <a
           href="https://www.instagram.com/jmumensrugby/"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-jmuDarkGold/60 bg-jmuPurple/25 transition hover:border-jmuGold hover:bg-jmuGold/15 hover:text-jmuGold"
+          className="social-orb inline-flex h-9 w-9 items-center justify-center rounded-full border border-jmuDarkGold/60 bg-jmuPurple/25 transition hover:border-jmuGold hover:bg-jmuGold/15 hover:text-jmuGold"
           aria-label="JMU Men's Rugby Instagram"
         >
           <FaInstagram size={18} />
@@ -30,7 +50,7 @@ export default function Navbar() {
           href="https://www.facebook.com/JMURugby/"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-jmuDarkGold/60 bg-jmuPurple/25 transition hover:border-jmuGold hover:bg-jmuGold/15 hover:text-jmuGold"
+          className="social-orb inline-flex h-9 w-9 items-center justify-center rounded-full border border-jmuDarkGold/60 bg-jmuPurple/25 transition hover:border-jmuGold hover:bg-jmuGold/15 hover:text-jmuGold"
           aria-label="JMU Men's Rugby Facebook"
         >
           <FaFacebook size={18} />
@@ -41,10 +61,10 @@ export default function Navbar() {
         <img
           src={logoGold}
           alt="JMU Rugby Logo"
-          className="mb-3 h-20 w-auto object-contain sm:mb-0 sm:mr-5 sm:h-24"
+          className="brand-crest mb-3 h-20 w-auto object-contain sm:mb-0 sm:mr-5 sm:h-24"
         />
         <div className="text-center leading-tight sm:text-left">
-          <h1 className="text-4xl font-bold tracking-tight text-jmuGold sm:text-5xl lg:text-6xl">
+          <h1 className="site-title text-4xl font-bold tracking-tight text-jmuGold sm:text-5xl lg:text-6xl">
             JMU Men's Rugby
           </h1>
           <p className="mt-1 text-sm uppercase tracking-[0.3em] text-jmuLightGold sm:text-base">
@@ -61,9 +81,9 @@ export default function Navbar() {
                 <NavLink
                   to={path}
                   className={({ isActive }) =>
-                    `rounded-full border px-4 py-2 text-sm font-semibold tracking-wide transition-all duration-200 sm:text-base ${
+                    `nav-link-chip rounded-full border px-4 py-2 text-sm font-semibold tracking-wide transition-all duration-200 sm:text-base ${
                       isActive
-                        ? "border-jmuGold bg-jmuGold text-jmuPurple shadow-[0_7px_16px_rgba(203,182,119,0.28)]"
+                        ? "is-active border-jmuGold bg-jmuGold text-jmuPurple shadow-[0_7px_16px_rgba(203,182,119,0.28)]"
                         : "border-jmuDarkGold/65 bg-jmuPurple/25 text-jmuLightGold hover:border-jmuGold hover:bg-jmuGold hover:text-jmuPurple"
                     }`
                   }
@@ -80,9 +100,9 @@ export default function Navbar() {
               <NavLink
                 to="/admin"
                 className={({ isActive }) =>
-                  `inline-flex rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all duration-200 ${
+                  `nav-link-chip inline-flex rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all duration-200 ${
                     isActive
-                      ? "border-jmuGold bg-jmuGold text-jmuPurple"
+                      ? "is-active border-jmuGold bg-jmuGold text-jmuPurple"
                       : "border-jmuLightGold/85 bg-jmuPurple/35 text-jmuLightGold hover:border-jmuGold hover:bg-jmuGold hover:text-jmuPurple"
                   }`
                 }
