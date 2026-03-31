@@ -16,6 +16,8 @@ VITE_R2_PUBLIC_BASE_URL=https://media.jmumensrugby.com
 VITE_MAX_R2_UPLOAD_BYTES=12582912
 ```
 
+For Vercel, set `VITE_R2_PUBLIC_BASE_URL` in Project Settings -> Environment Variables for `Production` (and `Preview` if desired), then redeploy so the built bundle contains the media host.
+
 Set the same value in Supabase function secrets as `R2_PUBLIC_BASE_URL`.
 
 ## 2) Configure R2 Bucket CORS

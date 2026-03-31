@@ -1,8 +1,27 @@
 import { supabase } from "./supabaseClient";
 
-const R2_PUBLIC_BASE_URL = String(import.meta.env.VITE_R2_PUBLIC_BASE_URL || "")
+const DEFAULT_R2_PUBLIC_BASE_URL = "https://media.jmumensrugby.com";
+const configuredR2PublicBaseUrl = String(import.meta.env.VITE_R2_PUBLIC_BASE_URL || "")
   .trim()
   .replace(/\/+$/, "");
+const R2_FALLBACK_HOSTS = new Set(["jmumensrugby.com", "www.jmumensrugby.com"]);
+
+function resolveR2PublicBaseUrl() {
+  if (configuredR2PublicBaseUrl) {
+    return configuredR2PublicBaseUrl;
+  }
+
+  if (typeof window !== "undefined") {
+    const runtimeHost = String(window.location?.hostname || "").toLowerCase();
+    if (R2_FALLBACK_HOSTS.has(runtimeHost)) {
+      return DEFAULT_R2_PUBLIC_BASE_URL;
+    }
+  }
+
+  return "";
+}
+
+const R2_PUBLIC_BASE_URL = resolveR2PublicBaseUrl();
 const LEGACY_BUCKET_PREFIXES = ["rugby-media/", "media/"];
 const DEFAULT_MAX_R2_UPLOAD_BYTES = 12 * 1024 * 1024;
 const parsedMaxUploadBytes = Number(import.meta.env.VITE_MAX_R2_UPLOAD_BYTES);
