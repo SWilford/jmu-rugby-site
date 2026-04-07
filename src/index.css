@@ -62,6 +62,32 @@ body {
     overflow-x: clip;
 }
 
+.site-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, rgba(69, 0, 132, 0.08), rgba(47, 0, 89, 0.02)),
+        repeating-linear-gradient(
+            -35deg,
+            rgba(255, 255, 255, 0.035) 0,
+            rgba(255, 255, 255, 0.035) 2px,
+            transparent 2px,
+            transparent 16px
+        );
+    background-size:
+        100% 100%,
+        220px 220px;
+    background-position:
+        0 0,
+        0 0;
+    mix-blend-mode: soft-light;
+    opacity: 0.7;
+    animation: video-stripes-drift 16s linear infinite;
+}
+
 .scroll-progress {
     position: fixed;
     top: 0;
@@ -598,15 +624,6 @@ body {
     transition:
         transform 240ms var(--ease-spring),
         box-shadow 240ms var(--ease-standard);
-    animation: sponsor-float 4s ease-in-out infinite;
-}
-
-.sponsor-item:nth-child(2n) {
-    animation-delay: 0.35s;
-}
-
-.sponsor-item:nth-child(3n) {
-    animation-delay: 0.6s;
 }
 
 .sponsor-item:hover {
@@ -709,16 +726,6 @@ body {
     65%,
     100% {
         transform: translateX(120%);
-    }
-}
-
-@keyframes sponsor-float {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-2px);
     }
 }
 

@@ -6,7 +6,7 @@ export default function JoinMediaPlaceholders({
   galleryError = "",
 }) {
   return (
-    <section className="surface-card mt-8 p-5 sm:p-8">
+    <section className="surface-card mt-6 p-5 sm:p-8">
       <h2 className="mb-3 text-xl font-bold sm:mb-4 sm:text-2xl">See the Team in Action</h2>
       <p className="mb-5 text-sm text-jmuSlate sm:mb-6 sm:text-base">
         Get a feel for our training, match intensity, and team culture.

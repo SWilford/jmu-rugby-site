@@ -226,13 +226,7 @@ export default function Home() {
         </div>
       </section>
 
-      <Motion.section
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6 }}
-        className="surface-card mt-12 p-8 sm:p-10"
-      >
+      <section className="surface-card mt-12 p-8 sm:p-10">
         <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl">About the Dukes</h2>
         <p className="mb-6 mt-4 text-lg leading-relaxed text-jmuSlate">
           Founded in 1974, JMU Men's Rugby is a tight knit brotherhood competing in the National
@@ -245,15 +239,9 @@ export default function Home() {
         >
           Learn More <FaArrowRight aria-hidden="true" />
         </Link>
-      </Motion.section>
+      </section>
 
-      <Motion.section
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6 }}
-        className="surface-card mt-12 p-8 sm:p-10"
-      >
+      <section className="surface-card mt-12 p-8 sm:p-10">
         <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl mb-6">Next Match</h2>
 
         {nextMatches.length > 0 ? (
@@ -294,15 +282,9 @@ export default function Home() {
             <p className="italic text-jmuDarkGold text-lg">No upcoming matches scheduled - check back soon.</p>
           </div>
         )}
-      </Motion.section>
+      </section>
 
-      <Motion.section
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6 }}
-        className="surface-card mt-12 p-8 sm:p-10"
-      >
+      <section className="surface-card mt-12 p-8 sm:p-10">
         <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
           <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl">Follow Us on Instagram</h2>
           <a
@@ -323,15 +305,9 @@ export default function Home() {
             className="instagram-embed-frame w-full border-0"
           />
         </div>
-      </Motion.section>
+      </section>
 
-      <Motion.section
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6 }}
-        className="surface-card mb-8 mt-12 p-8 sm:p-10"
-      >
+      <section className="surface-card mb-8 mt-12 p-8 sm:p-10">
         <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl mb-6">Gallery</h2>
 
         {featuredImages.length === 0 ? (
@@ -364,7 +340,7 @@ export default function Home() {
             View More Photos <FaArrowRight aria-hidden="true" />
           </Link>
         </div>
-      </Motion.section>
+      </section>
     </Motion.div>
   );
 }

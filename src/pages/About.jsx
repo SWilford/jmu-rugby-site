@@ -32,13 +32,7 @@ export default function About() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="page-shell pt-8"
     >
-      <Motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5 }}
-        className="surface-card p-6 sm:p-8"
-      >
+      <section className="surface-card p-6 sm:p-8">
         <h1 className="mb-2 text-3xl font-bold sm:text-4xl">About JMU Men&apos;s Rugby</h1>
         <p className="mb-6 text-sm font-semibold uppercase tracking-[0.28em] text-jmuDarkGold sm:text-base">
           Fifteen | As | One
@@ -48,15 +42,9 @@ export default function About() {
           We compete to win, represent James Madison University with pride, and develop men who are
           dependable on and off the pitch.
         </p>
-      </Motion.section>
+      </section>
 
-      <Motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5 }}
-        className="surface-card mt-8 p-6 sm:p-8"
-      >
+      <section className="surface-card mt-8 p-6 sm:p-8">
         <h2 className="mb-4 text-2xl font-bold">Program History</h2>
         <p className="mb-4 leading-relaxed text-jmuSlate">
           Founded in 1974, JMU Men&apos;s Rugby has a long tradition of physical, disciplined, and team-first
@@ -67,15 +55,9 @@ export default function About() {
           Our history is more than results and competition; it&apos;s the standard each class leaves behind for
           the next. Every season adds to that legacy.
         </p>
-      </Motion.section>
+      </section>
 
-      <Motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5 }}
-        className="surface-card mt-8 p-6 sm:p-8"
-      >
+      <section className="surface-card mt-8 p-6 sm:p-8">
         <h2 className="mb-6 text-2xl font-bold">Core Values</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {coreValues.map((value) => (
@@ -85,15 +67,9 @@ export default function About() {
             </article>
           ))}
         </div>
-      </Motion.section>
+      </section>
 
-      <Motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5 }}
-        className="surface-card mt-8 p-6 sm:p-8"
-      >
+      <section className="surface-card mt-8 p-6 sm:p-8">
         <h2 className="mb-4 text-2xl font-bold">What to Expect</h2>
         <p className="mb-4 leading-relaxed text-jmuSlate">
           Our fall season is focused on 15s, while spring emphasizes 7s competition. Players are expected
@@ -103,15 +79,9 @@ export default function About() {
           Whether you are new to rugby or an experienced player, you will be challenged, supported, and
           pushed to improve by teammates and coaches who care about your growth.
         </p>
-      </Motion.section>
+      </section>
 
-      <Motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5 }}
-        className="surface-card mb-4 mt-8 p-6 sm:p-8"
-      >
+      <section className="surface-card mb-4 mt-8 p-6 sm:p-8">
         <h2 className="mb-4 text-2xl font-bold">Be Part of the Program</h2>
         <p className="mb-6 leading-relaxed text-jmuSlate">
           Interested in competing for JMU Men&apos;s Rugby? See what&apos;s ahead and take the next step.
@@ -124,7 +94,7 @@ export default function About() {
             View Schedule
           </Link>
         </div>
-      </Motion.section>
+      </section>
     </Motion.div>
   );
 }

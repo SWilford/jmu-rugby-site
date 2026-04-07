@@ -153,27 +153,15 @@ export default function Contact() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="page-shell pt-8"
     >
-      <Motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5 }}
-        className="surface-card p-6 sm:p-8"
-      >
+      <section className="surface-card p-6 sm:p-8">
         <h1 className="mb-3 text-3xl font-bold sm:text-4xl">Contact JMU Men&apos;s Rugby</h1>
         <p className="text-lg leading-relaxed text-jmuSlate">
           If you have questions about the team, recruiting, matches, or anything else, reach out using
           the contact options below.
         </p>
-      </Motion.section>
+      </section>
 
-      <Motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5 }}
-        className="surface-card mb-4 mt-8 p-6 sm:p-8"
-      >
+      <section className="surface-card mb-4 mt-8 p-6 sm:p-8">
         <h2 className="mb-5 text-center text-2xl font-bold">Get In Touch</h2>
 
         {loading ? (
@@ -211,7 +199,7 @@ export default function Contact() {
         )}
 
         {copyError && <p className="mt-4 font-semibold text-red-700">{copyError}</p>}
-      </Motion.section>
+      </section>
     </Motion.div>
   );
 }
