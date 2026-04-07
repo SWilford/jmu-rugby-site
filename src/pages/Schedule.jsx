@@ -99,7 +99,12 @@ export default function Schedule() {
   }
 
   return (
-    <section className="surface-card mt-8 p-5 sm:p-6">
+    <Motion.section
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="surface-card mt-8 p-5 sm:p-6"
+    >
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold">Season Schedule</h2>
 
@@ -295,6 +300,6 @@ export default function Schedule() {
           </div>
         </>
       )}
-    </section>
+    </Motion.section>
   );
 }

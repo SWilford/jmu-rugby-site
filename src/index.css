@@ -103,41 +103,41 @@ body {
 .surface-card {
     position: relative;
     width: min(100%, 72rem);
-    border: 1px solid rgba(173, 156, 101, 0.8);
-    border-radius: 1rem;
+    border: 1px solid rgba(203, 182, 119, 0.2);
+    border-radius: 1.5rem;
     color: #2f0059;
     overflow: hidden;
     background:
-        linear-gradient(140deg, rgba(247, 246, 244, 0.98), rgba(244, 239, 225, 0.96));
+        linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(247, 246, 244, 0.9));
     box-shadow:
-        0 14px 36px rgba(24, 0, 46, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        0 12px 36px rgba(24, 0, 46, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
     transition:
         box-shadow 380ms var(--ease-standard),
         border-color 380ms var(--ease-standard);
 }
 
 .surface-card:hover {
-    border-color: rgba(173, 156, 101, 0.95);
+    border-color: rgba(203, 182, 119, 0.4);
     box-shadow:
-        0 22px 42px rgba(24, 0, 46, 0.33),
-        inset 0 1px 0 rgba(255, 255, 255, 0.66);
+        0 16px 40px rgba(24, 0, 46, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .surface-card-no-lift:hover,
 .surface-card:has(.surface-card-soft):hover,
 .surface-card:has(.data-table):hover {
     transform: none;
-    border-color: rgba(173, 156, 101, 0.8);
+    border-color: rgba(203, 182, 119, 0.3);
     box-shadow:
-        0 14px 36px rgba(24, 0, 46, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        0 14px 36px rgba(24, 0, 46, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .surface-card-soft {
-    border: 1px solid rgba(173, 156, 101, 0.45);
-    border-radius: 0.875rem;
-    background: linear-gradient(180deg, rgba(244, 239, 225, 0.62), rgba(244, 239, 225, 0.34));
+    border: 1px solid rgba(203, 182, 119, 0.25);
+    border-radius: 1rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3));
     transition:
         transform 320ms var(--ease-standard),
         border-color 320ms var(--ease-standard),
@@ -145,9 +145,9 @@ body {
 }
 
 .surface-card-soft:hover {
-    transform: translateY(-3px);
-    border-color: rgba(173, 156, 101, 0.72);
-    box-shadow: 0 12px 24px rgba(24, 0, 46, 0.16);
+    transform: translateY(-2px);
+    border-color: rgba(203, 182, 119, 0.5);
+    box-shadow: 0 12px 24px rgba(24, 0, 46, 0.06);
 }
 
 .brand-button {

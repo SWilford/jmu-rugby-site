@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { motion as Motion } from "framer-motion";
 
 const FALLBACK_CONTACT_CARDS = [
   {
@@ -146,16 +147,33 @@ export default function Contact() {
   };
 
   return (
-    <div className="page-shell pt-8">
-      <section className="surface-card p-6 sm:p-8">
+    <Motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="page-shell pt-8"
+    >
+      <Motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5 }}
+        className="surface-card p-6 sm:p-8"
+      >
         <h1 className="mb-3 text-3xl font-bold sm:text-4xl">Contact JMU Men&apos;s Rugby</h1>
         <p className="text-lg leading-relaxed text-jmuSlate">
           If you have questions about the team, recruiting, matches, or anything else, reach out using
           the contact options below.
         </p>
-      </section>
+      </Motion.section>
 
-      <section className="surface-card mb-4 mt-8 p-6 sm:p-8">
+      <Motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5 }}
+        className="surface-card mb-4 mt-8 p-6 sm:p-8"
+      >
         <h2 className="mb-5 text-center text-2xl font-bold">Get In Touch</h2>
 
         {loading ? (
@@ -167,7 +185,7 @@ export default function Contact() {
             {visibleCards.map((card) => {
               const action = buildCardAction(card);
               return (
-                <article key={card.id} className="surface-card-soft rounded-lg p-4">
+                <article key={card.id} className="surface-card-soft rounded-lg p-4 transition-transform hover:-translate-y-1">
                   <p className="mb-1 font-semibold text-jmuPurple">{card.label}</p>
                   <p className="mb-3 break-all text-jmuDarkGold">{card.value}</p>
                   <div className="flex flex-wrap justify-center gap-3">
@@ -193,7 +211,7 @@ export default function Contact() {
         )}
 
         {copyError && <p className="mt-4 font-semibold text-red-700">{copyError}</p>}
-      </section>
-    </div>
+      </Motion.section>
+    </Motion.div>
   );
 }

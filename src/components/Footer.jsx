@@ -15,24 +15,24 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="site-footer mt-8 w-full bg-jmuPurple/50 text-jmuGold font-arvo">
-      <div className="mx-auto w-full max-w-6xl border-t border-jmuDarkGold/85 px-4 pb-6 pt-5 text-center sm:px-6">
-        <section className="footer-panel mb-5 rounded-xl border border-jmuDarkGold/60 bg-jmuPurple/30 px-4 py-4">
-          <p className="mb-4 text-sm font-semibold text-jmuLightGold sm:text-base">
-            JMU Men's Rugby is proudly sponsored by
+    <footer className="site-footer mt-12 w-full bg-jmuPurple text-jmuGold font-arvo shadow-[0_-8px_30px_rgba(24,0,46,0.3)]">
+      <div className="mx-auto w-full max-w-6xl border-t border-jmuDarkGold/30 px-4 pb-8 pt-8 text-center sm:px-6">
+        <section className="mb-8 flex flex-col items-center">
+          <p className="mb-6 text-sm font-semibold uppercase tracking-widest text-jmuLightGold/80 sm:text-sm">
+            Proudly Sponsored By
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
             {sponsors.map((sponsor) => {
               const content = sponsor.logo_url ? (
                 <img
                   src={sponsor.logo_url}
                   alt={sponsor.alt_text || `${sponsor.name} logo`}
-                  className="h-14 w-auto object-contain sm:h-20"
+                  className="h-12 w-auto object-contain sm:h-16 opacity-90 transition-opacity hover:opacity-100 drop-shadow-md"
                   loading="lazy"
                 />
               ) : (
-                <span className="text-sm sm:text-base">{sponsor.name}</span>
+                <span className="text-sm font-bold sm:text-base text-jmuLightGold">{sponsor.name}</span>
               );
 
               if (sponsor.website_url) {
@@ -42,7 +42,7 @@ export default function Footer() {
                     href={sponsor.website_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="sponsor-item inline-flex items-center rounded-lg border border-transparent px-2 py-1 transition hover:border-jmuDarkGold/60 hover:bg-jmuPurple/35"
+                    className="sponsor-item inline-flex items-center transition-transform hover:scale-110 duration-300"
                   >
                     {content}
                   </a>
@@ -50,7 +50,7 @@ export default function Footer() {
               }
 
               return (
-                <div key={sponsor.id} className="sponsor-item inline-flex items-center rounded-lg px-2 py-1">
+                <div key={sponsor.id} className="sponsor-item inline-flex items-center">
                   {content}
                 </div>
               );
@@ -58,13 +58,15 @@ export default function Footer() {
           </div>
 
           {sponsors.length === 0 && (
-            <p className="text-xs text-jmuLightGold/80 sm:text-sm">Sponsor logos coming soon.</p>
+            <p className="text-xs text-jmuLightGold/60 italic sm:text-sm mt-4">Sponsor logos coming soon.</p>
           )}
         </section>
 
-        <p className="text-sm text-jmuLightGold/90">
-          &copy; {currentYear} JMU Men&apos;s Rugby | Fifteen as One
-        </p>
+        <div className="border-t border-jmuDarkGold/20 pt-6">
+          <p className="text-xs tracking-wider text-jmuLightGold/70">
+            &copy; {currentYear} JMU Men&apos;s Rugby | Fifteen as One
+          </p>
+        </div>
       </div>
     </footer>
   );

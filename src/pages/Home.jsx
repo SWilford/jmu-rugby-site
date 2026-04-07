@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
 import { supabase } from "../lib/supabaseClient";
 import { getMediaFilePath, MEDIA_HOME_CAROUSEL_COLUMNS } from "../lib/mediaUtils";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 
 import img0 from "../assets/home/image0.jpeg";
 import img1 from "../assets/home/image1.jpeg";
@@ -13,7 +14,6 @@ import img5 from "../assets/home/image5.JPG";
 
 const MAX_CAROUSEL_IMAGES = 6;
 const CAROUSEL_CYCLE_MS = 6000;
-const CAROUSEL_FADE_MS = 1200;
 const STATIC_CAROUSEL_IMAGES = [
   { key: "static-0", src: img0, alt: "Home carousel static image 0" },
   { key: "static-1", src: img1, alt: "Home carousel static image 1" },
@@ -48,15 +48,12 @@ const getSideOrder = (seasonId) => {
 
 export default function Home() {
   const [current, setCurrent] = useState(0);
-  const [exitingIndex, setExitingIndex] = useState(null);
   const [nextMatches, setNextMatches] = useState([]);
   const navigate = useNavigate();
-  const previousIndexRef = useRef(0);
   const [featuredImages, setFeaturedImages] = useState([]);
   const [carouselImages, setCarouselImages] = useState(() =>
     getStaticCarouselFallback(MAX_CAROUSEL_IMAGES)
   );
-  const [loadedCarouselIndexes, setLoadedCarouselIndexes] = useState(new Set([0, 1]));
 
   useEffect(() => {
     if (!carouselImages.length) return undefined;
@@ -67,57 +64,6 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [carouselImages.length]);
-
-  useEffect(() => {
-    setCurrent((prev) => (carouselImages.length ? prev % carouselImages.length : 0));
-  }, [carouselImages.length]);
-
-  useEffect(() => {
-    previousIndexRef.current = 0;
-    setExitingIndex(null);
-  }, [carouselImages.length]);
-
-  useEffect(() => {
-    if (!carouselImages.length) {
-      setLoadedCarouselIndexes(new Set());
-      return;
-    }
-
-    const initialIndexes = [0, carouselImages.length > 1 ? 1 : null].filter((value) => value !== null);
-    setLoadedCarouselIndexes(new Set(initialIndexes));
-  }, [carouselImages.length]);
-
-  useEffect(() => {
-    if (!carouselImages.length) return;
-
-    const nextIndex = (current + 1) % carouselImages.length;
-
-    setLoadedCarouselIndexes((prev) => {
-      if (prev.has(current) && prev.has(nextIndex)) return prev;
-      const nextSet = new Set(prev);
-      nextSet.add(current);
-      nextSet.add(nextIndex);
-      return nextSet;
-    });
-  }, [current, carouselImages.length]);
-
-  useEffect(() => {
-    if (!carouselImages.length) return undefined;
-
-    const previousIndex = previousIndexRef.current;
-    if (previousIndex === current) return undefined;
-
-    setExitingIndex(previousIndex);
-    previousIndexRef.current = current;
-
-    const timeoutId = window.setTimeout(() => {
-      setExitingIndex((value) => (value === previousIndex ? null : value));
-    }, CAROUSEL_FADE_MS);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [current, carouselImages.length]);
 
   useEffect(() => {
     (async () => {
@@ -207,131 +153,120 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="page-shell min-h-full justify-between pt-6 sm:pt-8">
-      <section
-        className="hero-banner relative mt-2 flex h-[52vh] w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-2xl border border-jmuDarkGold/80 shadow-[0_18px_36px_rgba(24,0,46,0.34)] sm:h-[64vh]"
-        style={{ "--carousel-cycle-ms": `${CAROUSEL_CYCLE_MS}ms` }}
-      >
-        {carouselImages.map((slide, i) => {
-          if (!loadedCarouselIndexes.has(i)) return null;
-
-          const isActive = i === current;
-          const isExiting = i === exitingIndex;
-          const visibilityClass = isActive ? "is-active z-10 opacity-100" : "";
-          const exitingClass = isExiting ? "is-exiting z-0 opacity-0" : "";
-          const zoomDirectionClass = i % 2 === 0 ? "zoom-in" : "zoom-out";
-
-          return (
-            <img
-              key={slide.key}
-              src={slide.src}
-              alt={slide.alt || `Slide ${i + 1}`}
-              loading={i === 0 ? "eager" : "lazy"}
-              fetchPriority={i === 0 ? "high" : "auto"}
-              decoding="async"
-              className={`hero-slide ${zoomDirectionClass} absolute inset-0 h-full w-full object-cover transition-opacity ease-linear ${
-                visibilityClass || exitingClass || "z-0 opacity-0"
-              }`}
-              style={{ transitionDuration: `${CAROUSEL_FADE_MS}ms` }}
+    <Motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="page-shell min-h-full justify-between pt-6 sm:pt-8"
+    >
+      <section className="relative mt-2 flex h-[55vh] w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-2xl border border-jmuDarkGold/60 shadow-xl sm:h-[68vh]">
+        <AnimatePresence mode="popLayout">
+          {carouselImages.length > 0 && (
+            <Motion.img
+              key={current}
+              src={carouselImages[current].src}
+              alt={carouselImages[current].alt}
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
+              className="absolute inset-0 h-full w-full object-cover"
+              loading="eager"
             />
-          );
-        })}
+          )}
+        </AnimatePresence>
 
-        <div className="absolute inset-0 z-20 bg-gradient-to-b from-black/35 via-jmuPurple/55 to-jmuPurple/85" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/40 via-jmuPurple/50 to-jmuPurple/90" />
 
-        <div className="hero-content relative z-30 flex max-w-3xl flex-col items-center justify-center px-4 text-center">
-          <h1 className="text-4xl font-bold text-jmuGold drop-shadow-md sm:text-6xl lg:text-7xl">
+        <div className="relative z-20 flex max-w-3xl flex-col items-center justify-center px-4 text-center">
+          <Motion.h1
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="text-4xl font-bold text-jmuGold drop-shadow-lg sm:text-6xl lg:text-7xl"
+          >
             JMU Men's Rugby
-          </h1>
-          <p className="mb-8 mt-3 text-base uppercase tracking-[0.4em] text-jmuLightGold/95 drop-shadow sm:text-xl">
+          </Motion.h1>
+          <Motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="mb-8 mt-3 text-base uppercase tracking-[0.4em] text-jmuLightGold/95 drop-shadow-md sm:text-xl font-semibold"
+          >
             Fifteen | As | One
-          </p>
+          </Motion.p>
 
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-            <Link
-              to="/schedule"
-              className="brand-button brand-button-gold hero-cta px-5 py-2.5 sm:px-6 sm:py-3"
-            >
+          <Motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+            className="flex flex-wrap justify-center gap-4 sm:gap-6"
+          >
+            <Link to="/schedule" className="brand-button brand-button-gold px-6 py-3 sm:px-8 sm:py-3.5 text-sm sm:text-base">
               View Schedule
             </Link>
-            <Link
-              to="/join"
-              className="brand-button brand-button-gold hero-cta px-5 py-2.5 sm:px-6 sm:py-3"
-            >
+            <Link to="/join" className="brand-button brand-button-gold px-6 py-3 sm:px-8 sm:py-3.5 text-sm sm:text-base">
               Join the Team
             </Link>
-          </div>
+          </Motion.div>
         </div>
 
-        <div className="absolute bottom-5 z-40 flex items-center gap-2 rounded-full border border-jmuGold/55 bg-jmuPurple/45 px-3 py-1.5 backdrop-blur-sm">
+        <div className="absolute bottom-6 z-30 flex items-center gap-2.5 rounded-full border border-jmuGold/40 bg-jmuPurple/60 px-4 py-2 backdrop-blur-md">
           {carouselImages.map((slide, i) => (
             <button
               key={`dot-${slide.key}`}
               type="button"
               onClick={() => setCurrent(i)}
-              className={`carousel-dot ${i === current ? "is-active" : ""}`}
+              className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
+                i === current ? "bg-jmuGold w-6" : "bg-jmuLightGold/40 hover:bg-jmuLightGold/80"
+              }`}
               aria-label={`View slide ${i + 1}`}
             />
           ))}
         </div>
       </section>
 
-      <section className="surface-card mt-8 p-6 sm:p-8">
-        <h2 className="text-2xl font-bold">About the Dukes</h2>
-        <p className="mb-6 mt-4 leading-relaxed text-jmuSlate">
+      <Motion.section
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6 }}
+        className="surface-card mt-12 p-8 sm:p-10"
+      >
+        <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl">About the Dukes</h2>
+        <p className="mb-6 mt-4 text-lg leading-relaxed text-jmuSlate">
           Founded in 1974, JMU Men's Rugby is a tight knit brotherhood competing in the National
           Collegiate Rugby D1-AA division. We pride ourselves on grit, discipline, and a strong culture
           of camaraderie both on and off the pitch.
         </p>
         <Link
           to="/about"
-          className="inline-flex items-center gap-2 font-semibold text-jmuPurple transition hover:text-jmuDarkGold"
+          className="inline-flex items-center gap-2 font-bold text-jmuPurple transition hover:text-jmuDarkGold text-lg"
         >
           Learn More <FaArrowRight aria-hidden="true" />
         </Link>
-      </section>
+      </Motion.section>
 
-      <section className="surface-card mt-8 p-5 sm:p-8">
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-xl font-bold sm:text-2xl">Follow Us on Instagram</h2>
-          <a
-            href="https://www.instagram.com/jmumensrugby/"
-            target="_blank"
-            rel="noreferrer"
-            className="brand-button px-4 py-2 text-sm"
-          >
-            Open @jmumensrugby
-          </a>
-        </div>
-
-        <div className="instagram-embed-shell mt-5 overflow-hidden rounded-xl border border-jmuDarkGold/70 bg-jmuLightGold/35 shadow-sm">
-          <iframe
-            src="https://www.instagram.com/jmumensrugby/embed"
-            title="JMU Men's Rugby Instagram feed"
-            loading="lazy"
-            className="instagram-embed-frame w-full border-0"
-          />
-        </div>
-
-        <p className="mt-3 text-xs leading-relaxed text-jmuDarkGold">
-          If this embed is blocked by your browser settings, use the button above to open Instagram directly.
-        </p>
-      </section>
-
-      <section className="surface-card mt-8 p-6 sm:p-8">
-        <h2 className="text-2xl font-bold">Next Match</h2>
+      <Motion.section
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6 }}
+        className="surface-card mt-12 p-8 sm:p-10"
+      >
+        <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl mb-6">Next Match</h2>
 
         {nextMatches.length > 0 ? (
-          <Link to="/schedule" className="mt-5 block overflow-hidden rounded-xl border border-jmuDarkGold/70">
+          <Link to="/schedule" className="block overflow-hidden rounded-xl border border-jmuDarkGold/40 transition hover:shadow-lg">
             {nextMatches.map((match, index) => (
               <div
                 key={match.id}
-                className={`${index > 0 ? "border-t border-jmuDarkGold/75" : ""} bg-jmuLightGold/30 px-4 py-4 transition hover:bg-jmuLightGold/55`}
+                className={`${index > 0 ? "border-t border-jmuDarkGold/30" : ""} bg-white/60 px-6 py-5 transition hover:bg-white/90`}
               >
                 <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                   <div>
                     <p className="mb-1 text-2xl font-bold text-jmuPurple">{match.opponent}</p>
-                    <p className="font-medium text-jmuDarkGold">
+                    <p className="font-medium text-jmuDarkGold text-lg">
                       {parseDateOnly(match.date).toLocaleDateString("en-US", {
                         weekday: "short",
                         month: "short",
@@ -342,12 +277,12 @@ export default function Home() {
                   </div>
 
                   {match.show_result && match.result && (
-                    <p className="text-xl font-bold text-jmuPurple">{match.result}</p>
+                    <p className="text-2xl font-bold text-jmuPurple bg-jmuGold/20 px-4 py-2 rounded-lg">{match.result}</p>
                   )}
                 </div>
 
                 {match.notes && (
-                  <div className="mt-3 border-t border-jmuDarkGold/70 pt-3 text-sm text-jmuPurple/85">
+                  <div className="mt-4 border-t border-jmuDarkGold/20 pt-4 text-base text-jmuSlate">
                     <p className="line-clamp-2 italic">{match.notes}</p>
                   </div>
                 )}
@@ -355,19 +290,58 @@ export default function Home() {
             ))}
           </Link>
         ) : (
-          <p className="mt-6 italic text-jmuDarkGold">No upcoming matches - check back soon.</p>
+          <div className="bg-jmuLightGold/30 p-6 rounded-xl border border-jmuDarkGold/30">
+            <p className="italic text-jmuDarkGold text-lg">No upcoming matches scheduled - check back soon.</p>
+          </div>
         )}
-      </section>
+      </Motion.section>
 
-      <section className="surface-card mb-4 mt-8 p-6 sm:p-8">
-        <h2 className="text-2xl font-bold">Gallery</h2>
+      <Motion.section
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6 }}
+        className="surface-card mt-12 p-8 sm:p-10"
+      >
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl">Follow Us on Instagram</h2>
+          <a
+            href="https://www.instagram.com/jmumensrugby/"
+            target="_blank"
+            rel="noreferrer"
+            className="brand-button px-5 py-2.5 text-sm"
+          >
+            Open @jmumensrugby
+          </a>
+        </div>
+
+        <div className="instagram-embed-shell overflow-hidden rounded-xl border border-jmuDarkGold/40 bg-white shadow-sm transition hover:shadow-md">
+          <iframe
+            src="https://www.instagram.com/jmumensrugby/embed"
+            title="JMU Men's Rugby Instagram feed"
+            loading="lazy"
+            className="instagram-embed-frame w-full border-0"
+          />
+        </div>
+      </Motion.section>
+
+      <Motion.section
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6 }}
+        className="surface-card mb-8 mt-12 p-8 sm:p-10"
+      >
+        <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl mb-6">Gallery</h2>
 
         {featuredImages.length === 0 ? (
-          <p className="mt-6 text-center italic text-jmuDarkGold">No featured photos yet.</p>
+          <p className="text-center italic text-jmuDarkGold text-lg py-8">No featured photos yet.</p>
         ) : (
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {featuredImages.map((photo) => (
-              <img
+              <Motion.img
+                whileHover={{ scale: 1.03, y: -4 }}
+                transition={{ type: "spring", stiffness: 300 }}
                 key={photo.id}
                 src={getMediaFilePath(photo)}
                 alt={photo.album}
@@ -376,22 +350,21 @@ export default function Home() {
                     `/media?album=${encodeURIComponent(photo.album)}&season=${photo.season_id}&photo=${photo.id}`
                   )
                 }
-                className="h-40 w-full cursor-pointer rounded-lg border border-jmuDarkGold/80 object-cover transition duration-200 hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md sm:h-48"
+                className="h-44 w-full cursor-pointer rounded-xl border border-jmuDarkGold/30 object-cover shadow-sm"
               />
             ))}
           </div>
         )}
 
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center">
           <Link
             to="/media"
-            className="inline-flex items-center gap-2 font-semibold text-jmuPurple transition hover:text-jmuDarkGold"
+            className="inline-flex items-center gap-2 font-bold text-jmuPurple transition hover:text-jmuDarkGold text-lg"
           >
-            View More <FaArrowRight aria-hidden="true" />
+            View More Photos <FaArrowRight aria-hidden="true" />
           </Link>
         </div>
-      </section>
-    </div>
+      </Motion.section>
+    </Motion.div>
   );
 }
-

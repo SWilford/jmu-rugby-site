@@ -5,6 +5,7 @@ import JoinMediaPlaceholders from "../components/Join/JoinMediaPlaceholders";
 import JOIN_INFO_FALLBACK, { getJoinInfo } from "../data/joinInfo";
 import { supabase } from "../lib/supabaseClient";
 import { getMediaFilePath, MEDIA_JOIN_PAGE_COLUMNS } from "../lib/mediaUtils";
+import { motion as Motion } from "framer-motion";
 
 const MAX_JOIN_MEDIA_IMAGES = 3;
 
@@ -133,8 +134,19 @@ export default function Join() {
   }
 
   return (
-    <div className="page-shell pt-6 sm:pt-8">
-      <section className="surface-card p-5 sm:p-8">
+    <Motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="page-shell pt-6 sm:pt-8"
+    >
+      <Motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5 }}
+        className="surface-card p-5 sm:p-8"
+      >
         <h1 className="mb-3 text-2xl font-bold sm:text-4xl">{joinInfo.title}</h1>
         <p className="text-base leading-relaxed text-jmuSlate sm:text-lg">{joinInfo.intro}</p>
         {joinInfoError && (
@@ -142,7 +154,7 @@ export default function Join() {
             {joinInfoError}
           </div>
         )}
-      </section>
+      </Motion.section>
 
       <JoinMediaPlaceholders
         video={mediaSlotConfig.video}
@@ -152,7 +164,14 @@ export default function Join() {
         galleryError={joinGalleryError}
       />
 
-      <section id="practice-schedule" className="surface-card mt-8 p-5 sm:p-8">
+      <Motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5 }}
+        id="practice-schedule"
+        className="surface-card mt-8 p-5 sm:p-8"
+      >
         <h2 className="mb-5 text-xl font-bold sm:text-2xl">Practice &amp; Season Details</h2>
 
         <div className="space-y-6 md:hidden">
@@ -224,9 +243,15 @@ export default function Join() {
             </div>
           </article>
         </div>
-      </section>
+      </Motion.section>
 
-      <section className="surface-card mt-8 p-5 sm:p-8">
+      <Motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5 }}
+        className="surface-card mt-8 p-5 sm:p-8"
+      >
         <h2 className="mb-4 text-xl font-bold sm:text-2xl">Gear &amp; Expectations</h2>
         <ul className="list-disc space-y-2 pl-5 leading-relaxed text-sm text-jmuSlate sm:pl-6 sm:text-base">
           {joinInfo.gear.map((item) => (
@@ -234,9 +259,15 @@ export default function Join() {
           ))}
         </ul>
         <p className="mt-4 text-sm leading-relaxed text-jmuSlate sm:text-base">{joinInfo.eligibility}</p>
-      </section>
+      </Motion.section>
 
-      <section className="surface-card mb-4 mt-8 p-5 sm:p-8">
+      <Motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5 }}
+        className="surface-card mb-4 mt-8 p-5 sm:p-8"
+      >
         <h2 className="mb-5 text-xl font-bold sm:text-2xl">FAQs</h2>
         <JoinFaqAccordion faqs={joinInfo.faqs} />
 
@@ -246,7 +277,7 @@ export default function Join() {
             Contact
           </Link>
         </div>
-      </section>
-    </div>
+      </Motion.section>
+    </Motion.div>
   );
 }

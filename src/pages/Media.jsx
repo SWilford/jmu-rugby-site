@@ -109,7 +109,12 @@ export default function Media() {
   if (loading) return <p className="mt-12 text-center text-jmuLightGold">Loading media...</p>;
 
   return (
-    <section className="surface-card mb-4 mt-8 p-5 sm:p-6">
+    <Motion.section
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="surface-card mb-4 mt-8 p-5 sm:p-6"
+    >
       <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <h2 className="text-3xl font-bold">Media Gallery</h2>
 
@@ -262,6 +267,6 @@ export default function Media() {
           </Motion.div>
         )}
       </AnimatePresence>
-    </section>
+    </Motion.section>
   );
 }
