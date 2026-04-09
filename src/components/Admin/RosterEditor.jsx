@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { extractStorageObjectPath, sanitizeFileName } from "../../lib/mediaUtils";
+import { buildRosterImportDiff, buildRosterImportPreview } from "../../lib/rosterCsv";
 import { buildStoragePublicUrl, deleteR2Objects, uploadFileToR2 } from "../../lib/storageUtils";
 
 const MEDIA_BUCKET = "rugby-media";
@@ -49,6 +50,29 @@ const toUserFriendlyRosterError = (error, fallbackMessage) => {
 };
 
 const normalizeText = (value) => String(value || "").trim();
+const toNullableText = (value) => {
+  const normalized = normalizeText(value);
+  return normalized || null;
+};
+const toNullableNumber = (value) => {
+  const normalized = normalizeText(value);
+  if (!normalized) return null;
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const buildPlayerWritePayload = (player) => ({
+  name: normalizeText(player.name),
+  position: normalizeText(player.position),
+  year: toNullableText(player.year),
+  major: toNullableText(player.major),
+  hometown: toNullableText(player.hometown),
+  height: toNullableText(player.height),
+  weight: toNullableNumber(player.weight),
+  bio: toNullableText(player.bio),
+  headshot_url: toNullableText(player.headshot_url),
+});
 
 function HeadshotDropzone({
   isDragging,
@@ -172,9 +196,12 @@ export default function RosterEditor() {
   const [removeCoachHeadshot, setRemoveCoachHeadshot] = useState(false);
   const [playerDragging, setPlayerDragging] = useState(false);
   const [coachDragging, setCoachDragging] = useState(false);
+  const [csvImportPreview, setCsvImportPreview] = useState(null);
+  const [csvImportFileName, setCsvImportFileName] = useState("");
 
   const playerFileInputRef = useRef(null);
   const coachFileInputRef = useRef(null);
+  const csvFileInputRef = useRef(null);
 
   const sortedPlayers = useMemo(
     () =>
@@ -209,6 +236,14 @@ export default function RosterEditor() {
     setCoachHeadshotFile(null);
     setRemoveCoachHeadshot(false);
     setCoachDragging(false);
+  };
+
+  const resetCsvImportState = () => {
+    setCsvImportPreview(null);
+    setCsvImportFileName("");
+    if (csvFileInputRef.current) {
+      csvFileInputRef.current.value = "";
+    }
   };
 
   const loadRosterData = async () => {
@@ -354,6 +389,123 @@ export default function RosterEditor() {
     });
   };
 
+  const handlePreviewCsvImport = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setError("");
+    setStatus("");
+
+    try {
+      const csvText = await file.text();
+      const preview = buildRosterImportPreview(csvText, players);
+      setCsvImportPreview(preview);
+      setCsvImportFileName(file.name);
+
+      if (preview.summary.parsed === 0) {
+        setStatus("The CSV did not contain any player rows after formatting.");
+      } else if (preview.invalidRows.length > 0) {
+        setStatus(
+          `Preview ready. Fix ${preview.invalidRows.length} row${
+            preview.invalidRows.length === 1 ? "" : "s"
+          } before replacing the roster.`
+        );
+      } else {
+        setStatus(
+          `Preview ready for ${preview.summary.valid} player${
+            preview.summary.valid === 1 ? "" : "s"
+          }. Confirm below to replace the roster.`
+        );
+      }
+    } catch (previewError) {
+      resetCsvImportState();
+      setError(previewError.message || "Unable to read this CSV file.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const handleReplaceRosterFromCsv = async () => {
+    if (!csvImportPreview) {
+      setError("Upload a CSV to preview the replacement before importing.");
+      return;
+    }
+
+    if (csvImportPreview.invalidRows.length > 0) {
+      setError("Fix the CSV issues shown in the preview before replacing the roster.");
+      return;
+    }
+
+    if (csvImportPreview.validRows.length === 0) {
+      setError("This CSV does not contain any valid player rows to import.");
+      return;
+    }
+
+    if (!window.confirm("Replace the current player roster with this CSV preview? Existing matching headshots will be kept.")) {
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setStatus("");
+
+    try {
+      const diff = buildRosterImportDiff(players, csvImportPreview.validRows);
+
+      for (const row of diff.matchedRows) {
+        const writePayload = buildPlayerWritePayload(row.nextRow);
+        const { error: updateError } = await supabase.from("roster").update(writePayload).eq("id", row.existingPlayer.id);
+        if (updateError) throw updateError;
+      }
+
+      if (diff.newRows.length > 0) {
+        const insertPayload = diff.newRows.map((row) => ({
+          id: row.id,
+          ...buildPlayerWritePayload(row),
+        }));
+        const { error: insertError } = await supabase.from("roster").insert(insertPayload);
+        if (insertError) throw insertError;
+      }
+
+      if (diff.removedPlayers.length > 0) {
+        const { error: deleteError } = await supabase
+          .from("roster")
+          .delete()
+          .in(
+            "id",
+            diff.removedPlayers.map((player) => player.id)
+          );
+        if (deleteError) throw deleteError;
+      }
+
+      const cleanupNotices = [];
+      for (const player of diff.removedPlayers) {
+        const notice = await removeHeadshotFromStorage(player.headshot_url, {
+          required: false,
+          context: `player headshot for ${normalizeText(player.name) || `player #${player.id}`}`,
+        });
+        if (notice) cleanupNotices.push(notice);
+      }
+
+      if (editingPlayerId && diff.removedPlayers.some((player) => player.id === editingPlayerId)) {
+        resetPlayerForm();
+      }
+
+      resetCsvImportState();
+      await loadRosterData();
+
+      let nextStatus = `Roster replaced. ${diff.summary.matched} matched, ${diff.summary.added} added, ${diff.summary.removed} removed.`;
+      if (cleanupNotices.length > 0) {
+        nextStatus = `${nextStatus} ${Array.from(new Set(cleanupNotices)).join(" ")}`.trim();
+      }
+      setStatus(nextStatus);
+    } catch (importError) {
+      setError(toUserFriendlyRosterError(importError, "Unable to replace the roster from this CSV."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const startEditingCoach = (coach) => {
     setError("");
     setStatus("");
@@ -411,8 +563,10 @@ export default function RosterEditor() {
       }
 
       const writePayload = {
-        ...payload,
-        headshot_url: nextHeadshotPath || null,
+        ...buildPlayerWritePayload({
+          ...payload,
+          headshot_url: nextHeadshotPath,
+        }),
       };
 
       let writeError;
@@ -654,6 +808,129 @@ export default function RosterEditor() {
                   >
                     New player
                   </button>
+                </div>
+
+                <div className="mt-4 rounded border border-jmuDarkGold/80 bg-jmuPurple/25 p-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h5 className="font-semibold text-jmuLightGold">Bulk CSV Upload</h5>
+                      <p className="mt-1 text-xs text-jmuLightGold/80">
+                        Upload the Google Form CSV, preview the cleaned roster, then confirm to replace all player rows.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => csvFileInputRef.current?.click()}
+                      className="rounded border border-jmuLightGold px-3 py-1.5 text-xs hover:bg-jmuLightGold hover:text-jmuPurple disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      Choose CSV
+                    </button>
+                  </div>
+
+                  <input
+                    ref={csvFileInputRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={handlePreviewCsvImport}
+                  />
+
+                  {csvImportFileName && (
+                    <p className="mt-3 text-xs text-jmuLightGold/85">Previewing: {csvImportFileName}</p>
+                  )}
+
+                  {csvImportPreview && (
+                    <div className="mt-3 space-y-3">
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        <div className="rounded border border-jmuDarkGold/70 bg-jmuPurple/30 px-3 py-2 text-xs">
+                          <p className="uppercase tracking-wide text-jmuLightGold/70">Rows</p>
+                          <p className="mt-1 text-sm font-semibold text-white">
+                            {csvImportPreview.summary.valid} valid / {csvImportPreview.summary.parsed} parsed
+                          </p>
+                        </div>
+                        <div className="rounded border border-jmuDarkGold/70 bg-jmuPurple/30 px-3 py-2 text-xs">
+                          <p className="uppercase tracking-wide text-jmuLightGold/70">Changes</p>
+                          <p className="mt-1 text-sm font-semibold text-white">
+                            {csvImportPreview.summary.matched} matched, {csvImportPreview.summary.added} new
+                          </p>
+                        </div>
+                        <div className="rounded border border-jmuDarkGold/70 bg-jmuPurple/30 px-3 py-2 text-xs">
+                          <p className="uppercase tracking-wide text-jmuLightGold/70">Removed</p>
+                          <p className="mt-1 text-sm font-semibold text-white">
+                            {csvImportPreview.summary.removed} old player{csvImportPreview.summary.removed === 1 ? "" : "s"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {csvImportPreview.invalidRows.length > 0 && (
+                        <div className="rounded border border-red-300/60 bg-red-100/10 p-3 text-xs text-red-100">
+                          <p className="font-semibold text-red-100">
+                            Fix these rows before replacing the roster:
+                          </p>
+                          <ul className="mt-2 space-y-2">
+                            {csvImportPreview.invalidRows.map((row, index) => (
+                              <li key={`${row.sourceRowNumber}-${index}`}>
+                                Row {row.sourceRowNumber}
+                                {row.name ? ` (${row.name})` : ""}: {row.messages.join(" ")}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <div className="rounded border border-jmuDarkGold/70 bg-jmuPurple/30 p-3 text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-semibold text-jmuLightGold">
+                            Preview sample
+                          </p>
+                          <p className="text-jmuLightGold/75">
+                            Showing {Math.min(csvImportPreview.validRows.length, 6)} of {csvImportPreview.validRows.length} valid players
+                          </p>
+                        </div>
+
+                        {csvImportPreview.validRows.length === 0 ? (
+                          <p className="mt-2 text-jmuLightGold/80">No valid player rows are ready to import yet.</p>
+                        ) : (
+                          <ul className="mt-2 space-y-2">
+                            {csvImportPreview.validRows.slice(0, 6).map((row) => (
+                              <li
+                                key={`${row.canonicalNameKey}-${row.sourceRowNumber}`}
+                                className="rounded border border-jmuDarkGold/60 bg-jmuPurple/35 px-3 py-2"
+                              >
+                                <p className="font-semibold text-white">{row.name}</p>
+                                <p className="text-jmuLightGold/80">
+                                  {row.position || "No position"}{row.year ? ` - ${row.year}` : ""}
+                                </p>
+                                <p className="text-jmuLightGold/70">
+                                  {row.major || "No major"}{row.hometown ? ` | ${row.hometown}` : ""}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={resetCsvImportState}
+                          className="rounded border border-jmuLightGold px-3 py-1.5 text-xs hover:bg-jmuLightGold hover:text-jmuPurple disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          Cancel preview
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy || csvImportPreview.invalidRows.length > 0 || csvImportPreview.validRows.length === 0}
+                          onClick={handleReplaceRosterFromCsv}
+                          className="rounded bg-jmuGold px-3 py-1.5 text-xs font-semibold text-jmuPurple transition hover:bg-jmuLightGold disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          {busy ? "Replacing..." : "Replace roster"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {sortedPlayers.length === 0 ? (
