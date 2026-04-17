@@ -33,12 +33,12 @@ export default function About() {
       className="page-shell pt-8"
     >
       <section className="surface-card p-6 sm:p-8">
-        <h1 className="mb-2 text-3xl font-bold sm:text-4xl">About JMU Men&apos;s Rugby</h1>
+        <h1 className="mb-2 text-3xl font-bold sm:text-4xl">About JMU Men&apos;s Rugby Club</h1>
         <p className="mb-6 text-sm font-semibold uppercase tracking-[0.28em] text-jmuDarkGold sm:text-base">
           Fifteen | As | One
         </p>
         <p className="text-lg leading-relaxed text-jmuSlate">
-          JMU Men&apos;s Rugby is a competitive brotherhood built on standards, work ethic, and commitment.
+          JMU Men&apos;s Rugby Club is a competitive brotherhood built on standards, work ethic, and commitment.
           We compete to win, represent James Madison University with pride, and develop men who are
           dependable on and off the pitch.
         </p>
@@ -47,7 +47,7 @@ export default function About() {
       <section className="surface-card mt-8 p-6 sm:p-8">
         <h2 className="mb-4 text-2xl font-bold">Program History</h2>
         <p className="mb-4 leading-relaxed text-jmuSlate">
-          Founded in 1974, JMU Men&apos;s Rugby has a long tradition of physical, disciplined, and team-first
+          Founded in 1974, JMU Men&apos;s Rugby Club has a long tradition of physical, disciplined, and team-first
           rugby. Generations of Dukes have helped build a culture centered on respect, consistency, and
           competitive pride.
         </p>
@@ -84,7 +84,7 @@ export default function About() {
       <section className="surface-card mb-4 mt-8 p-6 sm:p-8">
         <h2 className="mb-4 text-2xl font-bold">Be Part of the Program</h2>
         <p className="mb-6 leading-relaxed text-jmuSlate">
-          Interested in competing for JMU Men&apos;s Rugby? See what&apos;s ahead and take the next step.
+          Interested in competing for JMU Men&apos;s Rugby Club? See what&apos;s ahead and take the next step.
         </p>
         <div className="flex flex-wrap gap-3 sm:gap-4">
           <Link to="/join" className="brand-button px-6 py-3">

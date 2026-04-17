@@ -19,7 +19,7 @@ export default function Footer() {
       <div className="mx-auto w-full max-w-6xl border-t border-jmuDarkGold/30 px-4 pb-8 pt-8 text-center sm:px-6">
         <section className="mb-8 flex flex-col items-center">
           <p className="mb-6 text-sm font-semibold uppercase tracking-widest text-jmuLightGold/80 sm:text-sm">
-            Proudly Sponsored By
+            JMU Men&apos;s Rugby Club Is Proudly Sponsored By
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
@@ -64,7 +64,7 @@ export default function Footer() {
 
         <div className="border-t border-jmuDarkGold/20 pt-6">
           <p className="text-xs tracking-wider text-jmuLightGold/70">
-            &copy; {currentYear} JMU Men&apos;s Rugby | Fifteen as One
+            &copy; {currentYear} JMU Men&apos;s Rugby Club | Fifteen as One
           </p>
         </div>
       </div>

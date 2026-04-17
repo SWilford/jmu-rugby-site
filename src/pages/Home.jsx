@@ -128,7 +128,7 @@ export default function Home() {
           const dynamicSlides = (carouselRows || []).map((row) => ({
             key: `media-${row.id}`,
             src: getMediaFilePath(row),
-            alt: row.album ? `${row.album} carousel photo` : "JMU Rugby carousel photo",
+            alt: row.album ? `${row.album} carousel photo` : "JMU Men's Rugby Club carousel photo",
           }));
 
           setCarouselImages(buildCarouselImages(dynamicSlides));
@@ -185,7 +185,7 @@ export default function Home() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-4xl font-bold text-jmuGold drop-shadow-lg sm:text-6xl lg:text-7xl"
           >
-            JMU Men's Rugby
+            JMU Men's Rugby Club
           </Motion.h1>
           <Motion.p
             initial={{ y: 20, opacity: 0 }}
@@ -229,7 +229,7 @@ export default function Home() {
       <section className="surface-card mt-12 p-8 sm:p-10">
         <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl">About the Dukes</h2>
         <p className="mb-6 mt-4 text-lg leading-relaxed text-jmuSlate">
-          Founded in 1974, JMU Men's Rugby is a tight knit brotherhood competing in the National
+          Founded in 1974, JMU Men's Rugby Club is a tight knit brotherhood competing in the National
           Collegiate Rugby D1-AA division. We pride ourselves on grit, discipline, and a strong culture
           of camaraderie both on and off the pitch.
         </p>
@@ -300,7 +300,7 @@ export default function Home() {
         <div className="instagram-embed-shell overflow-hidden rounded-xl border border-jmuDarkGold/40 bg-white shadow-sm transition hover:shadow-md">
           <iframe
             src="https://www.instagram.com/jmumensrugby/embed"
-            title="JMU Men's Rugby Instagram feed"
+            title="JMU Men's Rugby Club Instagram feed"
             loading="lazy"
             className="instagram-embed-frame w-full border-0"
           />

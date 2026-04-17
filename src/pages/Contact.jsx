@@ -154,7 +154,7 @@ export default function Contact() {
       className="page-shell pt-8"
     >
       <section className="surface-card p-6 sm:p-8">
-        <h1 className="mb-3 text-3xl font-bold sm:text-4xl">Contact JMU Men&apos;s Rugby</h1>
+        <h1 className="mb-3 text-3xl font-bold sm:text-4xl">Contact JMU Men&apos;s Rugby Club</h1>
         <p className="text-lg leading-relaxed text-jmuSlate">
           If you have questions about the team, recruiting, matches, or anything else, reach out using
           the contact options below.

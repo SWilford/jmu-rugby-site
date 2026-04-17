@@ -1,4 +1,4 @@
-# JMU Men's Rugby Web Platform - Project Dossier
+# JMU Men's Rugby Club Web Platform - Project Dossier
 
 This repository is not just a static site codebase. It is the operating system for a college rugby program's public brand, admin workflows, and media pipeline.
 

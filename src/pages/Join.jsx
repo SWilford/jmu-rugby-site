@@ -97,7 +97,7 @@ export default function Join() {
           .map((row) => ({
             id: row.id,
             src: getMediaFilePath(row),
-            alt: row.album ? `${row.album} join page photo` : "JMU Rugby join page photo",
+            alt: row.album ? `${row.album} join page photo` : "JMU Men's Rugby Club join page photo",
           }))
           .filter((row) => Boolean(row.src));
 

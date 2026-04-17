@@ -212,7 +212,7 @@ export default function Media() {
                       >
                         <img
                           src={getMediaFilePath(photo)}
-                          alt={photo.caption || "JMU Rugby"}
+                          alt={photo.caption || "JMU Men's Rugby Club"}
                           className="h-44 w-full cursor-pointer object-cover transition duration-200 group-hover:scale-[1.02]"
                           onClick={() => setSelectedPhoto(photo)}
                         />
@@ -244,7 +244,7 @@ export default function Media() {
             >
               <img
                 src={getMediaFilePath(selectedPhoto)}
-                alt={selectedPhoto.caption || "JMU Rugby"}
+                alt={selectedPhoto.caption || "JMU Men's Rugby Club"}
                 className="max-h-[80vh] w-full rounded-lg object-contain"
               />
               <div className="mt-4 flex items-center justify-between gap-3">

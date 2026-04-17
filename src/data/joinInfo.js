@@ -1,9 +1,9 @@
 import { supabase } from "../lib/supabaseClient";
 
 export const JOIN_INFO_FALLBACK = {
-  title: "Join JMU Men's Rugby",
+  title: "Join JMU Men's Rugby Club",
   intro:
-    "JMU Men's Rugby welcomes students at all experience levels who are prepared to train consistently, compete, and contribute to a team-first culture. If you are interested in joining, you can begin by attending practice and introducing yourself to the team.",
+    "JMU Men's Rugby Club welcomes students at all experience levels who are prepared to train consistently, compete, and contribute to a team-first culture. If you are interested in joining, you can begin by attending practice and introducing yourself to the team.",
   cta: {
     email: "jmurugby@gmail.com",
     instagram: "https://www.instagram.com/jmumensrugby/",
@@ -44,7 +44,7 @@ export const JOIN_INFO_FALLBACK = {
     {
       question: "Do I need experience?",
       answer:
-        "No experience is required. JMU Men's Rugby welcomes beginners and experienced players, and our training structure is designed to teach fundamentals while improving fitness.",
+        "No experience is required. JMU Men's Rugby Club welcomes beginners and experienced players, and our training structure is designed to teach fundamentals while improving fitness.",
     },
     {
       question: "What should I bring?",
