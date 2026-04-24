@@ -65,14 +65,14 @@ export default function Navbar() {
         </NavLink>
       </div>
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center border-y border-jmuDarkGold/40 px-5 py-6 sm:flex-row sm:justify-start sm:px-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center border-y border-jmuDarkGold/40 px-4 py-6 sm:flex-row sm:justify-start sm:px-6">
         <img
           src={logoGold}
           alt="JMU Men's Rugby Club logo"
-          className="brand-crest mb-3 h-20 w-auto object-contain sm:mb-0 sm:mr-5 sm:h-24 transition-transform duration-300 hover:scale-105"
+          className="brand-crest mb-3 h-[4.5rem] w-auto object-contain transition-transform duration-300 hover:scale-105 sm:mb-0 sm:mr-5 sm:h-24"
         />
-        <div className="text-center leading-tight sm:text-left">
-          <h1 className="site-title text-4xl font-bold tracking-tight text-jmuGold sm:text-5xl lg:text-6xl drop-shadow-lg">
+        <div className="w-full min-w-0 text-center leading-tight sm:text-left">
+          <h1 className="site-title mx-auto text-2xl font-bold tracking-tight text-jmuGold drop-shadow-lg sm:mx-0 sm:text-5xl lg:text-6xl">
             JMU Men's Rugby Club
           </h1>
           <p className="mt-2 text-xs uppercase tracking-[0.35em] text-jmuLightGold/90 sm:text-sm drop-shadow-md">
@@ -83,13 +83,13 @@ export default function Navbar() {
 
       <nav className="bg-transparent">
         <div className="mx-auto w-full max-w-6xl px-3 sm:px-5">
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 py-4 sm:justify-start">
+          <div className="flex flex-wrap items-center justify-center gap-2 py-4 sm:justify-start sm:gap-4">
             {links.map(([label, path]) => (
               <NavLink
                 key={label}
                 to={path}
                 className={({ isActive }) =>
-                  `nav-link-chip rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide transition-all duration-300 sm:text-base border border-transparent ${
+                  `nav-link-chip rounded-full px-3 py-1.5 text-sm font-semibold tracking-wide transition-all duration-300 sm:px-4 sm:text-base border border-transparent ${
                     isActive
                       ? "is-active bg-jmuGold text-jmuPurple shadow-[0_4px_12px_rgba(203,182,119,0.3)] border-jmuGold"
                       : "text-jmuLightGold hover:bg-jmuGold/10 hover:text-jmuGold hover:border-jmuGold/30"

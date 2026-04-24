@@ -55,6 +55,20 @@ export default function Home() {
     getStaticCarouselFallback(MAX_CAROUSEL_IMAGES)
   );
 
+  const handleCarouselImageError = (failedKey) => {
+    setCarouselImages((slides) => {
+      const fallbackSlides = getStaticCarouselFallback(MAX_CAROUSEL_IMAGES);
+      return slides.map((slide, index) => {
+        if (slide.key !== failedKey || slide.key.startsWith("fallback-")) return slide;
+        const fallback = fallbackSlides[index % fallbackSlides.length];
+        return {
+          ...fallback,
+          key: `fallback-${failedKey}`,
+        };
+      });
+    });
+  };
+
   useEffect(() => {
     if (!carouselImages.length) return undefined;
 
@@ -159,31 +173,32 @@ export default function Home() {
       transition={{ duration: 0.4 }}
       className="page-shell min-h-full justify-between pt-6 sm:pt-8"
     >
-      <section className="relative mt-2 flex h-[55vh] w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-2xl border border-jmuDarkGold/60 shadow-xl sm:h-[68vh]">
+      <section className="hero-banner relative mt-2 flex min-h-[32rem] w-full max-w-6xl flex-col items-center justify-center overflow-hidden border border-jmuDarkGold/60 sm:min-h-[40rem]">
         <AnimatePresence mode="popLayout">
           {carouselImages.length > 0 && (
             <Motion.img
               key={current}
               src={carouselImages[current].src}
               alt={carouselImages[current].alt}
+              onError={() => handleCarouselImageError(carouselImages[current].key)}
               initial={{ opacity: 0, scale: 1.05 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.2, ease: "easeInOut" }}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="hero-image absolute inset-0 h-full w-full object-cover"
               loading="eager"
             />
           )}
         </AnimatePresence>
 
-        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/40 via-jmuPurple/50 to-jmuPurple/90" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/25 via-jmuPurple/30 to-jmuPurple/80" />
 
-        <div className="relative z-20 flex max-w-3xl flex-col items-center justify-center px-4 text-center">
+        <div className="hero-content relative z-20 flex flex-col items-center justify-center px-4 text-center">
           <Motion.h1
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-4xl font-bold text-jmuGold drop-shadow-lg sm:text-6xl lg:text-7xl"
+            className="text-2xl font-bold text-jmuGold drop-shadow-lg sm:text-6xl lg:text-7xl"
           >
             JMU Men's Rugby Club
           </Motion.h1>
@@ -200,12 +215,12 @@ export default function Home() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.6 }}
-            className="flex flex-wrap justify-center gap-4 sm:gap-6"
+            className="flex w-full flex-wrap justify-center gap-3 sm:gap-6"
           >
-            <Link to="/schedule" className="brand-button brand-button-gold px-6 py-3 sm:px-8 sm:py-3.5 text-sm sm:text-base">
+            <Link to="/schedule" className="brand-button brand-button-gold w-full max-w-[11rem] px-5 py-3 text-sm sm:w-auto sm:max-w-none sm:px-8 sm:py-3.5 sm:text-base">
               View Schedule
             </Link>
-            <Link to="/join" className="brand-button brand-button-gold px-6 py-3 sm:px-8 sm:py-3.5 text-sm sm:text-base">
+            <Link to="/join" className="brand-button brand-button-gold w-full max-w-[11rem] px-5 py-3 text-sm sm:w-auto sm:max-w-none sm:px-8 sm:py-3.5 sm:text-base">
               Join the Team
             </Link>
           </Motion.div>
