@@ -24,9 +24,9 @@ const FALLBACK_CONTACT_CARDS = [
   {
     id: "fallback-instagram",
     label: "Instagram",
-    value: "https://www.instagram.com/jmumensrugby/",
+    value: "https://www.instagram.com/jmumensrugbyclub/",
     contact_type: "url",
-    cta_label: "Visit @jmumensrugby",
+    cta_label: "Visit @jmumensrugbyclub",
     display_order: 3,
     is_active: true,
   },

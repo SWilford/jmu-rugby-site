@@ -312,7 +312,7 @@ export default function ContactEditor() {
                   name="cta_label"
                   value={formState.cta_label}
                   onChange={handleFormChange}
-                  placeholder="Visit @jmumensrugby"
+                  placeholder="Visit @jmumensrugbyclub"
                   className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2 text-sm"
                 />
               </label>

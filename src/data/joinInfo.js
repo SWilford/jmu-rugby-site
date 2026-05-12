@@ -6,7 +6,7 @@ export const JOIN_INFO_FALLBACK = {
     "JMU Men's Rugby Club welcomes students at all experience levels who are prepared to train consistently, compete, and contribute to a team-first culture. If you are interested in joining, you can begin by attending practice and introducing yourself to the team.",
   cta: {
     email: "jmurugby@gmail.com",
-    instagram: "https://www.instagram.com/jmumensrugby/",
+    instagram: "https://www.instagram.com/jmumensrugbyclub/",
   },
   schedule: [
     {

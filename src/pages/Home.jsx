@@ -303,18 +303,18 @@ export default function Home() {
         <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
           <h2 className="text-2xl font-bold text-jmuPurple sm:text-3xl">Follow Us on Instagram</h2>
           <a
-            href="https://www.instagram.com/jmumensrugby/"
+            href="https://www.instagram.com/jmumensrugbyclub/"
             target="_blank"
             rel="noreferrer"
             className="brand-button px-5 py-2.5 text-sm"
           >
-            Open @jmumensrugby
+            Open @jmumensrugbyclub
           </a>
         </div>
 
         <div className="instagram-embed-shell overflow-hidden rounded-xl border border-jmuDarkGold/40 bg-white shadow-sm transition hover:shadow-md">
           <iframe
-            src="https://www.instagram.com/jmumensrugby/embed"
+            src="https://www.instagram.com/jmumensrugbyclub/embed"
             title="JMU Men's Rugby Club Instagram feed"
             loading="lazy"
             className="instagram-embed-frame w-full border-0"

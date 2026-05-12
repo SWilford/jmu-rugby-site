@@ -35,7 +35,7 @@ const ALLOWED_UPLOAD_CONTENT_TYPES = new Set([
 ]);
 
 const CORS_ORIGINS = (Deno.env.get("CORS_ORIGINS") ??
-  "http://localhost:5173,https://www.jmumensrugby.com")
+  "http://localhost:5173,https://jmumensrugbyclub.com,https://www.jmumensrugbyclub.com")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);

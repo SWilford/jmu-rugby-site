@@ -7,12 +7,12 @@ This project stores relational data in Supabase tables, but media objects in Clo
 Pick one:
 
 - R2 managed domain (`*.r2.dev`)
-- Custom domain (recommended), for example: `https://media.jmumensrugby.com`
+- Custom domain (recommended), for example: `https://media.jmumensrugbyclub.com`
 
 Set this value in frontend env:
 
 ```bash
-VITE_R2_PUBLIC_BASE_URL=https://media.jmumensrugby.com
+VITE_R2_PUBLIC_BASE_URL=https://media.jmumensrugbyclub.com
 VITE_MAX_R2_UPLOAD_BYTES=12582912
 ```
 
@@ -31,7 +31,8 @@ Example CORS JSON:
   {
     "AllowedOrigins": [
       "http://localhost:5173",
-      "https://www.jmumensrugby.com"
+      "https://jmumensrugbyclub.com",
+      "https://www.jmumensrugbyclub.com"
     ],
     "AllowedMethods": ["GET", "HEAD", "PUT"],
     "AllowedHeaders": ["*"],
@@ -51,9 +52,9 @@ supabase secrets set \
   R2_BUCKET=rugby-media \
   R2_ACCESS_KEY_ID=... \
   R2_SECRET_ACCESS_KEY=... \
-  R2_PUBLIC_BASE_URL=https://media.jmumensrugby.com \
+  R2_PUBLIC_BASE_URL=https://media.jmumensrugbyclub.com \
   R2_MAX_UPLOAD_BYTES=12582912 \
-  CORS_ORIGINS=http://localhost:5173,https://www.jmumensrugby.com
+  CORS_ORIGINS=http://localhost:5173,https://jmumensrugbyclub.com,https://www.jmumensrugbyclub.com
 ```
 
 ## 4) Deploy the Edge Function

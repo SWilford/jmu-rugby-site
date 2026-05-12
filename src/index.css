@@ -59,10 +59,7 @@ body::-webkit-scrollbar {
 body {
     margin: 0;
     font-family: "Arvo", serif;
-    background:
-        radial-gradient(circle at 10% -10%, rgba(203, 182, 119, 0.24), transparent 38%),
-        radial-gradient(circle at 85% 0%, rgba(173, 156, 101, 0.22), transparent 42%),
-        linear-gradient(180deg, #3f0078 0%, #450084 42%, #2f0059 100%);
+    background: #450084;
     color: #F4EFE1;
     width: 100%;
     overflow-x: hidden;
@@ -80,23 +77,7 @@ body {
 }
 
 .site-shell::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-        -35deg,
-        rgba(255, 255, 255, 0.035) 0,
-        rgba(255, 255, 255, 0.035) 2px,
-        transparent 2px,
-        transparent 18px
-    );
-    background-size: 220px 220px;
-    background-position: 0 0;
-    mix-blend-mode: soft-light;
-    opacity: 0.72;
-    animation: video-stripes-drift 16s linear infinite;
+    content: none;
 }
 
 .scroll-progress {
@@ -636,16 +617,18 @@ body {
 .site-footer {
     position: relative;
     overflow: hidden;
+    background: linear-gradient(180deg, rgba(45, 0, 85, 0.94), rgba(69, 0, 132, 0.9));
+    border-top: 1px solid rgba(173, 156, 101, 0.8);
 }
 
 .site-footer::before {
     content: "";
     position: absolute;
-    inset: 0;
+    inset: 0 0 auto 0;
+    height: 1px;
     pointer-events: none;
-    background: linear-gradient(90deg, transparent, rgba(203, 182, 119, 0.12), transparent);
-    transform: translateX(-100%);
-    animation: footer-sheen 9s linear infinite;
+    background: linear-gradient(90deg, transparent, rgba(203, 182, 119, 0.78), transparent);
+    opacity: 0.6;
 }
 
 .footer-panel {

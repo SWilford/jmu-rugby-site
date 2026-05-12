@@ -39,7 +39,7 @@ export default function Navbar() {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-2 text-sm text-jmuLightGold sm:px-6">
         <div className="flex gap-2">
           <a
-            href="https://www.instagram.com/jmumensrugby/"
+            href="https://www.instagram.com/jmumensrugbyclub/"
             target="_blank"
             rel="noopener noreferrer"
             className="social-orb inline-flex h-8 w-8 items-center justify-center rounded-full bg-jmuPurple/25 transition hover:bg-jmuGold/20 hover:text-jmuGold"

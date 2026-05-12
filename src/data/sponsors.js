@@ -28,7 +28,7 @@ function withPublicLogoUrl(row) {
   if (logoUrlValue && isAbsoluteUrl(logoUrlValue)) {
     return {
       ...row,
-      logo_url: logoUrlValue,
+      logo_url: buildStoragePublicUrl(logoUrlValue),
     };
   }
 

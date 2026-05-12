@@ -27,7 +27,7 @@ Backend/data/auth:
 
 Object storage and CDN edge:
 - Cloudflare R2 bucket: `rugby-media`.
-- Public media domain: `media.jmumensrugby.com`.
+- Public media domain: `media.jmumensrugbyclub.com`.
 - R2 object paths are stored in DB; public URLs are built at runtime.
 
 Web hosting:
@@ -46,7 +46,7 @@ Domain and DNS boundaries:
 1. Visitor requests the site from Vercel.
 2. React app loads and reads public content from Supabase tables.
 3. Media URLs are derived from stored object paths + `VITE_R2_PUBLIC_BASE_URL`.
-4. Browser fetches media from `media.jmumensrugby.com` (Cloudflare/R2 path).
+4. Browser fetches media from `media.jmumensrugbyclub.com` (Cloudflare/R2 path).
 
 ### Admin write flow (DB content)
 1. Admin logs in at `/admin` using Supabase Auth email/password.
@@ -151,7 +151,7 @@ Built into code today:
 - Object-path storage instead of DB blobs.
 
 Operational controls to keep tuned in Cloudflare:
-- Cache aggressively on `media.jmumensrugby.com`.
+- Cache aggressively on `media.jmumensrugbyclub.com`.
 - Enable Smart Tiered Cache.
 - Keep anti-abuse protections active on media host.
 - Monitor R2 operations trend (Class A/B behavior) in Cloudflare billing/analytics.
@@ -175,7 +175,7 @@ supabase secrets set \
   R2_SECRET_ACCESS_KEY=... \
   R2_PUBLIC_BASE_URL=https://media.your-domain.com \
   R2_MAX_UPLOAD_BYTES=12582912 \
-  CORS_ORIGINS=http://localhost:5173,https://www.jmumensrugby.com
+  CORS_ORIGINS=http://localhost:5173,https://jmumensrugbyclub.com,https://www.jmumensrugbyclub.com
 ```
 
 Critical secret handling policy:

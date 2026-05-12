@@ -16,7 +16,7 @@ export default function Footer() {
 
   return (
     <footer className="site-footer mt-12 w-full bg-jmuPurple text-jmuGold font-arvo shadow-[0_-8px_30px_rgba(24,0,46,0.3)]">
-      <div className="mx-auto w-full max-w-6xl border-t border-jmuDarkGold/30 px-4 pb-8 pt-8 text-center sm:px-6">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-8 text-center sm:px-6">
         <section className="mb-8 flex flex-col items-center">
           <p className="mb-6 text-sm font-semibold uppercase tracking-widest text-jmuLightGold/80 sm:text-sm">
             JMU Men&apos;s Rugby Club Is Proudly Sponsored By

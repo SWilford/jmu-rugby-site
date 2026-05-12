@@ -49,7 +49,7 @@ from (
   values
     ('Club President', 'madisonrugbypresident@gmail.com', 'email', null, 1, true),
     ('Head Coach Mark Fowler', 'Fowlerma@alumni.vcu.edu', 'email', null, 2, true),
-    ('Instagram', 'https://www.instagram.com/jmumensrugby/', 'url', 'Visit @jmumensrugby', 3, true)
+    ('Instagram', 'https://www.instagram.com/jmumensrugbyclub/', 'url', 'Visit @jmumensrugbyclub', 3, true)
 ) as seed(label, value, contact_type, cta_label, display_order, is_active)
 where not exists (select 1 from public.contact_cards);
 

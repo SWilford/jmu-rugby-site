@@ -1,10 +1,11 @@
 import { supabase } from "./supabaseClient";
 
-const DEFAULT_R2_PUBLIC_BASE_URL = "https://media.jmumensrugby.com";
+const DEFAULT_R2_PUBLIC_BASE_URL = "https://media.jmumensrugbyclub.com";
 const configuredR2PublicBaseUrl = String(import.meta.env.VITE_R2_PUBLIC_BASE_URL || "")
   .trim()
   .replace(/\/+$/, "");
-const R2_FALLBACK_HOSTS = new Set(["jmumensrugby.com", "www.jmumensrugby.com"]);
+const R2_FALLBACK_HOSTS = new Set(["jmumensrugbyclub.com", "www.jmumensrugbyclub.com"]);
+const R2_MEDIA_HOSTS = new Set(["media.jmumensrugby.com", "media.jmumensrugbyclub.com"]);
 const LOCALHOST_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 const DEV_R2_PROXY_PREFIX = "/__r2_proxy";
 
@@ -151,6 +152,7 @@ function extractLegacyObjectPath(rawUrl) {
   try {
     const parsed = new URL(rawUrl);
     const pathname = String(parsed.pathname || "");
+    const hostname = parsed.hostname.toLowerCase();
 
     for (const prefix of LEGACY_STORAGE_PATH_PREFIXES) {
       const index = pathname.indexOf(prefix);
@@ -158,6 +160,11 @@ function extractLegacyObjectPath(rawUrl) {
         const extracted = decodeURIComponent(pathname.slice(index + prefix.length));
         return normalizeStoredObjectPath(extracted);
       }
+    }
+
+    const configuredHost = getConfiguredR2Host();
+    if (R2_MEDIA_HOSTS.has(hostname) || (configuredHost && hostname === configuredHost)) {
+      return normalizeStoredObjectPath(decodeURIComponent(pathname));
     }
 
     return "";
