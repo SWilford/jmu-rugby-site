@@ -15,6 +15,56 @@ import Contact from "./pages/Contact";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
+const SITE_URL = "https://www.jmumensrugbyclub.com";
+
+const routeSeo = {
+  "/": {
+    title: "JMU Men's Rugby Club",
+    description: "Official site for JMU Men's Rugby Club with match schedule, roster, media, and join details.",
+  },
+  "/about": {
+    title: "About | JMU Men's Rugby Club",
+    description: "Learn about JMU Men's Rugby Club, our mission, and what drives our program.",
+  },
+  "/schedule": {
+    title: "Schedule | JMU Men's Rugby Club",
+    description: "View the latest JMU Men's Rugby Club match schedule and upcoming fixtures.",
+  },
+  "/team": {
+    title: "Team | JMU Men's Rugby Club",
+    description: "Meet the JMU Men's Rugby Club roster and coaching staff.",
+  },
+  "/media": {
+    title: "Media | JMU Men's Rugby Club",
+    description: "Explore photos and media highlights from JMU Men's Rugby Club.",
+  },
+  "/join": {
+    title: "Join | JMU Men's Rugby Club",
+    description: "Interested in joining? See how to become part of JMU Men's Rugby Club.",
+  },
+  "/donate": {
+    title: "Donate | JMU Men's Rugby Club",
+    description: "Support JMU Men's Rugby Club with a donation.",
+  },
+  "/contact": {
+    title: "Contact | JMU Men's Rugby Club",
+    description: "Contact JMU Men's Rugby Club for recruiting, scheduling, and general inquiries.",
+  },
+  "/admin": {
+    title: "Admin | JMU Men's Rugby Club",
+    description: "Administrative access for JMU Men's Rugby Club site management.",
+    noindex: true,
+  },
+};
+
+const upsertHeadTag = (selector, createTag) => {
+  const existingTag = document.head.querySelector(selector);
+  if (existingTag) return existingTag;
+  const tag = createTag();
+  document.head.appendChild(tag);
+  return tag;
+};
+
 /*export default function App() {
   return (
     <>
@@ -41,6 +91,46 @@ import NotFound from "./pages/NotFound";
 export default function App() {
   const location = useLocation();
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const seo = routeSeo[location.pathname] || {
+      title: "JMU Men's Rugby Club",
+      description: "Official site for JMU Men's Rugby Club.",
+      noindex: true,
+    };
+
+    const canonicalUrl = `${SITE_URL}${location.pathname === "/" ? "" : location.pathname}`;
+
+    document.title = seo.title;
+
+    const descriptionTag = upsertHeadTag('meta[name="description"]', () => {
+      const tag = document.createElement("meta");
+      tag.setAttribute("name", "description");
+      return tag;
+    });
+    descriptionTag.setAttribute("content", seo.description);
+
+    const robotsTag = upsertHeadTag('meta[name="robots"]', () => {
+      const tag = document.createElement("meta");
+      tag.setAttribute("name", "robots");
+      return tag;
+    });
+    robotsTag.setAttribute("content", seo.noindex ? "noindex, nofollow" : "index, follow");
+
+    const canonicalTag = upsertHeadTag('link[rel="canonical"]', () => {
+      const tag = document.createElement("link");
+      tag.setAttribute("rel", "canonical");
+      return tag;
+    });
+    canonicalTag.setAttribute("href", canonicalUrl);
+
+    const ogUrlTag = upsertHeadTag('meta[property="og:url"]', () => {
+      const tag = document.createElement("meta");
+      tag.setAttribute("property", "og:url");
+      return tag;
+    });
+    ogUrlTag.setAttribute("content", canonicalUrl);
+  }, [location.pathname]);
 
   useEffect(() => {
     let rafId = null;
