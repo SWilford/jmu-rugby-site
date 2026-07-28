@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
 import { supabase } from "../lib/supabaseClient";
 import { getMediaFilePath, MEDIA_HOME_CAROUSEL_COLUMNS } from "../lib/mediaUtils";
-import { motion as Motion, AnimatePresence } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 
 import img0 from "../assets/home/image0.jpeg";
 import img1 from "../assets/home/image1.jpeg";
@@ -34,6 +34,14 @@ const buildCarouselImages = (dynamicSlides = []) => {
   return [...dynamic, ...getStaticCarouselFallback(remainingCount)];
 };
 
+const preloadImage = (src) =>
+  new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(true);
+    image.onerror = () => resolve(false);
+    image.src = src;
+  });
+
 const parseDateOnly = (dateString) => {
   const [year, month, day] = dateString.split("-").map(Number);
   return new Date(year, month - 1, day);
@@ -54,8 +62,24 @@ export default function Home() {
   const [carouselImages, setCarouselImages] = useState(() =>
     getStaticCarouselFallback(MAX_CAROUSEL_IMAGES)
   );
+  const [loadedCarouselKeys, setLoadedCarouselKeys] = useState(() => new Set());
+
+  const markCarouselImageLoaded = (slideKey) => {
+    setLoadedCarouselKeys((loadedKeys) => {
+      if (loadedKeys.has(slideKey)) return loadedKeys;
+      const nextLoadedKeys = new Set(loadedKeys);
+      nextLoadedKeys.add(slideKey);
+      return nextLoadedKeys;
+    });
+  };
 
   const handleCarouselImageError = (failedKey) => {
+    setLoadedCarouselKeys((loadedKeys) => {
+      const nextLoadedKeys = new Set(loadedKeys);
+      nextLoadedKeys.delete(failedKey);
+      return nextLoadedKeys;
+    });
+
     setCarouselImages((slides) => {
       const fallbackSlides = getStaticCarouselFallback(MAX_CAROUSEL_IMAGES);
       return slides.map((slide, index) => {
@@ -73,14 +97,23 @@ export default function Home() {
     if (!carouselImages.length) return undefined;
 
     const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % carouselImages.length);
+      setCurrent((previousIndex) => {
+        for (let offset = 1; offset <= carouselImages.length; offset += 1) {
+          const nextIndex = (previousIndex + offset) % carouselImages.length;
+          if (loadedCarouselKeys.has(carouselImages[nextIndex].key)) return nextIndex;
+        }
+
+        return previousIndex;
+      });
     }, CAROUSEL_CYCLE_MS);
 
     return () => clearInterval(interval);
-  }, [carouselImages.length]);
+  }, [carouselImages, loadedCarouselKeys]);
 
   useEffect(() => {
-    (async () => {
+    let isCancelled = false;
+
+    const loadNextMatches = async () => {
       const today = new Date();
       const month = today.getMonth();
       const year = today.getFullYear();
@@ -109,11 +142,13 @@ export default function Home() {
           .filter((match) => match.date === nextDate)
           .sort((a, b) => (sideOrder[a.side] || 99) - (sideOrder[b.side] || 99));
 
-        setNextMatches(matchesForNextDate);
+        if (!isCancelled) setNextMatches(matchesForNextDate);
       } else {
-        setNextMatches([]);
+        if (!isCancelled) setNextMatches([]);
       }
+    };
 
+    const loadCarousel = async () => {
       try {
         let carouselColumn = "";
 
@@ -126,7 +161,7 @@ export default function Home() {
         }
 
         if (!carouselColumn) {
-          setCarouselImages(getStaticCarouselFallback(MAX_CAROUSEL_IMAGES));
+          return;
         } else {
           const { data: carouselRows, error: carouselError } = await supabase
             .from("media")
@@ -145,13 +180,21 @@ export default function Home() {
             alt: row.album ? `${row.album} carousel photo` : "JMU Men's Rugby Club carousel photo",
           }));
 
-          setCarouselImages(buildCarouselImages(dynamicSlides));
+          const nextSlides = buildCarouselImages(dynamicSlides);
+          const firstSlideReady = nextSlides[0] ? await preloadImage(nextSlides[0].src) : false;
+
+          if (!isCancelled && firstSlideReady) {
+            setCarouselImages(nextSlides);
+            setCurrent(0);
+            markCarouselImageLoaded(nextSlides[0].key);
+          }
         }
       } catch (carouselError) {
         console.error("Home carousel fetch error:", carouselError);
-        setCarouselImages(getStaticCarouselFallback(MAX_CAROUSEL_IMAGES));
       }
+    };
 
+    const loadFeaturedImages = async () => {
       const { data: mediaData, error: mediaError } = await supabase
         .from("media")
         .select("*")
@@ -160,10 +203,16 @@ export default function Home() {
       if (mediaError) {
         console.error("Featured fetch error:", mediaError);
       } else if (mediaData?.length) {
-        const shuffled = mediaData.sort(() => 0.5 - Math.random());
-        setFeaturedImages(shuffled.slice(0, 6));
+        const shuffled = [...mediaData].sort(() => 0.5 - Math.random());
+        if (!isCancelled) setFeaturedImages(shuffled.slice(0, 6));
       }
-    })();
+    };
+
+    Promise.allSettled([loadNextMatches(), loadCarousel(), loadFeaturedImages()]);
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   return (
@@ -174,22 +223,21 @@ export default function Home() {
       className="page-shell min-h-full justify-between pt-6 sm:pt-8"
     >
       <section className="hero-banner relative mt-2 flex min-h-[32rem] w-full max-w-6xl flex-col items-center justify-center overflow-hidden border border-jmuDarkGold/60 sm:min-h-[40rem]">
-        <AnimatePresence mode="popLayout">
-          {carouselImages.length > 0 && (
-            <Motion.img
-              key={current}
-              src={carouselImages[current].src}
-              alt={carouselImages[current].alt}
-              onError={() => handleCarouselImageError(carouselImages[current].key)}
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.2, ease: "easeInOut" }}
-              className="hero-image absolute inset-0 h-full w-full object-cover"
-              loading="eager"
-            />
-          )}
-        </AnimatePresence>
+        {carouselImages.map((slide, index) => (
+          <img
+            key={slide.key}
+            src={slide.src}
+            alt={slide.alt}
+            onLoad={() => markCarouselImageLoaded(slide.key)}
+            onError={() => handleCarouselImageError(slide.key)}
+            className={`hero-image absolute inset-0 h-full w-full object-cover ${
+              index === current && loadedCarouselKeys.has(slide.key) ? "is-active" : ""
+            }`}
+            loading={index < 2 ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={index === 0 ? "high" : "low"}
+          />
+        ))}
 
         <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/25 via-jmuPurple/30 to-jmuPurple/80" />
 
@@ -231,7 +279,9 @@ export default function Home() {
             <button
               key={`dot-${slide.key}`}
               type="button"
-              onClick={() => setCurrent(i)}
+              onClick={() => {
+                if (loadedCarouselKeys.has(slide.key)) setCurrent(i);
+              }}
               className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
                 i === current ? "bg-jmuGold w-6" : "bg-jmuLightGold/40 hover:bg-jmuLightGold/80"
               }`}
@@ -336,6 +386,8 @@ export default function Home() {
                 key={photo.id}
                 src={getMediaFilePath(photo)}
                 alt={photo.album}
+                loading="lazy"
+                decoding="async"
                 onClick={() =>
                   navigate(
                     `/media?album=${encodeURIComponent(photo.album)}&season=${photo.season_id}&photo=${photo.id}`

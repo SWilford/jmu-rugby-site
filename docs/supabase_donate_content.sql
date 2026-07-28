@@ -38,7 +38,8 @@ execute function public.set_updated_at();
 insert into public.donate_content_settings (key, value, description)
 values
   ('venmo_url', 'https://venmo.com/u/David-Neal-84', 'Venmo URL used for the Donate page CTA and QR code.'),
-  ('venmo_recipient_name', 'David Neal', 'Recipient name used in Donate page copy and QR alt text.')
+  ('venmo_recipient_name', 'David Neal', 'Recipient name used in Donate page copy and QR alt text.'),
+  ('merch_url', 'https://www.quarterathleticrugby.com/collections/jmu-mens-rugby-club', 'External Merch link displayed in the site header.')
 on conflict (key) do update
 set value = excluded.value,
     description = excluded.description,

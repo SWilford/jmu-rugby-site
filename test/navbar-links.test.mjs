@@ -19,4 +19,7 @@ test('navbar includes all top-level navigation links', () => {
   for (const [label, path] of expectedLinks) {
     assert.match(navbarSource, new RegExp(`\\["${label}",\\s*"${path}"\\]`));
   }
+
+  assert.match(navbarSource, />\s*Merch\s*<\/a>/);
+  assert.match(navbarSource, /target="_blank"/);
 });

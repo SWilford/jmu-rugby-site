@@ -1,19 +1,20 @@
 // src/App.jsx
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
 import Home from "./pages/Home";
-import About from "./pages/About";
-import Schedule from "./pages/Schedule";
-import Team from "./pages/Team";
-import Media from "./pages/Media";
-import Join from "./pages/Join";
-import Donate from "./pages/Donate";
-import Contact from "./pages/Contact";
-import Admin from "./pages/Admin";
-import NotFound from "./pages/NotFound";
+
+const About = lazy(() => import("./pages/About"));
+const Schedule = lazy(() => import("./pages/Schedule"));
+const Team = lazy(() => import("./pages/Team"));
+const Media = lazy(() => import("./pages/Media"));
+const Join = lazy(() => import("./pages/Join"));
+const Donate = lazy(() => import("./pages/Donate"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Admin = lazy(() => import("./pages/Admin"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const SITE_URL = "https://www.jmumensrugbyclub.com";
 
@@ -173,18 +174,26 @@ export default function App() {
       <Navbar />
       <main className="flex flex-1 flex-col items-center pb-6 sm:pb-8">
         <div key={location.pathname} className="route-stage">
-          <Routes location={location}>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/media" element={<Media />} />
-            <Route path="/join" element={<Join />} />
-            <Route path="/donate" element={<Donate />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense
+            fallback={
+              <div className="flex min-h-64 items-center justify-center text-jmuLightGold">
+                Loading page...
+              </div>
+            }
+          >
+            <Routes location={location}>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/schedule" element={<Schedule />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/media" element={<Media />} />
+              <Route path="/join" element={<Join />} />
+              <Route path="/donate" element={<Donate />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </div>
       </main>
       <Footer />

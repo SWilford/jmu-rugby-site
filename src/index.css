@@ -1,6 +1,20 @@
-@import "@fontsource/arvo/400.css";
-@import "@fontsource/arvo/700.css";
 @import "tailwindcss";
+
+@font-face {
+    font-family: "Arvo";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 400;
+    src: url("/fonts/arvo-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Arvo";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 700;
+    src: url("/fonts/arvo-latin-700-normal.woff2") format("woff2");
+}
 
 @theme {
     --font-arvo: "Arvo", serif;
@@ -463,6 +477,17 @@ body {
 
 .hero-image {
     filter: saturate(1.08) contrast(1.04);
+    opacity: 0;
+    transform: scale(1.025);
+    transition:
+        opacity 800ms ease-in-out,
+        transform var(--carousel-cycle-ms, 6000ms) ease-out;
+    will-change: opacity, transform;
+}
+
+.hero-image.is-active {
+    opacity: 1;
+    transform: scale(1.075);
 }
 
 .hero-slide {

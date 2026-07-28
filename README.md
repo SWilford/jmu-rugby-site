@@ -57,8 +57,8 @@ Domain and DNS boundaries:
 
 ### Admin write flow (media objects)
 1. Admin action calls `supabase.functions.invoke("r2-media")`.
-2. Edge Function verifies request origin + auth token + admin status.
-3. Function signs upload / deletes / moves in R2 using service credentials.
+2. Edge Function verifies request origin, then checks auth and admin status for write actions.
+3. Function signs downloads and admin-only upload / delete / move operations in R2.
 4. Browser uploads directly to signed R2 URL for efficient transfer.
 
 ## 4) Frontend Architecture Summary
@@ -119,8 +119,8 @@ SQL and policy files:
 
 ### Edge Function controls (`supabase/functions/r2-media/index.ts`)
 - Allowed origins gate via `CORS_ORIGINS`.
-- Requires Authorization header and valid Supabase user session.
-- Requires admin access (RPC + service-role checked fallback).
+- Validates request origin and object paths for short-lived public download links.
+- Requires a valid Supabase session and admin access (RPC + service-role checked fallback) for writes.
 - Upload restrictions:
   - Allowed image MIME types only.
   - Max upload bytes enforced (`R2_MAX_UPLOAD_BYTES`, default 12 MB).

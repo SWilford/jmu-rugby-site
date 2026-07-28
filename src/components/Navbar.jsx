@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
 import logoGold from "../assets/jmu-gold-logo.png";
 import { NavLink } from "react-router-dom";
+import { getMerchUrl, MERCH_URL_FALLBACK } from "../data/siteLinks";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [merchUrl, setMerchUrl] = useState(MERCH_URL_FALLBACK);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +18,18 @@ export default function Navbar() {
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getMerchUrl().then((nextMerchUrl) => {
+      if (isMounted) setMerchUrl(nextMerchUrl);
+    });
+
+    return () => {
+      isMounted = false;
     };
   }, []);
 
@@ -99,6 +113,14 @@ export default function Navbar() {
                 {label}
               </NavLink>
             ))}
+            <a
+              href={merchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="nav-link-chip rounded-full border border-transparent px-3 py-1.5 text-sm font-semibold tracking-wide text-jmuLightGold transition-all duration-300 hover:border-jmuGold/30 hover:bg-jmuGold/10 hover:text-jmuGold sm:px-4 sm:text-base"
+            >
+              Merch
+            </a>
           </div>
         </div>
       </nav>

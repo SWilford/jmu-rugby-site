@@ -2,6 +2,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   CopyObjectCommand,
   DeleteObjectsCommand,
+  GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "npm:@aws-sdk/client-s3@3.937.0";
@@ -185,7 +186,13 @@ type MoveObjectPayload = {
   toPath: string;
 };
 
-type Payload = SignUploadPayload | DeleteObjectsPayload | MoveObjectPayload;
+type SignDownloadPayload = {
+  action: "sign-download";
+  objectPath: string;
+  fileName?: string;
+};
+
+type Payload = SignUploadPayload | DeleteObjectsPayload | MoveObjectPayload | SignDownloadPayload;
 
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
@@ -209,11 +216,6 @@ Deno.serve(async (req) => {
     );
   }
 
-  const authResult = await requireAdmin(req);
-  if (!authResult.ok) {
-    return authResult.response;
-  }
-
   let payload: Payload;
   try {
     payload = (await req.json()) as Payload;
@@ -222,6 +224,31 @@ Deno.serve(async (req) => {
   }
 
   try {
+    if (payload.action === "sign-download") {
+      const objectPath = normalizeObjectPath(payload.objectPath);
+      if (!isValidObjectPath(objectPath)) {
+        return jsonResponse({ error: "Invalid objectPath provided." }, 400, origin);
+      }
+
+      const objectFileName = objectPath.split("/").pop() || "jmu-rugby-photo";
+      const safeFileName = String(payload.fileName || objectFileName)
+        .replace(/[\r\n"]/g, "")
+        .trim() || "jmu-rugby-photo";
+      const command = new GetObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: objectPath,
+        ResponseContentDisposition: `attachment; filename="${safeFileName}"`,
+      });
+      const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
+
+      return jsonResponse({ signedUrl, expiresIn: 60 }, 200, origin);
+    }
+
+    const authResult = await requireAdmin(req);
+    if (!authResult.ok) {
+      return authResult.response;
+    }
+
     if (payload.action === "sign-upload") {
       const objectPath = normalizeObjectPath(payload.objectPath);
       if (!isValidObjectPath(objectPath)) {

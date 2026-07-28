@@ -6,6 +6,7 @@ import ContactEditor from "../components/Admin/ContactEditor";
 import SponsorsEditor from "../components/Admin/SponsorsEditor";
 import JoinEditor from "../components/Admin/JoinEditor";
 import DonateEditor from "../components/Admin/DonateEditor";
+import SiteLinksEditor from "../components/Admin/SiteLinksEditor";
 
 const INITIAL_FORM = {
   season_id: "",
@@ -409,6 +410,7 @@ export default function Admin() {
                   <option value="join">Join editor</option>
                   <option value="contact">Contact editor</option>
                   <option value="donate">Donate editor</option>
+                  <option value="site-links">Site links</option>
                   <option value="sponsors">Sponsors editor</option>
                 </select>
               </div>
@@ -604,6 +606,7 @@ export default function Admin() {
               {activeEditor === "join" && <JoinEditor />}
               {activeEditor === "contact" && <ContactEditor />}
               {activeEditor === "donate" && <DonateEditor />}
+              {activeEditor === "site-links" && <SiteLinksEditor />}
               {activeEditor === "sponsors" && <SponsorsEditor />}
             </div>
           </div>
