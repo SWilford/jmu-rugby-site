@@ -53,7 +53,6 @@ export default function Donate() {
             alt={`Venmo QR Code for ${donateInfo.recipientName}`}
             className="w-48 h-48"
             loading="lazy"
-            decoding="async"
           />
         </div>
 

@@ -87,8 +87,6 @@ export default function JoinMediaPlaceholders({
               key={item.id}
               src={item.src}
               alt={item.alt}
-              loading="lazy"
-              decoding="async"
               className="h-44 w-full rounded-lg border border-jmuDarkGold object-cover shadow-sm sm:h-36"
             />
           ))}

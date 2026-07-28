@@ -73,8 +73,6 @@ export default function CoachList({ expandedId, setExpandedId }) {
                                 <img
                                   src={buildStoragePublicUrl(coach.headshot_url) || logoPurple}
                                   alt={coach.name}
-                                  loading="lazy"
-                                  decoding="async"
                                   className="h-56 w-40 rounded-lg border border-jmuDarkGold object-cover"
                                 />
                                 <div className="flex flex-col justify-center text-jmuPurple">
@@ -129,8 +127,6 @@ export default function CoachList({ expandedId, setExpandedId }) {
                           <img
                             src={buildStoragePublicUrl(coach.headshot_url) || logoPurple}
                             alt={coach.name}
-                            loading="lazy"
-                            decoding="async"
                             className="mx-auto h-56 w-40 rounded-lg border border-jmuDarkGold object-cover"
                           />
                           <div className="space-y-2 text-jmuSlate">

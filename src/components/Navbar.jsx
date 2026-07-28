@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaFacebook, FaInstagram, FaShoppingBag } from "react-icons/fa";
+import { FaFacebook, FaInstagram } from "react-icons/fa";
 import logoGold from "../assets/jmu-gold-logo.png";
 import { NavLink } from "react-router-dom";
 
@@ -29,8 +29,6 @@ export default function Navbar() {
     ["Donate", "/donate"],
     ["Contact", "/contact"],
   ];
-  const merchUrl =
-    "https://www.quarterathleticrugby.com/collections/jmu-mens-rugby-club";
 
   return (
     <header
@@ -71,8 +69,6 @@ export default function Navbar() {
         <img
           src={logoGold}
           alt="JMU Men's Rugby Club logo"
-          decoding="async"
-          fetchPriority="high"
           className="brand-crest mb-3 h-[4.5rem] w-auto object-contain transition-transform duration-300 hover:scale-105 sm:mb-0 sm:mr-5 sm:h-24"
         />
         <div className="w-full min-w-0 text-center leading-tight sm:text-left">
@@ -103,15 +99,6 @@ export default function Navbar() {
                 {label}
               </NavLink>
             ))}
-            <a
-              href={merchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="nav-link-chip inline-flex items-center gap-2 rounded-full border border-transparent px-3 py-1.5 text-sm font-semibold tracking-wide text-jmuLightGold transition-all duration-300 hover:border-jmuGold/30 hover:bg-jmuGold/10 hover:text-jmuGold sm:px-4 sm:text-base"
-            >
-              <FaShoppingBag className="text-[0.85em]" aria-hidden="true" />
-              Merch
-            </a>
           </div>
         </div>
       </nav>

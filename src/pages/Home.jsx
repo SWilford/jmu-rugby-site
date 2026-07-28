@@ -22,30 +22,6 @@ const STATIC_CAROUSEL_IMAGES = [
   { key: "static-4", src: img4, alt: "Home carousel static image 4" },
   { key: "static-5", src: img5, alt: "Home carousel static image 5" },
 ];
-const imageWarmCache = new Map();
-
-const warmImage = (src) => {
-  if (!src || typeof Image === "undefined") return Promise.resolve();
-  if (imageWarmCache.has(src)) return imageWarmCache.get(src);
-
-  const promise = new Promise((resolve) => {
-    const image = new Image();
-    image.decoding = "async";
-    image.onload = async () => {
-      try {
-        await image.decode();
-      } catch {
-        // The image is still usable when decode() is unsupported or interrupted.
-      }
-      resolve();
-    };
-    image.onerror = resolve;
-    image.src = src;
-  });
-
-  imageWarmCache.set(src, promise);
-  return promise;
-};
 
 const getStaticCarouselFallback = (count = MAX_CAROUSEL_IMAGES) =>
   STATIC_CAROUSEL_IMAGES.slice(-count).reverse();
@@ -79,13 +55,6 @@ export default function Home() {
     getStaticCarouselFallback(MAX_CAROUSEL_IMAGES)
   );
 
-  const showCarouselImage = async (index) => {
-    const slide = carouselImages[index];
-    if (!slide) return;
-    await warmImage(slide.src);
-    setCurrent(index);
-  };
-
   const handleCarouselImageError = (failedKey) => {
     setCarouselImages((slides) => {
       const fallbackSlides = getStaticCarouselFallback(MAX_CAROUSEL_IMAGES);
@@ -101,22 +70,14 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (carouselImages.length < 2) return undefined;
+    if (!carouselImages.length) return undefined;
 
-    let cancelled = false;
-    const nextIndex = (current + 1) % carouselImages.length;
-    void warmImage(carouselImages[nextIndex]?.src);
-
-    const timeout = window.setTimeout(async () => {
-      await warmImage(carouselImages[nextIndex]?.src);
-      if (!cancelled) setCurrent(nextIndex);
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % carouselImages.length);
     }, CAROUSEL_CYCLE_MS);
 
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeout);
-    };
-  }, [carouselImages, current]);
+    return () => clearInterval(interval);
+  }, [carouselImages.length]);
 
   useEffect(() => {
     (async () => {
@@ -184,11 +145,7 @@ export default function Home() {
             alt: row.album ? `${row.album} carousel photo` : "JMU Men's Rugby Club carousel photo",
           }));
 
-          const nextCarouselImages = buildCarouselImages(dynamicSlides);
-          await warmImage(nextCarouselImages[0]?.src);
-          setCurrent(0);
-          setCarouselImages(nextCarouselImages);
-          nextCarouselImages.slice(1, 3).forEach((slide) => void warmImage(slide.src));
+          setCarouselImages(buildCarouselImages(dynamicSlides));
         }
       } catch (carouselError) {
         console.error("Home carousel fetch error:", carouselError);
@@ -217,21 +174,19 @@ export default function Home() {
       className="page-shell min-h-full justify-between pt-6 sm:pt-8"
     >
       <section className="hero-banner relative mt-2 flex min-h-[32rem] w-full max-w-6xl flex-col items-center justify-center overflow-hidden border border-jmuDarkGold/60 sm:min-h-[40rem]">
-        <AnimatePresence initial={false} mode="sync">
+        <AnimatePresence mode="popLayout">
           {carouselImages.length > 0 && (
             <Motion.img
-              key={carouselImages[current].key}
+              key={current}
               src={carouselImages[current].src}
               alt={carouselImages[current].alt}
               onError={() => handleCarouselImageError(carouselImages[current].key)}
-              initial={{ opacity: 0, scale: 1.025 }}
+              initial={{ opacity: 0, scale: 1.05 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
               className="hero-image absolute inset-0 h-full w-full object-cover"
               loading="eager"
-              decoding="async"
-              fetchPriority={current === 0 ? "high" : "auto"}
             />
           )}
         </AnimatePresence>
@@ -276,7 +231,7 @@ export default function Home() {
             <button
               key={`dot-${slide.key}`}
               type="button"
-              onClick={() => void showCarouselImage(i)}
+              onClick={() => setCurrent(i)}
               className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
                 i === current ? "bg-jmuGold w-6" : "bg-jmuLightGold/40 hover:bg-jmuLightGold/80"
               }`}
@@ -381,15 +336,12 @@ export default function Home() {
                 key={photo.id}
                 src={getMediaFilePath(photo)}
                 alt={photo.album}
-                loading="lazy"
-                decoding="async"
-                onLoad={(event) => event.currentTarget.classList.add("is-loaded")}
                 onClick={() =>
                   navigate(
                     `/media?album=${encodeURIComponent(photo.album)}&season=${photo.season_id}&photo=${photo.id}`
                   )
                 }
-                className="progressive-image h-44 w-full cursor-pointer rounded-xl border border-jmuDarkGold/30 object-cover shadow-sm"
+                className="h-44 w-full cursor-pointer rounded-xl border border-jmuDarkGold/30 object-cover shadow-sm"
               />
             ))}
           </div>
