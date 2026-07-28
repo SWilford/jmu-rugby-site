@@ -1,6 +1,20 @@
-@import "@fontsource/arvo/400.css";
-@import "@fontsource/arvo/700.css";
 @import "tailwindcss";
+
+@font-face {
+    font-family: "Arvo";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 400;
+    src: url("@fontsource/arvo/files/arvo-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Arvo";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 700;
+    src: url("@fontsource/arvo/files/arvo-latin-700-normal.woff2") format("woff2");
+}
 
 @theme {
     --font-arvo: "Arvo", serif;
@@ -58,7 +72,8 @@ body::-webkit-scrollbar {
 
 body {
     margin: 0;
-    font-family: "Arvo", serif;
+    font-family: "Arvo", Georgia, "Times New Roman", serif;
+    font-synthesis: none;
     background: #450084;
     color: #F4EFE1;
     width: 100%;
@@ -463,6 +478,34 @@ body {
 
 .hero-image {
     filter: saturate(1.08) contrast(1.04);
+    backface-visibility: hidden;
+    will-change: opacity, transform;
+}
+
+.progressive-image {
+    opacity: 0;
+    transform: scale(1.015);
+    transition:
+        opacity 240ms var(--ease-standard),
+        transform 360ms var(--ease-standard);
+}
+
+.progressive-image.is-loaded {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.media-image-shell {
+    background:
+        linear-gradient(110deg, rgba(203, 182, 119, 0.12) 20%, rgba(255, 255, 255, 0.55) 40%, rgba(203, 182, 119, 0.12) 60%),
+        rgba(203, 182, 119, 0.18);
+    background-size: 220% 100%;
+    animation: image-placeholder 1.25s ease-in-out infinite;
+}
+
+.media-image-shell:has(.is-loaded) {
+    animation: none;
+    background: rgba(203, 182, 119, 0.12);
 }
 
 .hero-slide {
@@ -703,6 +746,15 @@ body {
     }
 }
 
+@keyframes image-placeholder {
+    from {
+        background-position: 120% 0;
+    }
+    to {
+        background-position: -120% 0;
+    }
+}
+
 @keyframes hero-zoom-in {
     from {
         transform: scale(1.05);
@@ -808,5 +860,9 @@ body {
 
     .scroll-progress {
         display: none;
+    }
+
+    .media-image-shell {
+        animation: none;
     }
 }

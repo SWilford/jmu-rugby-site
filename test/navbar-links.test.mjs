@@ -20,3 +20,8 @@ test('navbar includes all top-level navigation links', () => {
     assert.match(navbarSource, new RegExp(`\\["${label}",\\s*"${path}"\\]`));
   }
 });
+
+test('navbar includes the official merchandise store', () => {
+  assert.match(navbarSource, /https:\/\/www\.quarterathleticrugby\.com\/collections\/jmu-mens-rugby-club/);
+  assert.match(navbarSource, />\s*Merch\s*</);
+});

@@ -72,6 +72,8 @@ export default function RosterTable({ expandedId, setExpandedId }) {
                                 <img
                                   src={buildStoragePublicUrl(player.headshot_url) || logoPurple}
                                   alt={player.name}
+                                  loading="lazy"
+                                  decoding="async"
                                   className="h-56 w-40 rounded-lg border border-jmuDarkGold object-cover"
                                 />
                                 <div className="flex flex-col justify-center text-jmuPurple">
@@ -146,6 +148,8 @@ export default function RosterTable({ expandedId, setExpandedId }) {
                           <img
                             src={buildStoragePublicUrl(player.headshot_url) || logoPurple}
                             alt={player.name}
+                            loading="lazy"
+                            decoding="async"
                             className="mx-auto h-48 w-32 rounded-lg border border-jmuDarkGold object-cover"
                           />
                           <div className="space-y-1.5 text-sm text-jmuSlate">

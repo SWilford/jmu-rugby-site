@@ -30,6 +30,7 @@ export default function Footer() {
                   alt={sponsor.alt_text || `${sponsor.name} logo`}
                   className="h-12 w-auto object-contain sm:h-16 opacity-90 transition-opacity hover:opacity-100 drop-shadow-md"
                   loading="lazy"
+                  decoding="async"
                 />
               ) : (
                 <span className="text-sm font-bold sm:text-base text-jmuLightGold">{sponsor.name}</span>
