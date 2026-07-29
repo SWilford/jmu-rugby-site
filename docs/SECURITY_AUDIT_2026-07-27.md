@@ -1,7 +1,7 @@
 # JMU Men's Rugby Website Security Audit
 
 **Audit date:** July 27, 2026
-**Status:** S-01 and S-04 remediated, S-02 accepted with compensating controls, and S-03 implemented locally on July 28, 2026; remaining findings are pending
+**Status:** S-01 and S-04 remediated, S-02 accepted with compensating controls, and S-03 and S-05 implemented; remaining findings are pending
 **Repository:** `SWilford/jmu-rugby-site`
 **Production site reviewed:** `https://www.jmumensrugbyclub.com`
 
@@ -70,6 +70,24 @@ No R2 object was uploaded, moved, or deleted during verification. The local Blob
 
 A new persistent rate-limit service was not added. Removing the only public action leaves a JWT-validated, administrator-only function used by two administrators, so that infrastructure is not proportionate at present. The function continues to accept requests without an `Origin` header because CORS is not an authorization boundary; JWT validation and `is_admin()` provide that boundary. Application-level AAL2 was not added, consistent with the accepted S-02 decision. Revisit these decisions if the function becomes public again, administrator count or traffic grows, or abuse appears in logs.
 
+### July 28, 2026 — S-05 Content Security Policy implemented locally
+
+With owner approval, an enforced Content Security Policy was added to the global Vercel response headers after a report-only validation pass against the production build.
+
+- Allows executable scripts only from the site's own origin; inline scripts, evaluated code, data scripts, Blob scripts, and third-party scripts remain blocked
+- Allows stylesheets and fonts only from the site's own origin while retaining inline style attributes required by React and Framer Motion
+- Limits browser connections to the site, Supabase, the public R2 media domain, and the exact R2 signed-upload endpoint
+- Limits images to the site, temporary browser Blobs, Supabase, the R2 media domain, and the currently used QR provider
+- Allows frames only from Instagram and blocks every site from framing this application
+- Blocks plugins/embedded objects, base-tag injection, off-site form submissions, and workers
+- Upgrades insecure subresource requests
+- Adds three regression tests that lock the reviewed policy and prevent weakening the JavaScript directives
+- Reuses the Vercel header configuration in the local production-preview server so future CSP changes can be exercised before release
+
+The report-only build rendered every public route and the administrator sign-in surface without a CSP violation. The homepage Instagram embed, Join page video, donation QR image, Supabase-backed content reads, and local assets rendered under the reviewed allowlist. The external QR origin is a temporary exception pending S-12.
+
+The enforced configuration passes all 16 automated tests, lint, and the production build. Authenticated administrator editors and a real R2 upload/delete/move were not exercised because no administrator credentials or disposable media object were used in this pass; their required Supabase and R2 endpoints are explicitly covered by `connect-src`. The change remains local until the next approved GitHub push and Vercel deployment, after which the production header and workflows must be checked again.
+
 ## Scope and method
 
 This was a point-in-time, read-only review of:
@@ -110,7 +128,7 @@ Checks performed included:
 | S-02 | Medium | Admin accounts lack MFA; leaked-password protection is off | Accepted with compensating controls |
 | S-03 | Low residual | Direct and transitive dependencies have known advisories | Implemented locally; two non-reachable exceptions |
 | S-04 | Low residual | R2 signing Edge Function needs abuse and error hardening | Remediated in production July 28 |
-| S-05 | Medium | Production lacks a Content Security Policy | Confirmed |
+| S-05 | Low residual | Production lacks a Content Security Policy | Implemented locally; deployment pending |
 | S-06 | Medium | Database changes are not represented in migration history | Confirmed |
 | S-07 | Medium | Legacy public Supabase Storage bucket allows listing and lacks limits | Confirmed |
 | S-08 | Medium | GitHub Actions and repository security controls need hardening | Partly confirmed |
@@ -293,8 +311,8 @@ Requests without an `Origin` header remain accepted because CORS is not an authe
 
 ### S-05 — No Content Security Policy
 
-**Severity:** Medium
-**Status:** Confirmed on the production response
+**Severity:** Low residual after remediation (originally Medium)
+**Status:** Implemented locally July 28, 2026; deployment pending
 
 #### Evidence
 
@@ -310,6 +328,36 @@ No `dangerouslySetInnerHTML`, `eval`, or `document.write` sink was found. A CSP 
 4. Enforce the narrowed policy after testing.
 
 Expected directives will likely include `default-src 'self'`, restrictive `script-src`, `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'none'`, and explicit `connect-src`/`img-src` allowances for Supabase and the media domain. The external QR service should be removed or explicitly accounted for. Do not copy this sketch directly without observing the built app.
+
+#### Remediation result
+
+`vercel.json` now defines one enforced, site-wide policy:
+
+```text
+default-src 'self';
+base-uri 'none';
+object-src 'none';
+frame-ancestors 'none';
+form-action 'self';
+script-src 'self';
+script-src-attr 'none';
+style-src 'self';
+style-src-attr 'unsafe-inline';
+font-src 'self';
+img-src 'self' blob: https://media.jmumensrugbyclub.com https://pynvimffqpfhwttlbuao.supabase.co https://api.qrserver.com;
+media-src 'self';
+connect-src 'self' https://pynvimffqpfhwttlbuao.supabase.co https://media.jmumensrugbyclub.com https://73a769fc917d35b321261bed0b7bec8e.r2.cloudflarestorage.com;
+frame-src https://www.instagram.com;
+manifest-src 'self';
+worker-src 'none';
+upgrade-insecure-requests
+```
+
+The only `unsafe-inline` allowance is scoped to style attributes, which React and Framer Motion use for legitimate rendering and animation. It does not weaken `script-src`; executable JavaScript remains same-origin only, with inline and evaluated JavaScript disallowed.
+
+The policy was first served locally as `Content-Security-Policy-Report-Only` against the production bundle. Every public route and `/admin` rendered without a CSP violation. It was then changed to the enforced header and re-verified. Three automated checks lock the exact dependency map, require the enforced header, prevent unsafe JavaScript sources, and preserve the anti-framing/base/form/object directives.
+
+The Instagram and QR exceptions are narrowly scoped to their current functions. Remove the QR exception when S-12 replaces the third-party QR generator. Reassess the policy whenever a new analytics service, payment provider, embedded frame, external asset host, or browser worker is introduced.
 
 ### S-06 — Database changes are absent from migration history
 
