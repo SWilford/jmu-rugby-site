@@ -8,7 +8,6 @@ import {
   getMediaFilePath,
   getMediaStoredPath,
 } from "../lib/mediaUtils";
-import { getR2DownloadUrl } from "../lib/storageUtils";
 
 const MEDIA_BUCKET = "rugby-media";
 
@@ -120,28 +119,18 @@ export default function Media() {
       const storedPath = getMediaStoredPath(photo);
       const objectPath = extractStorageObjectPath(storedPath, MEDIA_BUCKET);
       const fileName = objectPath.split("/").pop() || `jmu-rugby-photo-${photo.id}.jpg`;
-      let downloadUrl;
-      let objectUrl;
-
-      try {
-        downloadUrl = await getR2DownloadUrl(objectPath, fileName);
-      } catch {
-        const response = await fetch(getMediaFilePath(photo));
-        if (!response.ok) throw new Error(`Media download failed with status ${response.status}.`);
-        objectUrl = URL.createObjectURL(await response.blob());
-        downloadUrl = objectUrl;
-      }
+      const response = await fetch(getMediaFilePath(photo));
+      if (!response.ok) throw new Error(`Media download failed with status ${response.status}.`);
+      const objectUrl = URL.createObjectURL(await response.blob());
 
       const link = document.createElement("a");
-      link.href = downloadUrl;
+      link.href = objectUrl;
       link.download = fileName;
       link.hidden = true;
       document.body.appendChild(link);
       link.click();
       link.remove();
-      if (objectUrl) {
-        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-      }
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (error) {
       console.error("Media download failed:", error);
       setDownloadError("Download could not start. Please try again.");

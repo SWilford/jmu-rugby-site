@@ -190,26 +190,6 @@ export async function uploadFileToR2(file, objectPath) {
   };
 }
 
-export async function getR2DownloadUrl(objectPath, fileName) {
-  const normalizedPath = normalizeObjectPath(objectPath);
-  if (!normalizedPath) {
-    throw new Error("Cannot download without a valid media path.");
-  }
-
-  const data = await invokeR2Media({
-    action: "sign-download",
-    objectPath: normalizedPath,
-    fileName: String(fileName || "").trim() || undefined,
-  });
-  const signedUrl = String(data?.signedUrl || "");
-
-  if (!signedUrl) {
-    throw new Error("The download service did not return a download link.");
-  }
-
-  return signedUrl;
-}
-
 export async function deleteR2Objects(objectPaths) {
   const normalizedPaths = Array.from(new Set((objectPaths || []).map(normalizeObjectPath).filter(Boolean)));
   if (!normalizedPaths.length) return;

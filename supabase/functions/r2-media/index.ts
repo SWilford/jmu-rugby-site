@@ -1,8 +1,7 @@
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createClient } from "jsr:@supabase/supabase-js@2.111.0";
 import {
   CopyObjectCommand,
   DeleteObjectsCommand,
-  GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "npm:@aws-sdk/client-s3@3.937.0";
@@ -10,7 +9,6 @@ import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3.937.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const R2_ACCOUNT_ID = Deno.env.get("R2_ACCOUNT_ID") ?? "";
 const R2_BUCKET = Deno.env.get("R2_BUCKET") ?? "";
@@ -22,6 +20,7 @@ const parsedMaxUploadBytes = Number(Deno.env.get("R2_MAX_UPLOAD_BYTES"));
 const R2_MAX_UPLOAD_BYTES = Number.isFinite(parsedMaxUploadBytes) && parsedMaxUploadBytes > 0
   ? Math.floor(parsedMaxUploadBytes)
   : DEFAULT_MAX_UPLOAD_BYTES;
+const MAX_REQUEST_BODY_BYTES = 2 * 1024 * 1024;
 const MAX_DELETE_OBJECTS_PER_REQUEST = 1000;
 
 const ALLOWED_UPLOAD_CONTENT_TYPES = new Set([
@@ -44,7 +43,6 @@ const CORS_ORIGINS = (Deno.env.get("CORS_ORIGINS") ??
 const REQUIRED_ENV_VARS = [
   ["SUPABASE_URL", SUPABASE_URL],
   ["SUPABASE_ANON_KEY", SUPABASE_ANON_KEY],
-  ["SUPABASE_SERVICE_ROLE_KEY", SUPABASE_SERVICE_ROLE_KEY],
   ["R2_ACCOUNT_ID", R2_ACCOUNT_ID],
   ["R2_BUCKET", R2_BUCKET],
   ["R2_ACCESS_KEY_ID", R2_ACCESS_KEY_ID],
@@ -107,7 +105,9 @@ function corsHeaders(origin: string | null): HeadersInit {
     "Access-Control-Allow-Origin": getAllowedOrigin(origin),
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Cache-Control": "no-store",
     "Content-Type": "application/json",
+    "Vary": "Origin",
   };
 }
 
@@ -118,10 +118,27 @@ function jsonResponse(body: Record<string, unknown>, status = 200, origin: strin
   });
 }
 
-async function requireAdmin(req: Request): Promise<{ ok: true } | { ok: false; response: Response }> {
+function logInternalError(
+  message: string,
+  requestId: string,
+  error: unknown,
+  details: Record<string, unknown> = {}
+): void {
+  const errorDetails = error instanceof Error
+    ? { name: error.name, message: error.message, stack: error.stack }
+    : error;
+
+  console.error(message, { requestId, ...details, error: errorDetails });
+}
+
+async function requireAdmin(
+  req: Request,
+  requestId: string
+): Promise<{ ok: true } | { ok: false; response: Response }> {
+  const origin = req.headers.get("origin");
   const authorization = req.headers.get("Authorization");
   if (!authorization) {
-    return { ok: false, response: jsonResponse({ error: "Missing Authorization header." }, 401, req.headers.get("origin")) };
+    return { ok: false, response: jsonResponse({ error: "Authentication is required." }, 401, origin) };
   }
 
   const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -136,32 +153,30 @@ async function requireAdmin(req: Request): Promise<{ ok: true } | { ok: false; r
   } = await authClient.auth.getUser();
 
   if (userError || !user) {
-    return { ok: false, response: jsonResponse({ error: "Invalid user session." }, 401, req.headers.get("origin")) };
+    return { ok: false, response: jsonResponse({ error: "Invalid user session." }, 401, origin) };
   }
 
   const { data: isAdminFromRpc, error: rpcError } = await authClient.rpc("is_admin");
-  if (!rpcError && Boolean(isAdminFromRpc)) {
-    return { ok: true };
-  }
-
-  const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const { data: adminRow, error: adminError } = await serviceClient
-    .from("admins")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (adminError) {
+  if (rpcError) {
+    logInternalError("R2 media admin authorization failed.", requestId, rpcError, { userId: user.id });
     return {
       ok: false,
-      response: jsonResponse({ error: "Unable to verify admin permissions." }, 500, req.headers.get("origin")),
+      response: jsonResponse(
+        {
+          error: "Unable to verify administrator permissions.",
+          code: "admin_verification_failed",
+          requestId,
+        },
+        500,
+        origin
+      ),
     };
   }
 
-  if (!adminRow) {
+  if (!Boolean(isAdminFromRpc)) {
     return {
       ok: false,
-      response: jsonResponse({ error: "Only admins can modify media storage." }, 403, req.headers.get("origin")),
+      response: jsonResponse({ error: "Only administrators can modify media storage." }, 403, origin),
     };
   }
 
@@ -186,16 +201,21 @@ type MoveObjectPayload = {
   toPath: string;
 };
 
-type SignDownloadPayload = {
-  action: "sign-download";
-  objectPath: string;
-  fileName?: string;
-};
+type Payload = SignUploadPayload | DeleteObjectsPayload | MoveObjectPayload;
 
-type Payload = SignUploadPayload | DeleteObjectsPayload | MoveObjectPayload | SignDownloadPayload;
+const SUPPORTED_ACTIONS = new Set<Payload["action"]>([
+  "sign-upload",
+  "delete-objects",
+  "move-object",
+]);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
 
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
+  const requestId = crypto.randomUUID();
   if (!isAllowedRequestOrigin(origin)) {
     return jsonResponse({ error: "Origin not allowed." }, 403, origin);
   }
@@ -209,54 +229,72 @@ Deno.serve(async (req) => {
   }
 
   if (missingEnvVars.length > 0) {
+    logInternalError(
+      "R2 media function is missing required configuration.",
+      requestId,
+      new Error("Missing required function configuration."),
+      { missingEnvVars }
+    );
     return jsonResponse(
-      { error: `Missing required function secrets: ${missingEnvVars.join(", ")}` },
+      {
+        error: "Media storage is temporarily unavailable.",
+        code: "storage_unavailable",
+        requestId,
+      },
       500,
       origin
     );
   }
 
+  const contentType = String(req.headers.get("content-type") || "").toLowerCase();
+  if (!contentType.includes("application/json")) {
+    return jsonResponse({ error: "Content-Type must be application/json." }, 415, origin);
+  }
+
+  const declaredBodySize = Number(req.headers.get("content-length"));
+  if (Number.isFinite(declaredBodySize) && declaredBodySize > MAX_REQUEST_BODY_BYTES) {
+    return jsonResponse({ error: "Request body is too large." }, 413, origin);
+  }
+
   let payload: Payload;
   try {
-    payload = (await req.json()) as Payload;
+    const rawBody = await req.text();
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BODY_BYTES) {
+      return jsonResponse({ error: "Request body is too large." }, 413, origin);
+    }
+
+    const parsedPayload: unknown = JSON.parse(rawBody);
+    if (
+      !isRecord(parsedPayload) ||
+      typeof parsedPayload.action !== "string" ||
+      !SUPPORTED_ACTIONS.has(parsedPayload.action as Payload["action"])
+    ) {
+      return jsonResponse({ error: "Unsupported action." }, 400, origin);
+    }
+
+    payload = parsedPayload as Payload;
   } catch {
     return jsonResponse({ error: "Request body must be valid JSON." }, 400, origin);
   }
 
   try {
-    if (payload.action === "sign-download") {
-      const objectPath = normalizeObjectPath(payload.objectPath);
-      if (!isValidObjectPath(objectPath)) {
-        return jsonResponse({ error: "Invalid objectPath provided." }, 400, origin);
-      }
-
-      const objectFileName = objectPath.split("/").pop() || "jmu-rugby-photo";
-      const safeFileName = String(payload.fileName || objectFileName)
-        .replace(/[\r\n"]/g, "")
-        .trim() || "jmu-rugby-photo";
-      const command = new GetObjectCommand({
-        Bucket: R2_BUCKET,
-        Key: objectPath,
-        ResponseContentDisposition: `attachment; filename="${safeFileName}"`,
-      });
-      const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
-
-      return jsonResponse({ signedUrl, expiresIn: 60 }, 200, origin);
-    }
-
-    const authResult = await requireAdmin(req);
+    const authResult = await requireAdmin(req, requestId);
     if (!authResult.ok) {
       return authResult.response;
     }
 
     if (payload.action === "sign-upload") {
+      if (typeof payload.objectPath !== "string") {
+        return jsonResponse({ error: "Invalid objectPath provided." }, 400, origin);
+      }
       const objectPath = normalizeObjectPath(payload.objectPath);
       if (!isValidObjectPath(objectPath)) {
         return jsonResponse({ error: "Invalid objectPath provided." }, 400, origin);
       }
 
-      const contentType = String(payload.contentType || "").trim().toLowerCase();
-      if (!ALLOWED_UPLOAD_CONTENT_TYPES.has(contentType)) {
+      const uploadContentType =
+        typeof payload.contentType === "string" ? payload.contentType.trim().toLowerCase() : "";
+      if (!ALLOWED_UPLOAD_CONTENT_TYPES.has(uploadContentType)) {
         return jsonResponse(
           { error: "Only JPG, PNG, WebP, AVIF, GIF, HEIC, and HEIF uploads are supported." },
           400,
@@ -282,7 +320,7 @@ Deno.serve(async (req) => {
       const command = new PutObjectCommand({
         Bucket: R2_BUCKET,
         Key: objectPath,
-        ContentType: contentType,
+        ContentType: uploadContentType,
         ContentLength: Math.floor(fileSize),
         CacheControl: cacheControl,
       });
@@ -303,7 +341,10 @@ Deno.serve(async (req) => {
     }
 
     if (payload.action === "delete-objects") {
-      if (!Array.isArray(payload.objectPaths)) {
+      if (
+        !Array.isArray(payload.objectPaths) ||
+        payload.objectPaths.some((path) => typeof path !== "string")
+      ) {
         return jsonResponse({ error: "objectPaths must be an array." }, 400, origin);
       }
       if (payload.objectPaths.length > MAX_DELETE_OBJECTS_PER_REQUEST) {
@@ -340,6 +381,9 @@ Deno.serve(async (req) => {
     }
 
     if (payload.action === "move-object") {
+      if (typeof payload.fromPath !== "string" || typeof payload.toPath !== "string") {
+        return jsonResponse({ error: "Invalid source or destination object path." }, 400, origin);
+      }
       const fromPath = normalizeObjectPath(payload.fromPath);
       const toPath = normalizeObjectPath(payload.toPath);
 
@@ -381,7 +425,17 @@ Deno.serve(async (req) => {
 
     return jsonResponse({ error: "Unsupported action." }, 400, origin);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unexpected storage error.";
-    return jsonResponse({ error: message }, 500, origin);
+    logInternalError("R2 media storage operation failed.", requestId, error, {
+      action: payload.action,
+    });
+    return jsonResponse(
+      {
+        error: "The media storage operation failed.",
+        code: "storage_operation_failed",
+        requestId,
+      },
+      500,
+      origin
+    );
   }
 });
