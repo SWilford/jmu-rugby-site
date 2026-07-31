@@ -1,3 +1,6 @@
+-- HISTORICAL REFERENCE ONLY - DO NOT RUN.
+-- The authoritative schema is in supabase/migrations/.
+
 -- ============================================================
 -- Sponsors schema + RLS + storage policies
 -- Public can read active sponsors.

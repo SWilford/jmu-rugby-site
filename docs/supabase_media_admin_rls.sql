@@ -1,3 +1,6 @@
+-- HISTORICAL REFERENCE ONLY - DO NOT RUN.
+-- The authoritative schema is in supabase/migrations/.
+
 -- ============================================================
 -- Secure media editing so only admins can insert/update/delete
 -- while everyone can read media and media assets.

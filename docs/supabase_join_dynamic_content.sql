@@ -1,3 +1,6 @@
+-- HISTORICAL REFERENCE ONLY - DO NOT RUN.
+-- The authoritative schema is in supabase/migrations/.
+
 -- ============================================
 -- Supabase schema for Join page dynamic content
 -- Public read, Admin-only write

@@ -1,3 +1,6 @@
+-- HISTORICAL REFERENCE ONLY - DO NOT RUN.
+-- The authoritative schema is in supabase/migrations/.
+
 -- Add a dedicated home carousel flag on media rows.
 -- Safe to run multiple times.
 

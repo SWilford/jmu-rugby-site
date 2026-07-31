@@ -1,3 +1,6 @@
+-- HISTORICAL REFERENCE ONLY - DO NOT RUN.
+-- The authoritative schema is in supabase/migrations/.
+
 -- ============================================================
 -- Fix admin auth checks so `/admin` login works reliably.
 --

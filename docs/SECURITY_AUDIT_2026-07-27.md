@@ -1,7 +1,7 @@
 # JMU Men's Rugby Website Security Audit
 
 **Audit date:** July 27, 2026
-**Status:** S-01 and S-04 remediated, S-02 accepted with compensating controls, and S-03 and S-05 implemented; remaining findings are pending
+**Status:** S-01, S-04, S-05, S-06, and S-07 remediated; S-02 accepted with compensating controls; S-03 implemented; remaining findings are pending
 **Repository:** `SWilford/jmu-rugby-site`
 **Production site reviewed:** `https://www.jmumensrugbyclub.com`
 
@@ -39,7 +39,7 @@ The owner confirmed that the two website administrator accounts use unique, secu
 
 The Supabase organization is on the Free plan, where leaked-password protection is unavailable. Given the disabled public signup, two-admin scope, password hygiene, and confirmed operational controls, the owner accepted the remaining application-level MFA risk. Website-admin TOTP and a paid-plan upgrade will not be implemented now. The decision must be revisited if more administrators are added, private member data is introduced, or financial functionality becomes more substantial.
 
-### July 28, 2026 — S-03 dependency remediation implemented locally
+### July 28, 2026 — S-03 dependency remediation implemented
 
 The approved patch/minor dependency update and runtime alignment were completed in the working tree:
 
@@ -50,7 +50,7 @@ The approved patch/minor dependency update and runtime alignment were completed 
 - Documented the two remaining non-reachable advisory situations below instead of forcing unapproved React Router 8 and ESLint 10 major upgrades
 - Passed lint, all 10 automated tests, the production build, HTTP checks for every public route and `/admin`, and live anonymous Supabase reads
 
-The visual browser and console regression pass could not run because no browser was connected to the workspace. Authenticated administrator editors and R2 upload/download/delete were therefore not exercised end-to-end in this pass. The changes have not been committed, pushed, or deployed; production continues to use the previous dependency bundle until that release work is approved and completed.
+The visual browser and console regression pass could not run because no browser was connected to the workspace. Authenticated administrator editors and R2 upload/download/delete were therefore not exercised end-to-end in this pass. The changes were subsequently committed, pushed, deployed, and verified on production.
 
 ### July 28, 2026 — S-04 R2 Edge Function hardened
 
@@ -66,11 +66,11 @@ With owner approval, version 6 of the `r2-media` Supabase Edge Function was depl
 - Confirmed the removed download-signing action returns 400, an anonymous upload-signing attempt returns 401, and a headerless function call is rejected by the Supabase gateway with 401
 - Added three focused regression tests; lint, all 13 tests, and the production build pass
 
-No R2 object was uploaded, moved, or deleted during verification. The local Blob-first frontend change has not been committed, pushed, or deployed, but the currently deployed frontend already falls back to the same Blob path when download signing is unavailable.
+No R2 object was uploaded, moved, or deleted during verification. The Blob-first frontend change was subsequently committed, pushed, and deployed.
 
 A new persistent rate-limit service was not added. Removing the only public action leaves a JWT-validated, administrator-only function used by two administrators, so that infrastructure is not proportionate at present. The function continues to accept requests without an `Origin` header because CORS is not an authorization boundary; JWT validation and `is_admin()` provide that boundary. Application-level AAL2 was not added, consistent with the accepted S-02 decision. Revisit these decisions if the function becomes public again, administrator count or traffic grows, or abuse appears in logs.
 
-### July 28, 2026 — S-05 Content Security Policy implemented locally
+### July 28, 2026 — S-05 Content Security Policy implemented
 
 With owner approval, an enforced Content Security Policy was added to the global Vercel response headers after a report-only validation pass against the production build.
 
@@ -86,7 +86,81 @@ With owner approval, an enforced Content Security Policy was added to the global
 
 The report-only build rendered every public route and the administrator sign-in surface without a CSP violation. The homepage Instagram embed, Join page video, donation QR image, Supabase-backed content reads, and local assets rendered under the reviewed allowlist. The external QR origin is a temporary exception pending S-12.
 
-The enforced configuration passes all 16 automated tests, lint, and the production build. Authenticated administrator editors and a real R2 upload/delete/move were not exercised because no administrator credentials or disposable media object were used in this pass; their required Supabase and R2 endpoints are explicitly covered by `connect-src`. The change remains local until the next approved GitHub push and Vercel deployment, after which the production header and workflows must be checked again.
+The enforced configuration passes all 16 automated tests, lint, and the production build. Authenticated administrator editors and a real R2 upload/delete/move were not exercised because no administrator credentials or disposable media object were used in this pass; their required Supabase and R2 endpoints are explicitly covered by `connect-src`. The change was subsequently committed, pushed, deployed, and verified on production.
+
+### July 28, 2026 — S-06 migration baseline implemented
+
+With owner approval, the live Supabase catalog was captured as an ordered,
+data-free migration baseline.
+
+- Added `20260728000000_baseline_live_schema.sql` before the tracked S-01
+  remediation migration
+- Captured all 11 public tables, 75 columns, indexes, constraints, functions,
+  six update triggers, RLS configuration, 54 public policies, 12 legacy Storage
+  policies, and the current grants
+- Added `supabase/config.toml` and declared the legacy `rugby-media` bucket for
+  reproducible local environments
+- Added an automated disposable-PostgreSQL rebuild that runs the complete
+  migration chain and verifies table/column structure, RLS, policy counts,
+  grants, zero copied content, and migration ordering
+- Marked every manually run `docs/supabase_*.sql` file as historical and added
+  a migration/rollback runbook
+- Recorded `20260728000000_baseline_live_schema` as already applied in
+  production migration history; the baseline SQL was not executed against the
+  existing production schema
+- Verified production history now contains the baseline followed by
+  `20260728232351_fix_permissive_content_policies`
+
+No production table, policy, function, grant, Auth user, website-content row, or
+Storage object was changed. A full Supabase CLI reset was unavailable because
+Docker is not installed in this workspace; the chain was instead executed in an
+in-process PostgreSQL database with the required Supabase roles and Auth/Storage
+prerequisites.
+
+### July 30, 2026 — S-07 production assets migrated to R2
+
+With owner approval, the two sponsor logos still referenced through Supabase
+Storage were copied into the existing `rugby-media` Cloudflare R2 bucket:
+
+- `sponsors/jmhj2.jpg` — 15,575 bytes; source and R2 SHA-256
+  `f26a853932fc102b7d60d933270f58b3ed6054ea37d09225fcadb0804658eabe`
+- `sponsors/jcmrf.jpg` — 46,800 bytes; source and R2 SHA-256
+  `8cf6112013767e53952e5085a368aed961ec02386e5bf3be018320a3c4dbc9f6`
+
+The production sponsor records now store the relative R2 object paths, and the
+homepage footer was verified to render both images from
+`media.jmumensrugbyclub.com` with valid dimensions and no related browser
+errors. The data update is represented by
+`20260731014725_migrate_sponsor_logos_to_r2.sql`, matching production migration
+history.
+
+The Supabase copies, remaining legacy objects, bucket, and policies have not
+been deleted. They are retained as rollback material until the owner separately
+approves destructive cleanup. The Supabase advisor will continue to report the
+public-bucket-listing warning until that cleanup is completed.
+
+### July 30, 2026 — S-07 legacy Supabase Storage retired
+
+After separate owner approval for destructive cleanup, the final inventory found
+13 objects totaling 28,824,116 bytes: nine files and four empty-folder markers.
+Only the two already migrated sponsor paths remained referenced in production.
+
+- Downloaded and hash-verified all 13 objects before deletion
+- Created the recoverable archive
+  `S07-supabase-rugby-media-2026-07-30.zip` outside the repository
+- Recorded every object path, byte length, and SHA-256 in the archive manifest
+- Verified the archive contains all 13 objects; archive SHA-256 is
+  `75f1d6ee008694638c7fd55eb0153e4cf570c5003b279d6bd99cf4d40dd93884`
+- Emptied and deleted the Supabase bucket through the Storage API
+- Removed all 12 obsolete `storage.objects` policies through
+  `20260731020959_retire_legacy_supabase_storage.sql`
+- Removed the legacy bucket declaration from `supabase/config.toml`
+- Restored the production `r2-media` Edge Function to its reviewed code with
+  JWT verification enabled and confirmed anonymous requests still return 401
+- Confirmed the Supabase bucket, objects, and related policies are absent and
+  the public-bucket-listing advisor warning is gone
+- Confirmed the homepage, Media page, and Team page contain no Supabase Storage
+  URL; both sponsor logos render from R2 with valid dimensions
 
 ## Scope and method
 
@@ -126,11 +200,11 @@ Checks performed included:
 |---|---|---|---|
 | S-01 | High | Live Supabase RLS policy drift permits unintended writes and reads | Remediated July 28 |
 | S-02 | Medium | Admin accounts lack MFA; leaked-password protection is off | Accepted with compensating controls |
-| S-03 | Low residual | Direct and transitive dependencies have known advisories | Implemented locally; two non-reachable exceptions |
+| S-03 | Low residual | Direct and transitive dependencies have known advisories | Deployed; two non-reachable exceptions |
 | S-04 | Low residual | R2 signing Edge Function needs abuse and error hardening | Remediated in production July 28 |
-| S-05 | Low residual | Production lacks a Content Security Policy | Implemented locally; deployment pending |
-| S-06 | Medium | Database changes are not represented in migration history | Confirmed |
-| S-07 | Medium | Legacy public Supabase Storage bucket allows listing and lacks limits | Confirmed |
+| S-05 | Low residual | Production lacks a Content Security Policy | Remediated July 28 |
+| S-06 | Medium | Database changes are not represented in migration history | Remediated July 28 |
+| S-07 | Remediated | Legacy public Supabase Storage bucket allows listing and lacks limits | Remediated July 30 |
 | S-08 | Medium | GitHub Actions and repository security controls need hardening | Partly confirmed |
 | S-09 | Medium | Main site bypasses Cloudflare proxy; provider firewall rules need manual verification | Confirmed/verification needed |
 | S-10 | Medium | Database grants and function execution are broader than necessary | Confirmed |
@@ -227,7 +301,7 @@ A reused, phished, or breached password can provide full content and media admin
 ### S-03 — Known dependency advisories
 
 **Severity:** Low residual after remediation (originally High)
-**Status:** Implemented locally July 28, 2026; release pending
+**Status:** Implemented and deployed July 28, 2026
 
 #### Evidence
 
@@ -273,7 +347,7 @@ The remaining seven high-severity package nodes reported by `npm audit` map to o
 
 These are documented reachability exceptions, not claims that the upstream vulnerabilities are fixed. They must be re-evaluated if the application adopts React Server Components, passes untrusted glob patterns into tooling, or performs the deferred major upgrades.
 
-HTTP smoke checks returned the application shell for `/`, `/about`, `/team`, `/schedule`, `/media`, `/join`, `/contact`, `/donate`, and `/admin`; live anonymous reads of FAQ, media, and sponsor content also succeeded. The unavailable browser session prevented a visual/console check and authenticated administrator/R2 end-to-end testing. The lockfile is ready to commit, but no commit, push, deployment, or post-deployment production check has occurred yet.
+HTTP smoke checks returned the application shell for `/`, `/about`, `/team`, `/schedule`, `/media`, `/join`, `/contact`, `/donate`, and `/admin`; live anonymous reads of FAQ, media, and sponsor content also succeeded. The unavailable browser session prevented a visual/console check and authenticated administrator/R2 end-to-end testing. The dependency changes were subsequently committed, pushed, deployed, and verified on production.
 
 ### S-04 — R2 signing Edge Function abuse and error hardening
 
@@ -312,11 +386,13 @@ Requests without an `Origin` header remain accepted because CORS is not an authe
 ### S-05 — No Content Security Policy
 
 **Severity:** Low residual after remediation (originally Medium)
-**Status:** Implemented locally July 28, 2026; deployment pending
+**Status:** Remediated in production July 28, 2026
 
 #### Evidence
 
-Production sends HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy`, but no `Content-Security-Policy`.
+At audit time, production sent HSTS, `X-Content-Type-Options`,
+`X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy`, but no
+`Content-Security-Policy`.
 
 No `dangerouslySetInnerHTML`, `eval`, or `document.write` sink was found. A CSP is still valuable defense in depth against future injection, compromised dependencies, and unexpected third-party content.
 
@@ -362,11 +438,14 @@ The Instagram and QR exceptions are narrowly scoped to their current functions. 
 ### S-06 — Database changes are absent from migration history
 
 **Severity:** Medium
-**Status:** Confirmed
+**Status:** Remediated July 28, 2026
 
 #### Evidence
 
-The live Supabase migration list is empty, while the repository contains numerous manually run SQL instruction files under `docs/`. The intended `is_admin` script revokes anonymous execution, but the live function remains executable by `anon`, demonstrating configuration drift.
+At audit time, the live Supabase migration list was empty while the repository
+contained numerous manually run SQL instruction files under `docs/`. The
+intended `is_admin` script revoked anonymous execution, but the live function
+remained executable by `anon`, demonstrating configuration drift.
 
 #### Impact
 
@@ -375,38 +454,48 @@ The live Supabase migration list is empty, while the repository contains numerou
 - Rollbacks and officer/developer handoffs are risky.
 - Documentation may describe a safer state than production actually has.
 
-#### Proposed change
+#### Implemented change
 
-1. Export the live schema and establish a reviewed baseline migration.
-2. Convert subsequent changes into ordered migrations under `supabase/migrations/`.
-3. Add policy/grant tests to CI.
-4. Require migration review and a backup/rollback plan for production changes.
-5. Archive or clearly mark historical SQL snippets so they are not mistaken for current truth.
+The live schema was converted to a reviewed, data-free baseline under
+`supabase/migrations/`, ordered before S-01, and recorded as already applied in
+production history. The repository now rebuilds and tests the migration chain,
+including RLS and grants. The operations documentation requires reviewed
+migrations, disposable rebuilds, production backups for destructive work,
+forward-fix rollback planning, and post-change advisor checks. Historical SQL
+snippets carry an explicit do-not-run warning.
 
 ### S-07 — Legacy public Supabase Storage bucket
 
-**Severity:** Medium
-**Status:** Confirmed
+**Severity:** Remediated (originally Medium)
+**Status:** Remediated July 30, 2026
 
 #### Evidence
 
-The `rugby-media` Supabase Storage bucket is public, contains five legacy objects, and has:
+At audit time, the `rugby-media` Supabase Storage bucket was public and had:
 
 - No bucket file-size limit
 - No bucket MIME allowlist
 - A broad public `SELECT` policy that allows listing all objects
 - Additional overlapping path-specific policies
 
-The active application now uses Cloudflare R2. Supabase's advisor flags the broad listing policy: [public bucket listing lint](https://supabase.com/docs/guides/database/database-linter?lint=0025_public_bucket_allows_listing).
+The final retirement inventory found 13 objects rather than the five initially
+counted. The difference consisted of older photos/headshots and empty-folder
+markers. A production database and repository reference scan found only the two
+sponsor paths still in use.
 
-#### Proposed change
+#### Remediation result
 
-First determine whether any production page still references the five objects. Then either:
+The two referenced sponsor logos were copied byte-for-byte to R2 and production
+records were updated to relative R2 paths. All 13 legacy objects were then
+downloaded into a verified backup archive before the Storage API emptied and
+deleted the bucket. A reviewed migration removed all 12 obsolete Storage
+policies, and the local bucket declaration was removed.
 
-- Migrate verified assets to R2, update references, back up, and retire the Supabase bucket; or
-- Keep the bucket but add bucket-level MIME/size controls, remove broad listing, and consolidate storage policies.
-
-Deletion or migration must be separately approved and have an object inventory plus rollback plan.
+Production now has no `rugby-media` Supabase bucket, objects, or related
+policies. The [public bucket listing lint](https://supabase.com/docs/guides/database/database-linter?lint=0025_public_bucket_allows_listing)
+is absent from the post-change advisor report. Cloudflare R2 still contains the
+two active sponsor objects, and live homepage, Media, and Team checks found no
+Supabase Storage URL.
 
 ### S-08 — GitHub security hardening
 
@@ -586,24 +675,23 @@ Before implementation, the site owner should explicitly approve:
 
 - [ ] A maintenance window and backup/rollback plan
 - [ ] The exact final RLS policy matrix
-- [ ] Mandatory TOTP MFA for every administrator
-- [x] Dependency upgrade scope — S-03 implemented locally
+- [x] Application MFA decision — risk accepted under S-02 compensating controls
+- [x] Dependency upgrade scope — S-03 implemented and deployed
 - [x] Whether public download signing remains available — removed in S-04
-- [ ] Whether the legacy Supabase Storage bucket is migrated or retained
-- [ ] CSP rollout in report-only then enforcement stages
+- [x] Migrate production-referenced legacy Supabase assets to R2
+- [x] Permanently delete the Supabase rollback copies, bucket, and obsolete policies
+- [x] CSP rollout in report-only then enforcement stages
 - [ ] GitHub branch/ruleset requirements
 - [ ] Vercel/Cloudflare firewall ownership and proposed rules
 - [ ] Monitoring owner, security contact, and incident process
 
-## Verification record
-
-At the time of this audit:
+## Current verification record
 
 - `npm run lint` — passed
-- `npm run test:ci` — passed, 13 tests
+- `npm run test:ci` — passed, 18 tests
 - `npm run build` — passed
 - Build emitted a performance warning for a JavaScript chunk over 500 kB; this is a performance/maintainability issue, not a direct security finding.
 
 ## Decision
 
-**S-01 and S-04 were implemented, S-02 was accepted with compensating controls, and S-03 was implemented locally on July 28, 2026.** The S-04 Edge Function is live; its Blob-first frontend cleanup and all S-03 application changes remain uncommitted and undeployed. Every remaining finding requires separate owner discussion/approval. These decisions do not authorize modifying DNS/firewalls, deleting storage objects, changing GitHub settings, or deploying additional code.
+**S-01, S-04, S-05, and S-06 were implemented, and S-02 was accepted with compensating controls on July 28, 2026.** S-06 establishes an ordered, data-free Supabase baseline and records it in production history without replaying it over the existing schema. Every remaining finding requires separate owner discussion/approval. These decisions do not authorize modifying DNS/firewalls, deleting storage objects, changing GitHub settings, or deploying additional code.

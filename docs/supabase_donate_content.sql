@@ -1,3 +1,6 @@
+-- HISTORICAL REFERENCE ONLY - DO NOT RUN.
+-- The authoritative schema is in supabase/migrations/.
+
 -- ============================================================
 -- Donate page content schema + RLS
 -- Public can read donate settings.

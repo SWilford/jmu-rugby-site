@@ -208,9 +208,14 @@ npm run build
 3. Confirm SPA routing and security headers are present.
 
 ### Supabase migrations and policies
-1. Run admin function/policy SQL scripts in Supabase SQL editor.
-2. Confirm at least one admin row exists in `public.admins`.
-3. Validate `/admin` login and write operations.
+1. Create and review an ordered file under `supabase/migrations/`.
+2. Run the repository tests and rebuild a disposable database.
+3. Apply the reviewed migration through the Supabase migration workflow.
+4. Confirm at least one admin row exists in `public.admins`.
+5. Validate `/admin` login and write operations, then re-run Supabase advisors.
+
+See `docs/SUPABASE_MIGRATIONS.md` for the baseline, validation, and rollback
+rules. The older `docs/supabase_*.sql` files are historical references only.
 
 ### R2 media pipeline
 1. Confirm bucket CORS allows frontend origins.

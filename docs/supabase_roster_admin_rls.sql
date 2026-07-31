@@ -1,3 +1,6 @@
+-- HISTORICAL REFERENCE ONLY - DO NOT RUN.
+-- The authoritative schema is in supabase/migrations/.
+
 -- ============================================================
 -- Secure roster/coaches editing so only admins can insert/update/delete
 -- while everyone can continue reading roster and coach data.
