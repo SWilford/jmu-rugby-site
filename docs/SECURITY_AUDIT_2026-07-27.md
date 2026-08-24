@@ -237,7 +237,7 @@ Checks performed included:
 | S-06 | Medium | Database changes are not represented in migration history | Remediated July 28 |
 | S-07 | Remediated | Legacy public Supabase Storage bucket allows listing and lacks limits | Remediated July 30 |
 | S-08 | Remediated | GitHub Actions and repository security controls need hardening | Remediated August 24 |
-| S-09 | Medium | Main site bypasses Cloudflare proxy; provider firewall rules need manual verification | Confirmed/verification needed |
+| S-09 | Remediated | Main site bypasses Cloudflare proxy; provider firewall rules need manual verification | Remediated and verified August 24 |
 | S-10 | Medium | Database grants and function execution are broader than necessary | Confirmed |
 | S-11 | Low | SPA fallback returns `200` for nonexistent sensitive paths | Confirmed |
 | S-12 | Low | Third-party QR generation leaks request metadata | Confirmed |
@@ -561,8 +561,8 @@ MFA is enabled.
 
 ### S-09 — Main site bypasses Cloudflare proxy; firewall rules need verification
 
-**Severity:** Medium
-**Status:** Architecture confirmed; rule details require dashboard verification
+**Severity:** Remediated
+**Status:** Remediated and verified August 24, 2026
 
 #### Evidence
 
@@ -572,20 +572,73 @@ For the primary domain:
 - `media.jmumensrugbyclub.com` is proxied through Cloudflare to R2.
 - Cloudflare's zone WAF/rate-limiting rules therefore do not protect the main Vercel website.
 - Vercel Authentication protects preview/immutable deployment URLs.
-- Vercel Firewall configuration was not exposed by the connector.
+- Vercel Firewall configuration was not exposed by the connector, so it was
+  verified through an authenticated project dashboard session on August 24.
+- Vercel automatically applies platform DDoS mitigation to every deployment and
+  plan; the public application is therefore not dependent on Cloudflare for
+  baseline DDoS protection.
 
 This is not automatically a defect. A Vercel-hosted site can correctly use Vercel's protection. It means the ownership boundary must be explicit: Cloudflare protects media/DNS, while Vercel protects the public app.
 
-Cloudflare R2 positives include disabled `r2.dev`, an enabled custom media domain with TLS 1.2 minimum, exact website origins in CORS, and multipart-upload cleanup after seven days.
+Cloudflare R2 positives include disabled `r2.dev`, an enabled custom media
+domain with TLS 1.2 minimum, exact website origins in CORS, and multipart-upload
+cleanup after seven days. Live checks on August 24 confirmed that an allowed
+origin receives the expected CORS response, a disallowed origin receives HTTP
+403, and a representative JPEG is cached (`cf-cache-status: HIT`) with its
+existing four-hour object cache lifetime. Before remediation, a preflight using
+an arbitrary request header was accepted, confirming that the live bucket used
+wildcard allowed headers.
 
-#### Proposed change
+The authenticated Vercel review confirmed that the project firewall and system
+mitigations are active. During the reviewed past-day window, Vercel reported 21
+denied requests and no active alerts. The project has no custom rules, IP blocks,
+system bypasses, or unpublished rules shown. Bot Protection and Attack Mode are
+off. This is the intended normal operating state for the static SPA; Attack Mode
+remains an incident-response control rather than an always-on setting.
 
-1. Document which provider owns DDoS, WAF, bot, and rate-limit controls for each hostname.
-2. Review Vercel Firewall in the dashboard and record active rules.
-3. Review Cloudflare managed rules, custom rules, and rate-limit expressions for both zones.
-4. Stage new rules in log-only mode, test on preview, then publish deliberately.
-5. Narrow R2 CORS request headers from `*` if actual upload requirements allow it.
-6. Evaluate caching for public R2 media; the tested image returned `cf-cache-status: DYNAMIC`.
+The authenticated Cloudflare zone review confirmed two active rules scoped to
+`media.jmumensrugbyclub.com`. `Media host managed challenge` challenges
+cross-site `GET`/`HEAD` hotlink traffic while excluding empty referrers, verified
+bots, and the apex/`www` website origins; it showed 12 events during the reviewed
+window. `Rate limit media host` blocks a non-verified-bot IP for 10 seconds after
+more than 300 `GET`/`HEAD` requests in 10 seconds; it showed zero events. The
+legacy `jmumensrugby.com` zone has no custom, rate-limit, or managed rules. The
+Cloudflare managed-rules upgrade is not needed for this public-media-only proxy
+boundary.
+
+#### Protection ownership
+
+| Surface | Provider responsible for protection | Controls |
+| --- | --- | --- |
+| `jmumensrugbyclub.com` and `www` | Vercel | Platform DDoS mitigation, Vercel Firewall/WAF, deployment protection, TLS and application response headers |
+| `media.jmumensrugbyclub.com` | Cloudflare | Proxied custom domain, Cloudflare edge/CDN controls, R2 CORS, TLS and object caching |
+| Supabase API and Auth endpoints | Supabase | Authentication, RLS, database grants, Edge Function authorization and platform abuse controls |
+| Authoritative DNS | Cloudflare | DNS integrity and availability; DNS-only records do not place Cloudflare in the main site's HTTP request path |
+
+#### Changes and verification
+
+1. Provider ownership is documented above.
+2. The repository now contains a least-privilege R2 policy at
+   `config/r2-cors.json`; it retains `GET`, `HEAD`, and signed `PUT` while
+   narrowing request headers from `*` to `Content-Type`.
+3. Public-media caching is working. No blanket cache rule is recommended:
+   timestamped uploads already receive immutable caching, while fixed legacy
+   paths need the current shorter lifetime so replacements do not remain stale.
+4. The main Vercel hostnames should remain DNS-only. Adding Cloudflare as a
+   second reverse proxy would introduce an unnecessary double-proxy boundary
+   and could reduce Vercel Firewall signal quality.
+5. The R2 CORS policy was applied in Cloudflare. A signed-upload-compatible
+   `Content-Type` preflight returned HTTP 204 with the expected allow headers;
+   an arbitrary request header and an unauthorized origin each returned HTTP
+   403. A public media GET continued to return HTTP 200 with
+   `cf-cache-status: HIT`.
+6. Vercel Firewall state was reviewed and recorded above. Because the deployment
+   is a static SPA with no Vercel API routes, no new rate-limit rule is justified
+   without traffic evidence. If a new rule is later warranted, stage it in
+   log-only mode and test it before enforcement.
+7. Cloudflare custom, rate-limit, and managed-rule states were reviewed for both
+   zones. The two existing media-scoped rules are active and appropriately
+   bounded; no new Cloudflare firewall rule was added.
 
 Do not proxy Vercel through Cloudflare merely to clear this finding without testing Vercel domain verification, caching, redirects, TLS, and support implications.
 

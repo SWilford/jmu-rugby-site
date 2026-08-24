@@ -11,6 +11,9 @@ const storageUtilsSource = readFileSync(
   new URL("../src/lib/storageUtils.js", import.meta.url),
   "utf8"
 );
+const r2CorsPolicy = JSON.parse(
+  readFileSync(new URL("../config/r2-cors.json", import.meta.url), "utf8")
+);
 
 test("R2 Edge Function exposes only administrator storage actions", () => {
   assert.match(
@@ -46,4 +49,22 @@ test("public media downloads use a temporary browser Blob instead of signing", (
   assert.match(mediaPageSource, /await response\.blob\(\)/);
   assert.match(mediaPageSource, /URL\.createObjectURL/);
   assert.match(mediaPageSource, /URL\.revokeObjectURL/);
+});
+
+test("R2 browser CORS remains limited to expected origins and upload headers", () => {
+  assert.equal(r2CorsPolicy.rules.length, 1);
+
+  const [rule] = r2CorsPolicy.rules;
+  assert.deepEqual(rule.allowed.origins, [
+    "http://localhost:5173",
+    "https://jmumensrugbyclub.com",
+    "https://www.jmumensrugbyclub.com",
+  ]);
+  assert.deepEqual(rule.allowed.methods, ["GET", "HEAD", "PUT"]);
+  assert.deepEqual(rule.allowed.headers, ["Content-Type"]);
+  assert.deepEqual(rule.expose_headers, ["ETag"]);
+  assert.equal(rule.max_age_seconds, 3600);
+
+  assert.ok(!rule.allowed.origins.includes("*"));
+  assert.ok(!rule.allowed.headers.includes("*"));
 });

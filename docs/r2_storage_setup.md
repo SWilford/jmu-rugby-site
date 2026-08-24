@@ -24,7 +24,12 @@ Set the same value in Supabase function secrets as `R2_PUBLIC_BASE_URL`.
 
 Because the app uploads directly to signed R2 URLs from the browser, bucket CORS must allow `PUT`.
 
-Example CORS JSON:
+The version-controlled production policy is [`config/r2-cors.json`](../config/r2-cors.json).
+It permits the three expected browser origins and limits request headers to
+`Content-Type`, which is the only non-safelisted header sent by the current
+presigned-upload client.
+
+Equivalent dashboard JSON:
 
 ```json
 [
@@ -35,12 +40,25 @@ Example CORS JSON:
       "https://www.jmumensrugbyclub.com"
     ],
     "AllowedMethods": ["GET", "HEAD", "PUT"],
-    "AllowedHeaders": ["*"],
+    "AllowedHeaders": ["Content-Type"],
     "ExposeHeaders": ["ETag"],
     "MaxAgeSeconds": 3600
   }
 ]
 ```
+
+Apply and verify the version-controlled policy with an authenticated Wrangler
+session:
+
+```bash
+npx wrangler login
+npx wrangler r2 bucket cors set rugby-media --file config/r2-cors.json
+npx wrangler r2 bucket cors list rugby-media
+```
+
+After changing CORS, purge cached assets for the media hostname if an existing
+cached response still exposes the old headers. Allow up to 30 seconds for R2
+CORS propagation before testing again.
 
 ## 3) Set Supabase Function Secrets
 

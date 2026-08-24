@@ -151,7 +151,9 @@ Built into code today:
 - Object-path storage instead of DB blobs.
 
 Operational controls to keep tuned in Cloudflare:
-- Cache aggressively on `media.jmumensrugbyclub.com`.
+- Honor each object's `Cache-Control` metadata on `media.jmumensrugbyclub.com`.
+  New timestamped uploads are immutable, while fixed legacy object paths should
+  retain a shorter cache lifetime so replacements do not remain stale.
 - Enable Smart Tiered Cache.
 - Keep anti-abuse protections active on media host.
 - Monitor R2 operations trend (Class A/B behavior) in Cloudflare billing/analytics.
