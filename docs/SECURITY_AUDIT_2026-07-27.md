@@ -1,7 +1,7 @@
 # JMU Men's Rugby Website Security Audit
 
 **Audit date:** July 27, 2026
-**Status:** S-01, S-04, S-05, S-06, and S-07 remediated; S-02 accepted with compensating controls; S-03 implemented; remaining findings are pending
+**Status:** S-01, S-04, S-05, S-06, S-07, and S-08 remediated; S-02 accepted with compensating controls; S-03 implemented; remaining findings are pending
 **Repository:** `SWilford/jmu-rugby-site`
 **Production site reviewed:** `https://www.jmumensrugbyclub.com`
 
@@ -162,6 +162,37 @@ Only the two already migrated sponsor paths remained referenced in production.
 - Confirmed the homepage, Media page, and Team page contain no Supabase Storage
   URL; both sponsor logos render from R2 with valid dimensions
 
+### August 24, 2026 — S-08 GitHub repository hardening
+
+With owner approval, the repository and GitHub security configuration were
+hardened. The owner's GitHub MFA was already enabled and did not require a
+change.
+
+- Granted workflows read-only repository contents by default and prevented
+  workflows from approving pull requests
+- Pinned every GitHub Action to a reviewed immutable commit SHA while retaining
+  version comments for maintainability
+- Added weekly Dependabot coverage for npm and GitHub Actions dependencies
+- Added pull-request dependency review that rejects moderate-or-higher newly
+  introduced vulnerabilities
+- Added weekly and change-triggered CodeQL analysis for JavaScript/TypeScript
+- Added a private vulnerability reporting policy and response expectations in
+  `SECURITY.md`
+- Enabled secret scanning, push protection, Dependabot alerts and security
+  updates, and GitHub private vulnerability reporting
+- Added a default-branch ruleset requiring pull requests, successful CI and
+  dependency review, and resolved review conversations while blocking branch
+  deletion and force pushes; repository administrators have pull-request-only
+  emergency bypass
+- Deliberately left required approvals at zero because this is currently a
+  one-maintainer repository; signed commits are not required
+- Added focused regression tests for workflow permissions, immutable action
+  pins, Dependabot, CodeQL, dependency review, and disclosure guidance
+
+All 20 automated tests, lint, the production build, and the production-only npm
+audit pass. The build continues to emit the existing large-chunk performance
+warning, which is not a direct security finding.
+
 ## Scope and method
 
 This was a point-in-time, read-only review of:
@@ -205,7 +236,7 @@ Checks performed included:
 | S-05 | Low residual | Production lacks a Content Security Policy | Remediated July 28 |
 | S-06 | Medium | Database changes are not represented in migration history | Remediated July 28 |
 | S-07 | Remediated | Legacy public Supabase Storage bucket allows listing and lacks limits | Remediated July 30 |
-| S-08 | Medium | GitHub Actions and repository security controls need hardening | Partly confirmed |
+| S-08 | Remediated | GitHub Actions and repository security controls need hardening | Remediated August 24 |
 | S-09 | Medium | Main site bypasses Cloudflare proxy; provider firewall rules need manual verification | Confirmed/verification needed |
 | S-10 | Medium | Database grants and function execution are broader than necessary | Confirmed |
 | S-11 | Low | SPA fallback returns `200` for nonexistent sensitive paths | Confirmed |
@@ -500,9 +531,9 @@ Supabase Storage URL.
 ### S-08 — GitHub security hardening
 
 **Severity:** Medium
-**Status:** Repository files confirmed; administrative settings require verification
+**Status:** Remediated and verified August 24, 2026
 
-#### Evidence
+#### Original evidence
 
 - The repository is public.
 - CI and nightly workflows use `actions/checkout@v4` and `actions/setup-node@v4` tags rather than immutable commit SHAs.
@@ -511,15 +542,22 @@ Supabase Storage URL.
 - Branch protection/rulesets, secret scanning, push protection, administrator bypass, member 2FA, and required-review settings could not be verified with the available access.
 - No high-confidence secret was found in the repository or history.
 
-#### Proposed change
+#### Remediation result
 
-1. Add top-level `permissions: contents: read`.
-2. Pin third-party actions to reviewed commit SHAs, retaining version comments.
-3. Enable Dependabot and dependency review.
-4. Add CodeQL for JavaScript/TypeScript.
-5. Add `SECURITY.md` with a private reporting path and response expectations.
-6. Manually verify rulesets: PR required, required CI, conversation resolution, no force push/deletion, limited bypass, and signed commits where practical.
-7. Verify GitHub secret scanning/push protection and 2FA for every collaborator.
+The CI and nightly workflows now use explicit read-only permissions and
+immutable action SHAs. Dependabot, dependency review, CodeQL, a private
+reporting policy, and regression tests were added. GitHub secret scanning, push
+protection, dependency alerts and security updates, private vulnerability
+reporting, and read-only workflow defaults are enabled.
+
+The default branch is protected by a repository ruleset requiring a pull
+request, successful `ci` and `dependency-review` checks, and resolution of
+review conversations. Force pushes and deletion are blocked. The sole
+repository administrator has pull-request-only emergency bypass. Zero approvals
+are required because a one-maintainer repository cannot obtain an independent
+approval; this should be increased when another regular maintainer is available.
+Signed commits were intentionally not made mandatory. The owner confirmed GitHub
+MFA is enabled.
 
 ### S-09 — Main site bypasses Cloudflare proxy; firewall rules need verification
 
@@ -681,17 +719,18 @@ Before implementation, the site owner should explicitly approve:
 - [x] Migrate production-referenced legacy Supabase assets to R2
 - [x] Permanently delete the Supabase rollback copies, bucket, and obsolete policies
 - [x] CSP rollout in report-only then enforcement stages
-- [ ] GitHub branch/ruleset requirements
+- [x] GitHub branch/ruleset requirements
 - [ ] Vercel/Cloudflare firewall ownership and proposed rules
 - [ ] Monitoring owner, security contact, and incident process
 
 ## Current verification record
 
 - `npm run lint` — passed
-- `npm run test:ci` — passed, 18 tests
+- `npm run test:ci` — passed, 20 tests
+- `npm audit --omit=dev --audit-level=high` — passed, zero vulnerabilities
 - `npm run build` — passed
 - Build emitted a performance warning for a JavaScript chunk over 500 kB; this is a performance/maintainability issue, not a direct security finding.
 
 ## Decision
 
-**S-01, S-04, S-05, and S-06 were implemented, and S-02 was accepted with compensating controls on July 28, 2026.** S-06 establishes an ordered, data-free Supabase baseline and records it in production history without replaying it over the existing schema. Every remaining finding requires separate owner discussion/approval. These decisions do not authorize modifying DNS/firewalls, deleting storage objects, changing GitHub settings, or deploying additional code.
+**S-01, S-04, S-05, S-06, S-07, and S-08 were implemented, and S-02 was accepted with compensating controls.** S-06 establishes an ordered, data-free Supabase baseline and records it in production history without replaying it over the existing schema. S-08 establishes automated GitHub supply-chain checks and default-branch protections appropriate for the current one-maintainer repository. Every remaining finding requires separate owner discussion/approval. These decisions do not authorize modifying DNS/firewalls, changing other provider settings, or deploying additional code.
