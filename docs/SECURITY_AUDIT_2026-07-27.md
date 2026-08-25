@@ -239,10 +239,10 @@ Checks performed included:
 | S-08 | Remediated | GitHub Actions and repository security controls need hardening | Remediated August 24 |
 | S-09 | Remediated | Main site bypasses Cloudflare proxy; provider firewall rules need manual verification | Remediated and verified August 24 |
 | S-10 | Remediated | Database grants and function execution are broader than necessary | Remediated and verified August 25 |
-| S-11 | Low | SPA fallback returns `200` for nonexistent sensitive paths | Confirmed |
-| S-12 | Low | Third-party QR generation leaks request metadata | Confirmed |
-| S-13 | Low | Security monitoring and incident-response ownership are not documented | Confirmed |
-| S-14 | Low | Environment-variable onboarding and rotation inventory are incomplete | Confirmed |
+| S-11 | Remediated | SPA fallback returns `200` for nonexistent sensitive paths | Remediated and verified August 25 |
+| S-12 | Remediated | Third-party QR generation leaks request metadata | Remediated and verified August 25 |
+| S-13 | Remediated | Security monitoring and incident-response ownership are not documented | Remediated August 25 |
+| S-14 | Remediated | Environment-variable onboarding and rotation inventory are incomplete | Remediated August 25 |
 
 ## Detailed findings and proposed changes
 
@@ -714,38 +714,67 @@ with no browser console errors.
 ### S-11 — SPA fallback returns `200` for nonexistent sensitive paths
 
 **Severity:** Low
-**Status:** Confirmed
+**Status:** Remediated and verified August 25, 2026
 
 Requests to `/.env`, `/.git/config`, and `/wp-admin` returned the normal React application shell with HTTP `200`, not the requested file. No disclosure occurred. The catch-all Vercel rewrite causes scanners, search engines, and monitoring to treat nonexistent paths as valid.
 
-**Proposed change:** Add explicit deny/404 handling for common sensitive paths and design a real SPA not-found strategy. Verify client-side routing and legacy redirects after any rewrite change.
+The catch-all rewrite was replaced with exact rewrites for the eight supported
+client routes. Vercel can therefore serve the SPA shell for valid deep links
+while its normal filesystem handling returns a genuine `404` for every other
+path, including sensitive-path probes. Automated tests lock the route allow-list
+and reject a future catch-all. Production verification covered every supported
+route, the two legacy-domain redirects, and representative unknown paths.
 
 ### S-12 — Third-party QR generation leaks request metadata
 
 **Severity:** Low
-**Status:** Confirmed
+**Status:** Remediated and verified August 25, 2026
 
 The donation page embeds an image from `api.qrserver.com`, passing the donation URL in the query string. Visitors who load it disclose their IP address, user agent, referrer behavior, and the encoded destination to that third party.
 
-**Proposed change:** Generate and host the QR image as a reviewed first-party asset, or disclose the provider and purpose in the privacy notice. Regenerate it whenever the approved donation destination changes.
+The third-party image request was removed. A pinned `qrcode.react` dependency
+now creates an accessible SVG entirely in the visitor's browser from the same
+administrator-editable Venmo URL used by the donation button. No request or
+donation destination is sent to a QR provider, and `api.qrserver.com` was
+removed from the enforced CSP. Automated tests prevent the provider from being
+reintroduced accidentally.
 
 ### S-13 — Monitoring and incident-response ownership
 
 **Severity:** Low
-**Status:** No repository documentation found
+**Status:** Remediated August 25, 2026
 
 No documented alert owner, security contact, credential-rotation schedule, incident checklist, or provider log-retention plan was found.
 
-**Proposed change:** Create a lightweight runbook covering compromised admin accounts, exposed keys, malicious content changes, storage abuse, breach assessment, provider contacts, evidence retention, public communications, and officer transition. Enable appropriate Supabase, Vercel, Cloudflare, and GitHub notifications without collecting unnecessary visitor data.
+`docs/SECURITY_OPERATIONS.md` now assigns joint operational ownership to the
+current Marketing Chairs and defines executive escalation, post-deployment and
+monthly reviews, provider notification routing, officer handoff, containment,
+evidence handling, recovery, and incident closure. It intentionally relies on
+provider-native logs rather than adding visitor tracking.
+
+The Admin Portal now includes a protected administrator-access editor. A
+server-only Supabase Edge Function verifies the caller's user JWT and
+`public.is_admin()` authorization before listing administrators or sending an
+invite. Supabase secret/service credentials never reach the browser. Removal
+retains the Auth account but immediately removes authorization; a locked
+service-role-only database transaction prevents self-removal and last-admin
+lockout. The production database has two administrators and the new Edge
+Function rejects unauthenticated requests with `401`.
 
 ### S-14 — Environment-variable onboarding and rotation inventory
 
 **Severity:** Low
-**Status:** Confirmed
+**Status:** Remediated August 25, 2026
 
 `.env.local` is ignored and no tracked secret was found, which is correct. The repository has no `.env.example` describing required public variables, owners, or rotation procedures.
 
-**Proposed change:** Add a value-free `.env.example` and a private credential inventory documenting where each secret lives, its privilege, owner, rotation trigger, and revocation steps. Never put actual values in the repository.
+A value-free `.env.example` now documents every browser variable and clearly
+warns that Vite variables are public. `docs/ENVIRONMENT_AND_CREDENTIALS.md`
+maps browser, Edge Function, provider-account, and R2 configuration to its
+owner, consumer, sensitivity, rotation trigger, and safe replacement process.
+Only a value-free template is tracked; the completed inventory, credentials,
+MFA recovery material, and rotation dates remain in the club's private
+password manager.
 
 ## Positive controls observed
 
@@ -761,7 +790,7 @@ No documented alert owner, security contact, credential-rotation schedule, incid
 - HTTPS redirect, HSTS, clickjacking protection, MIME sniffing protection, restrictive referrer policy, and permissions policy
 - No obvious HTML injection sink (`dangerouslySetInnerHTML`, `eval`, or `document.write`) found
 - Lint passed
-- All 10 automated tests passed
+- All 26 automated tests passed
 - Production build passed
 - Git working tree was clean before documentation was added
 
@@ -817,16 +846,16 @@ Before implementation, the site owner should explicitly approve:
 - [x] CSP rollout in report-only then enforcement stages
 - [x] GitHub branch/ruleset requirements
 - [ ] Vercel/Cloudflare firewall ownership and proposed rules
-- [ ] Monitoring owner, security contact, and incident process
+- [x] Monitoring owner, security contact, and incident process
 
 ## Current verification record
 
 - `npm run lint` — passed
-- `npm run test:ci` — passed, 20 tests
+- `npm run test:ci` — passed, 26 tests
 - `npm audit --omit=dev --audit-level=high` — passed, zero vulnerabilities
 - `npm run build` — passed
 - Build emitted a performance warning for a JavaScript chunk over 500 kB; this is a performance/maintainability issue, not a direct security finding.
 
 ## Decision
 
-**S-01, S-04, S-05, S-06, S-07, and S-08 were implemented, and S-02 was accepted with compensating controls.** S-06 establishes an ordered, data-free Supabase baseline and records it in production history without replaying it over the existing schema. S-08 establishes automated GitHub supply-chain checks and default-branch protections appropriate for the current one-maintainer repository. Every remaining finding requires separate owner discussion/approval. These decisions do not authorize modifying DNS/firewalls, changing other provider settings, or deploying additional code.
+**S-01 and S-03 through S-14 were implemented; S-02 was accepted with compensating controls.** S-06 establishes an ordered, data-free Supabase baseline and records it in production history without replaying it over the existing schema. S-08 establishes automated GitHub supply-chain checks and default-branch protections appropriate for the current one-maintainer repository. S-11 through S-14 complete the remaining low-severity routing, third-party request, operations, and environment-inventory work. No open technical security finding remains from this audit; the accepted S-02 controls and routine operational reviews remain ongoing responsibilities.

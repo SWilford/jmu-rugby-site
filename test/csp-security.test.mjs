@@ -10,8 +10,8 @@ const expectedPolicy =
   "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; " +
   "form-action 'self'; script-src 'self'; script-src-attr 'none'; style-src 'self'; " +
   "style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' blob: " +
-  "https://media.jmumensrugbyclub.com https://pynvimffqpfhwttlbuao.supabase.co " +
-  "https://api.qrserver.com; media-src 'self'; connect-src 'self' " +
+  "https://media.jmumensrugbyclub.com https://pynvimffqpfhwttlbuao.supabase.co; " +
+  "media-src 'self'; connect-src 'self' " +
   "https://pynvimffqpfhwttlbuao.supabase.co https://media.jmumensrugbyclub.com " +
   "https://73a769fc917d35b321261bed0b7bec8e.r2.cloudflarestorage.com; " +
   "frame-src https://www.instagram.com; manifest-src 'self'; worker-src 'none'; " +
@@ -58,4 +58,10 @@ test("CSP blocks framing, plugins, base-tag injection, and off-site forms", () =
   assert.match(cspHeader.value, /(?:^|; )object-src 'none'(?:;|$)/);
   assert.match(cspHeader.value, /(?:^|; )base-uri 'none'(?:;|$)/);
   assert.match(cspHeader.value, /(?:^|; )form-action 'self'(?:;|$)/);
+});
+
+test("CSP does not allow the retired third-party QR provider", () => {
+  const cspHeader = getGlobalHeaders().find(({ key }) => key === "Content-Security-Policy");
+  assert.ok(cspHeader);
+  assert.doesNotMatch(cspHeader.value, /api\.qrserver\.com/);
 });

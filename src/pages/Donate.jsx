@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion as Motion } from "framer-motion";
 import { FaHeart } from "react-icons/fa";
+import { QRCodeSVG } from "qrcode.react";
 import { DONATE_INFO_FALLBACK, getDonateInfo } from "../data/donateInfo";
 
 export default function Donate() {
@@ -24,10 +25,6 @@ export default function Donate() {
     };
   }, []);
 
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-    donateInfo.venmoUrl
-  )}`;
-
   return (
     <Motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -48,11 +45,13 @@ export default function Donate() {
         </p>
 
         <div className="bg-white p-4 rounded-2xl border border-jmuDarkGold/30 shadow-sm mb-8 inline-block transition-transform hover:scale-105 duration-300">
-          <img
-            src={qrCodeUrl}
-            alt={`Venmo QR Code for ${donateInfo.recipientName}`}
-            className="w-48 h-48"
-            loading="lazy"
+          <QRCodeSVG
+            value={donateInfo.venmoUrl}
+            size={192}
+            level="M"
+            marginSize={1}
+            title={`Venmo QR code for ${donateInfo.recipientName}`}
+            className="h-48 w-48"
           />
         </div>
 
