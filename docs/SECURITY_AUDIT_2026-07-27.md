@@ -238,7 +238,7 @@ Checks performed included:
 | S-07 | Remediated | Legacy public Supabase Storage bucket allows listing and lacks limits | Remediated July 30 |
 | S-08 | Remediated | GitHub Actions and repository security controls need hardening | Remediated August 24 |
 | S-09 | Remediated | Main site bypasses Cloudflare proxy; provider firewall rules need manual verification | Remediated and verified August 24 |
-| S-10 | Medium | Database grants and function execution are broader than necessary | Confirmed |
+| S-10 | Remediated | Database grants and function execution are broader than necessary | Remediated and verified August 25 |
 | S-11 | Low | SPA fallback returns `200` for nonexistent sensitive paths | Confirmed |
 | S-12 | Low | Third-party QR generation leaks request metadata | Confirmed |
 | S-13 | Low | Security monitoring and incident-response ownership are not documented | Confirmed |
@@ -645,7 +645,7 @@ Do not proxy Vercel through Cloudflare merely to clear this finding without test
 ### S-10 — Broad database grants and function execution
 
 **Severity:** Medium
-**Status:** Confirmed
+**Status:** Remediated and verified August 25, 2026
 
 #### Evidence
 
@@ -668,6 +668,48 @@ Include in the reviewed migration:
 3. Set a safe search path for trigger functions.
 4. Reduce table/schema/function grants to the operations each role requires.
 5. Re-run all administrator and public API tests after grant changes.
+
+#### Remediation completed August 25, 2026
+
+Production migrations `20260825131753_harden_database_privileges` and
+`20260825131944_lock_down_default_privileges` now provide the following
+least-privilege boundary:
+
+- `anon` has `SELECT` only on the ten public content tables and no table access
+  to `public.admins`.
+- `authenticated` and `service_role` have only `SELECT`, `INSERT`, `UPDATE`,
+  and `DELETE` on the eleven application tables. `TRUNCATE`, `REFERENCES`,
+  `TRIGGER`, and other structural table privileges were removed.
+- Only `authenticated` and `service_role` have `USAGE` on the three identity
+  sequences. Anonymous usage and direct sequence `SELECT`/`UPDATE` are denied.
+- Anonymous and authenticated read policies were split for contact cards, join
+  FAQs, and sponsors. Public reads now use only `is_active = true`, while an
+  authenticated administrator may still read inactive draft rows.
+- `public.is_admin()` uses an empty fixed search path and qualified object
+  names. Direct execution is denied to `PUBLIC` and `anon`, but retained for
+  `authenticated` and `service_role` because the Admin page and R2 signing
+  function intentionally call the RPC with a signed-in user's JWT.
+- `public.set_updated_at()` uses an empty fixed search path and
+  `pg_catalog.now()`. Direct role execution is denied while all six existing
+  triggers continue to run.
+- Future tables, sequences, and functions created by the migration owner in
+  `public` now default to owner-only privileges. Data API exposure must be
+  explicitly granted alongside RLS.
+
+The Supabase advisor no longer reports the mutable function search path or
+anonymous security-definer execution findings. It continues to report
+authenticated execution of `is_admin()` because that access is intentional and
+required by the current application architecture. The leaked-password warning
+is tracked separately under the accepted S-02 decision.
+
+Verification included the full 21-test repository suite, lint, production
+build, a clean replay of all migrations, and rollback-only production role
+simulations. Anonymous reads succeeded across all ten content tables while
+admin-table reads, writes, and `is_admin()` execution were denied. An existing
+administrator passed `is_admin()`, insert/update/delete, identity-sequence, and
+timestamp-trigger checks. The production homepage and the Schedule, Team,
+Media, Join, Donate, and Contact routes rendered their Supabase-backed content
+with no browser console errors.
 
 ### S-11 — SPA fallback returns `200` for nonexistent sensitive paths
 
@@ -725,7 +767,8 @@ No documented alert owner, security contact, credential-rotation schedule, incid
 
 ## Proposed remediation sequence
 
-No phase below is approved yet.
+This sequence is retained as historical planning context. Current approval and
+completion state is recorded in the risk register and each finding.
 
 ### Phase 0 — Safety baseline
 
@@ -736,7 +779,7 @@ No phase below is approved yet.
 
 ### Phase 1 — Immediate access-control fixes
 
-- Apply one reviewed migration for S-01, S-06, and S-10.
+- S-01 and S-06 were applied July 28; S-10 was applied and verified August 25.
 - Test anonymous, non-admin, admin `aal1`, and admin `aal2` behavior.
 - Add/enroll/enforce MFA and enable leaked-password protection.
 - Re-run Supabase security advisors.
