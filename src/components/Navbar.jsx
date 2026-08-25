@@ -73,7 +73,7 @@ export default function Navbar() {
         </div>
         <NavLink
           to="/admin"
-          className="text-xs uppercase tracking-wider text-jmuLightGold/70 transition hover:text-jmuGold hover:underline underline-offset-4"
+          className="admin-login-link"
         >
           Admin Login
         </NavLink>
