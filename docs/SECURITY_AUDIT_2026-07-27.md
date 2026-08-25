@@ -720,10 +720,13 @@ Requests to `/.env`, `/.git/config`, and `/wp-admin` returned the normal React a
 
 The catch-all rewrite was replaced with exact rewrites for the eight supported
 client routes. Vercel can therefore serve the SPA shell for valid deep links
-while its normal filesystem handling returns a genuine `404` for every other
-path, including sensitive-path probes. Automated tests lock the route allow-list
-and reject a future catch-all. Production verification covered every supported
-route, the two legacy-domain redirects, and representative unknown paths.
+while its normal filesystem handling returns a genuine `404` for unknown paths;
+the existing firewall may reject recognized attack probes even earlier with a
+`403`. Automated tests lock the route allow-list and reject a future catch-all.
+Production verification returned `404` for `/.env`, `/.git/config`, and an
+arbitrary nonexistent route, `403` for the firewall-recognized `/wp-admin`
+probe, `200` for every supported route, and the expected permanent redirect
+for both legacy domains.
 
 ### S-12 — Third-party QR generation leaks request metadata
 
