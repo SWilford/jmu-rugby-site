@@ -7,6 +7,7 @@ import SponsorsEditor from "../components/Admin/SponsorsEditor";
 import JoinEditor from "../components/Admin/JoinEditor";
 import DonateEditor from "../components/Admin/DonateEditor";
 import SiteLinksEditor from "../components/Admin/SiteLinksEditor";
+import AdminUsersEditor from "../components/Admin/AdminUsersEditor";
 
 const INITIAL_FORM = {
   season_id: "",
@@ -27,7 +28,10 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [activeEditor, setActiveEditor] = useState("schedule");
+  const [activeEditor, setActiveEditor] = useState(() => {
+    const inviteParameters = `${window.location.search}&${window.location.hash}`;
+    return inviteParameters.includes("type=invite") ? "admins" : "schedule";
+  });
   const [scheduleMatches, setScheduleMatches] = useState([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [scheduleError, setScheduleError] = useState("");
@@ -412,6 +416,7 @@ export default function Admin() {
                   <option value="donate">Donate editor</option>
                   <option value="site-links">Site links</option>
                   <option value="sponsors">Sponsors editor</option>
+                  <option value="admins">Administrator access</option>
                 </select>
               </div>
 
@@ -608,6 +613,7 @@ export default function Admin() {
               {activeEditor === "donate" && <DonateEditor />}
               {activeEditor === "site-links" && <SiteLinksEditor />}
               {activeEditor === "sponsors" && <SponsorsEditor />}
+              {activeEditor === "admins" && <AdminUsersEditor currentUserId={session.user.id} />}
             </div>
           </div>
         )}

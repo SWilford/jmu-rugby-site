@@ -51,14 +51,20 @@ Domain and DNS boundaries:
 ### Admin write flow (DB content)
 1. Admin logs in at `/admin` using Supabase Auth email/password.
 2. App validates admin status via `public.is_admin()` (and `public.admins` fallback).
-3. Admin UI enables editors (schedule, roster/coaches, media metadata, contact cards, sponsors).
+3. Admin UI enables content editors and a protected administrator-access editor.
 4. Writes are attempted with authenticated client session.
 5. Supabase RLS allows write only if user is admin.
+
+### Administrator onboarding and offboarding
+1. A current Marketing Chair enters the incoming administrator's email in the administrator-access editor.
+2. The `admin-users` Edge Function validates the caller's session and `public.is_admin()` status before using a server-only Supabase secret to send the invite.
+3. The new Auth user is added to `public.admins`; the invitee accepts the link and sets a password of at least 16 characters in the same editor.
+4. Offboarding removes the `public.admins` authorization row but retains the Auth account for audit/recovery. Database logic prevents self-removal and last-admin lockout.
 
 ### Admin write flow (media objects)
 1. Admin action calls `supabase.functions.invoke("r2-media")`.
 2. Edge Function verifies request origin, then checks auth and admin status for write actions.
-3. Function signs downloads and admin-only upload / delete / move operations in R2.
+3. Function signs admin-only upload operations and performs protected delete / move operations in R2.
 4. Browser uploads directly to signed R2 URL for efficient transfer.
 
 ## 4) Frontend Architecture Summary
@@ -119,8 +125,8 @@ SQL and policy files:
 
 ### Edge Function controls (`supabase/functions/r2-media/index.ts`)
 - Allowed origins gate via `CORS_ORIGINS`.
-- Validates request origin and object paths for short-lived public download links.
-- Requires a valid Supabase session and admin access (RPC + service-role checked fallback) for writes.
+- Validates request origin and object paths for privileged storage operations.
+- Requires a valid Supabase session and successful `public.is_admin()` authorization for every action.
 - Upload restrictions:
   - Allowed image MIME types only.
   - Max upload bytes enforced (`R2_MAX_UPLOAD_BYTES`, default 12 MB).
@@ -180,6 +186,11 @@ supabase secrets set \
   CORS_ORIGINS=http://localhost:5173,https://jmumensrugbyclub.com,https://www.jmumensrugbyclub.com
 ```
 
+The `admin-users` function also uses Supabase's provider-managed public and secret keys and supports:
+```bash
+ADMIN_INVITE_REDIRECT_URL=https://www.jmumensrugbyclub.com/admin
+```
+
 Critical secret handling policy:
 - Never expose `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, or service-role credentials in frontend variables.
 
@@ -218,6 +229,9 @@ npm run build
 
 See `docs/SUPABASE_MIGRATIONS.md` for the baseline, validation, and rollback
 rules. The older `docs/supabase_*.sql` files are historical references only.
+
+Security ownership, incident steps, and credential handoff are documented in
+`docs/SECURITY_OPERATIONS.md` and `docs/ENVIRONMENT_AND_CREDENTIALS.md`.
 
 ### R2 media pipeline
 1. Confirm bucket CORS allows frontend origins.

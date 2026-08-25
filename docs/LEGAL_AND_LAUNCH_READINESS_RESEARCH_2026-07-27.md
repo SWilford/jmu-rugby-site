@@ -44,7 +44,7 @@ The site publishes or can publish:
 - Vercel hosts the site and can process ordinary request/security logs.
 - Cloudflare provides DNS, media delivery/R2 storage, and security services for the media hostname.
 - GitHub stores source and development/deployment metadata.
-- The donation page requests a QR image from `api.qrserver.com`, revealing normal request metadata and the encoded Venmo destination to that provider.
+- The donation QR is generated locally in the browser from the approved destination. No QR-generation provider receives the destination or visitor request metadata.
 
 No public contact form, newsletter signup, ecommerce checkout, behavioral advertising, or first-party analytics integration was found. The tested public response did not set a cookie. If those features are added, this analysis must be revisited before launch.
 
@@ -361,8 +361,8 @@ For every public policy:
 4. Donation-account authorization and reconciliation procedure
 5. Data inventory and retention schedule
 6. Privacy/accessibility request procedure
-7. Security and breach-response runbook
-8. Administrator/officer onboarding and offboarding checklist
+7. Security and breach-response runbook — completed in `docs/SECURITY_OPERATIONS.md`
+8. Administrator/officer onboarding and offboarding checklist — completed in `docs/SECURITY_OPERATIONS.md` and supported by the Admin Portal
 9. Annual compliance review checklist
 10. Vendor/provider inventory with account owners and agreements
 
