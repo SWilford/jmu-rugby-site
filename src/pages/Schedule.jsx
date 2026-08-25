@@ -114,7 +114,7 @@ export default function Schedule() {
             <Motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowMenu((prev) => !prev)}
-              className="inline-flex min-w-40 items-center justify-between rounded-lg border border-jmuDarkGold bg-jmuDarkGold px-3 py-2 font-semibold text-jmuOffWhite transition hover:bg-jmuGold hover:text-jmuPurple"
+              className="brand-button brand-button-secondary min-w-40 px-3 py-2"
             >
               {seasons.find((s) => s.season_id === currentSeason)?.season_name || "Select Season"}
               <span className="ml-2 text-sm" aria-hidden="true">

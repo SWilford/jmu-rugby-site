@@ -166,7 +166,7 @@ export default function Media() {
             <Motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowMenu((prev) => !prev)}
-              className="inline-flex min-w-44 items-center justify-between rounded-lg border border-jmuDarkGold bg-jmuDarkGold px-4 py-2 font-semibold text-jmuOffWhite transition hover:bg-jmuGold hover:text-jmuPurple"
+              className="brand-button brand-button-secondary min-w-44 px-4 py-2"
             >
               {season
                 ? season
@@ -300,7 +300,7 @@ export default function Media() {
                 <button
                   type="button"
                   onClick={() => setSelectedPhoto(null)}
-                  className="inline-flex shrink-0 items-center gap-2 rounded-full border border-jmuPurple/25 bg-jmuPurple px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#5f1396] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jmuGold"
+                  className="brand-button brand-button-compact shrink-0 px-3 py-2 text-sm"
                   aria-label="Close selected image"
                 >
                   <FaTimes aria-hidden="true" />

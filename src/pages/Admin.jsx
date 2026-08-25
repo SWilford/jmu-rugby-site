@@ -8,6 +8,18 @@ import JoinEditor from "../components/Admin/JoinEditor";
 import DonateEditor from "../components/Admin/DonateEditor";
 import SiteLinksEditor from "../components/Admin/SiteLinksEditor";
 import AdminUsersEditor from "../components/Admin/AdminUsersEditor";
+import {
+  FaCalendarDays,
+  FaEnvelope,
+  FaHandshake,
+  FaHeart,
+  FaImages,
+  FaLink,
+  FaRightFromBracket,
+  FaShieldHalved,
+  FaUserGroup,
+  FaUserPlus,
+} from "react-icons/fa6";
 
 const INITIAL_FORM = {
   season_id: "",
@@ -20,6 +32,18 @@ const INITIAL_FORM = {
   result: "",
   notes: "",
 };
+
+const ADMIN_EDITORS = [
+  { id: "schedule", label: "Schedule editor", icon: FaCalendarDays },
+  { id: "roster", label: "Roster editor", icon: FaUserGroup },
+  { id: "media", label: "Media editor", icon: FaImages },
+  { id: "join", label: "Join editor", icon: FaUserPlus },
+  { id: "contact", label: "Contact editor", icon: FaEnvelope },
+  { id: "donate", label: "Donate editor", icon: FaHeart },
+  { id: "site-links", label: "Site links", icon: FaLink },
+  { id: "sponsors", label: "Sponsors editor", icon: FaHandshake },
+  { id: "admins", label: "Administrator access", icon: FaShieldHalved },
+];
 
 export default function Admin() {
   const [email, setEmail] = useState("");
@@ -319,293 +343,125 @@ export default function Admin() {
   };
 
   return (
-    <section className="w-full max-w-6xl px-6 py-10">
-      <div className="rounded-lg border border-jmuDarkGold bg-jmuPurple/70 p-6 shadow-lg">
-        <h2 className="text-3xl font-bold text-jmuGold">Admin Portal</h2>
-        <p className="mt-2 text-jmuLightGold">Sign in to manage protected team content.</p>
+    <section className="admin-page">
+      <header className="admin-page-heading">
+        <h2>Admin Portal</h2>
+        <p>Sign in to manage protected team content.</p>
+      </header>
 
-        {errorMessage && (
-          <div className="mt-4 rounded border border-red-300 bg-red-100/10 px-4 py-3 text-red-200">
-            {errorMessage}
-          </div>
-        )}
+      {errorMessage && <div className="admin-alert admin-alert-error" role="alert">{errorMessage}</div>}
 
-        {!session && !isLoading && (
-          <form className="mt-6 grid gap-4 max-w-md" onSubmit={handleLogin}>
-            <label className="grid gap-1">
-              <span className="text-sm uppercase tracking-wide text-jmuLightGold">Email</span>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2 text-jmuLightGold focus:border-jmuGold focus:outline-none"
-                placeholder="admin@email.com"
-              />
-            </label>
+      {!session && !isLoading && (
+        <form className="admin-login-card" onSubmit={handleLogin}>
+          <label className="admin-field">
+            <span>Email</span>
+            <input type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@email.com" />
+          </label>
+          <label className="admin-field">
+            <span>Password</span>
+            <input type="password" required autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" />
+          </label>
+          <button type="submit" className="admin-button admin-button-primary" disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Sign in as admin"}
+          </button>
+        </form>
+      )}
 
-            <label className="grid gap-1">
-              <span className="text-sm uppercase tracking-wide text-jmuLightGold">Password</span>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2 text-jmuLightGold focus:border-jmuGold focus:outline-none"
-                placeholder="••••••••"
-              />
-            </label>
+      {isLoading && <p className="admin-loading" role="status">Checking access...</p>}
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="mt-2 rounded bg-jmuGold px-4 py-2 font-semibold text-jmuPurple transition hover:bg-jmuLightGold disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isLoading ? "Signing in..." : "Sign in as admin"}
-            </button>
-          </form>
-        )}
+      {session && !isLoading && !isAdmin && (
+        <section className="admin-alert admin-alert-warning">
+          <p>You are signed in as <strong>{session.user.email}</strong>, but this account is not in the admins table.</p>
+          <button type="button" onClick={handleLogout} className="admin-button admin-button-secondary">Sign out</button>
+        </section>
+      )}
 
-        {isLoading && <p className="mt-6 text-jmuLightGold">Checking access...</p>}
-
-        {session && !isLoading && !isAdmin && (
-          <div className="mt-6 rounded border border-yellow-300 bg-yellow-100/10 px-4 py-3 text-yellow-100">
-            <p>
-              You are signed in as <strong>{session.user.email}</strong>, but this account is not in the
-              admins table.
-            </p>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="mt-4 rounded border border-jmuLightGold px-4 py-2 text-sm font-semibold hover:bg-jmuLightGold hover:text-jmuPurple"
-            >
-              Sign out
-            </button>
-          </div>
-        )}
-
-        {session && !isLoading && isAdmin && (
-          <div className="mt-6 rounded border border-green-300 bg-green-100/10 px-4 py-4 text-green-100">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold">Welcome, {session.user.email}.</p>
-                <p className="mt-1">✅ Admin access confirmed.</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="rounded border border-jmuLightGold px-4 py-2 text-sm font-semibold hover:bg-jmuLightGold hover:text-jmuPurple"
-              >
-                Sign out
+      {session && !isLoading && isAdmin && (
+        <div className="admin-workspace">
+          <aside className="admin-sidebar">
+            <p className="admin-sidebar-label">Editor</p>
+            <nav aria-label="Admin editors">
+              {ADMIN_EDITORS.map((editor) => {
+                const Icon = editor.icon;
+                return (
+                  <button
+                    key={editor.id}
+                    type="button"
+                    onClick={() => setActiveEditor(editor.id)}
+                    className={`admin-nav-button ${activeEditor === editor.id ? "is-active" : ""}`}
+                    aria-current={activeEditor === editor.id ? "page" : undefined}
+                  >
+                    <Icon aria-hidden="true" />
+                    <span>{editor.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+            <div className="admin-account">
+              <p>Welcome, {session.user.email}.</p>
+              <p>✅ Admin access confirmed.</p>
+              <button type="button" onClick={handleLogout} className="admin-button admin-button-secondary">
+                <FaRightFromBracket aria-hidden="true" /> Sign out
               </button>
             </div>
+          </aside>
 
-            <div className="mt-8 rounded border border-jmuLightGold/30 bg-jmuPurple/40 p-4 text-jmuLightGold">
-              <div className="mb-4 grid gap-1 sm:max-w-xs">
-                <label className="text-xs uppercase tracking-wide text-jmuLightGold/90">Editor</label>
-                <select
-                  value={activeEditor}
-                  onChange={(event) => setActiveEditor(event.target.value)}
-                  className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2"
-                >
-                  <option value="schedule">Schedule editor</option>
-                  <option value="roster">Roster editor</option>
-                  <option value="media">Media editor</option>
-                  <option value="join">Join editor</option>
-                  <option value="contact">Contact editor</option>
-                  <option value="donate">Donate editor</option>
-                  <option value="site-links">Site links</option>
-                  <option value="sponsors">Sponsors editor</option>
-                  <option value="admins">Administrator access</option>
-                </select>
-              </div>
-
+          <main className="admin-content">
+            <section className="admin-editor-canvas">
               {activeEditor === "schedule" && (
                 <>
-                  <h3 className="text-xl font-semibold text-jmuGold">Schedule Editor</h3>
-                  <p className="mt-1 text-sm text-jmuLightGold/90">
-                    Add, edit, and remove schedule entries. Writes are protected by matches table
-                    RLS and admin checks.
-                  </p>
+                  <header className="admin-editor-heading">
+                    <h3>Schedule Editor</h3>
+                    <p>Add, edit, and remove schedule entries. Writes are protected by matches table RLS and admin checks.</p>
+                  </header>
 
-                  {scheduleError && (
-                    <div className="mt-4 rounded border border-red-300 bg-red-100/10 px-4 py-3 text-red-200">
-                      {scheduleError}
-                    </div>
-                  )}
+                  {scheduleError && <div className="admin-alert admin-alert-error" role="alert">{scheduleError}</div>}
 
-                  <form className="mt-4 grid gap-3 lg:grid-cols-3" onSubmit={handleSaveMatch}>
-                    <label className="grid gap-1">
-                      <span className="text-xs uppercase tracking-wide">Season ID</span>
-                      <input
-                        name="season_id"
-                        required
-                        value={formState.season_id}
-                        onChange={handleFormChange}
-                        placeholder="fall-2026"
-                        className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2"
-                      />
-                    </label>
-                    <label className="grid gap-1">
-                      <span className="text-xs uppercase tracking-wide">Season Name</span>
-                      <input
-                        name="season_name"
-                        required
-                        value={formState.season_name}
-                        onChange={handleFormChange}
-                        placeholder="Fall 2026"
-                        className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2"
-                      />
-                    </label>
-                    <label className="grid gap-1">
-                      <span className="text-xs uppercase tracking-wide">Date</span>
-                      <input
-                        type="date"
-                        name="date"
-                        required
-                        value={formState.date}
-                        onChange={handleFormChange}
-                        className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2"
-                      />
-                    </label>
-                    <label className="grid gap-1">
-                      <span className="text-xs uppercase tracking-wide">Opponent</span>
-                      <input
-                        name="opponent"
-                        required
-                        value={formState.opponent}
-                        onChange={handleFormChange}
-                        className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2"
-                      />
-                    </label>
-                    <label className="grid gap-1">
-                      <span className="text-xs uppercase tracking-wide">Side</span>
-                      <input
-                        name="side"
-                        required
-                        value={formState.side}
-                        onChange={handleFormChange}
-                        placeholder="A"
-                        className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2"
-                      />
-                    </label>
-                    <label className="grid gap-1">
-                      <span className="text-xs uppercase tracking-wide">Result</span>
-                      <input
-                        name="result"
-                        value={formState.result}
-                        onChange={handleFormChange}
-                        placeholder="27-12 W"
-                        className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2"
-                      />
-                    </label>
-                    <label className="grid gap-1 lg:col-span-3">
-                      <span className="text-xs uppercase tracking-wide">Notes</span>
-                      <textarea
-                        name="notes"
-                        value={formState.notes}
-                        onChange={handleFormChange}
-                        rows="3"
-                        className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2"
-                      />
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        name="home"
-                        checked={formState.home}
-                        onChange={handleFormChange}
-                      />
-                      Home match
-                    </label>
-                    <label className="inline-flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        name="show_result"
-                        checked={formState.show_result}
-                        onChange={handleFormChange}
-                      />
-                      Show result publicly
-                    </label>
-                    <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                      {editingMatchId && (
-                        <button
-                          type="button"
-                          onClick={resetEditorForm}
-                          className="rounded border border-jmuLightGold px-4 py-2 text-sm font-semibold hover:bg-jmuLightGold hover:text-jmuPurple"
-                        >
-                          Cancel edit
-                        </button>
-                      )}
-                      <button
-                        type="submit"
-                        disabled={scheduleLoading}
-                        className="rounded bg-jmuGold px-4 py-2 font-semibold text-jmuPurple transition hover:bg-jmuLightGold disabled:cursor-not-allowed disabled:opacity-70"
-                      >
+                  <form className="admin-schedule-form" onSubmit={handleSaveMatch}>
+                    <label className="admin-field"><span>Season ID</span><input name="season_id" required value={formState.season_id} onChange={handleFormChange} placeholder="fall-2026" /></label>
+                    <label className="admin-field"><span>Season Name</span><input name="season_name" required value={formState.season_name} onChange={handleFormChange} placeholder="Fall 2026" /></label>
+                    <label className="admin-field"><span>Date</span><input type="date" name="date" required value={formState.date} onChange={handleFormChange} /></label>
+                    <label className="admin-field"><span>Opponent</span><input name="opponent" required value={formState.opponent} onChange={handleFormChange} /></label>
+                    <label className="admin-field"><span>Side</span><input name="side" required value={formState.side} onChange={handleFormChange} placeholder="A" /></label>
+                    <label className="admin-field"><span>Result</span><input name="result" value={formState.result} onChange={handleFormChange} placeholder="27-12 W" /></label>
+                    <label className="admin-field admin-field-wide"><span>Notes</span><textarea name="notes" value={formState.notes} onChange={handleFormChange} rows="3" /></label>
+                    <fieldset className="admin-checkboxes">
+                      <label><input type="checkbox" name="home" checked={formState.home} onChange={handleFormChange} /> Home match</label>
+                      <label><input type="checkbox" name="show_result" checked={formState.show_result} onChange={handleFormChange} /> Show result publicly</label>
+                    </fieldset>
+                    <div className="admin-form-actions">
+                      {editingMatchId && <button type="button" onClick={resetEditorForm} className="admin-button admin-button-secondary">Cancel edit</button>}
+                      <button type="submit" disabled={scheduleLoading} className="admin-button admin-button-primary">
                         {scheduleLoading ? "Saving..." : editingMatchId ? "Save changes" : "Add match"}
                       </button>
                     </div>
                   </form>
 
-                  <div className="mt-6">
-                    <div className="flex flex-wrap items-end justify-between gap-3">
-                      <h4 className="font-semibold text-jmuGold">Existing Matches</h4>
-                      <label className="grid gap-1 text-xs uppercase tracking-wide text-jmuLightGold/90">
-                        Filter by season
-                        <select
-                          value={selectedSeasonId}
-                          onChange={(event) => setSelectedSeasonId(event.target.value)}
-                          className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2 text-sm normal-case"
-                        >
-                          <option value="all">All seasons</option>
-                          {seasonOptions.map((season) => (
-                            <option key={season.season_id} value={season.season_id}>
-                              {season.season_name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-
+                  <section className="admin-records" aria-labelledby="existing-matches-heading">
+                    <header>
+                      <h4 id="existing-matches-heading">Existing Matches</h4>
+                      <label className="admin-field admin-filter"><span>Filter by season</span><select value={selectedSeasonId} onChange={(event) => setSelectedSeasonId(event.target.value)}><option value="all">All seasons</option>{seasonOptions.map((season) => <option key={season.season_id} value={season.season_id}>{season.season_name}</option>)}</select></label>
+                    </header>
                     {scheduleLoading ? (
                       <p className="mt-2 text-sm">Loading matches...</p>
                     ) : filteredMatches.length === 0 ? (
                       <p className="mt-2 text-sm">No matches found for this season.</p>
                     ) : (
-                      <ul className="mt-3 space-y-2 text-sm">
+                      <ul className="admin-match-list">
                         {filteredMatches.map((match) => (
-                          <li
-                            key={match.id}
-                            className="flex flex-wrap items-center justify-between gap-3 rounded border border-jmuDarkGold/70 bg-jmuPurple/50 px-3 py-2"
-                          >
-                            <span>
-                              {match.date} · {match.season_name} · {match.side} vs {match.opponent} (
-                              {match.home ? "Home" : "Away"})
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => startEditingMatch(match)}
-                                className="rounded border border-jmuLightGold px-2 py-1 text-xs hover:bg-jmuLightGold hover:text-jmuPurple"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteMatch(match.id)}
-                                className="rounded border border-red-200 px-2 py-1 text-xs text-red-100 hover:bg-red-100/20"
-                              >
-                                Remove
-                              </button>
+                          <li key={match.id} className="admin-match-row">
+                            <span>{match.date} · {match.season_name} · {match.side} vs {match.opponent} ({match.home ? "Home" : "Away"})</span>
+                            <div>
+                              <button type="button" onClick={() => startEditingMatch(match)} className="admin-button admin-button-small admin-button-secondary">Edit</button>
+                              <button type="button" onClick={() => handleDeleteMatch(match.id)} className="admin-button admin-button-small admin-button-danger">Remove</button>
                             </div>
                           </li>
                         ))}
                       </ul>
                     )}
-                  </div>
+                  </section>
                 </>
               )}
-
               {activeEditor === "roster" && <RosterEditor />}
               {activeEditor === "media" && <MediaEditor />}
               {activeEditor === "join" && <JoinEditor />}
@@ -614,10 +470,10 @@ export default function Admin() {
               {activeEditor === "site-links" && <SiteLinksEditor />}
               {activeEditor === "sponsors" && <SponsorsEditor />}
               {activeEditor === "admins" && <AdminUsersEditor currentUserId={session.user.id} />}
-            </div>
-          </div>
-        )}
-      </div>
+            </section>
+          </main>
+        </div>
+      )}
     </section>
   );
 }

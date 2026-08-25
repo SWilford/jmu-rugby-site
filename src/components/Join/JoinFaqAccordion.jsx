@@ -15,7 +15,7 @@ export default function JoinFaqAccordion({ faqs }) {
             <button
               type="button"
               onClick={() => setOpenIndex(isOpen ? -1 : index)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-jmuLightGold/35 sm:gap-4 sm:px-5 sm:py-4"
+              className="accordion-button flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:gap-4 sm:px-5 sm:py-4"
             >
               <span className="text-base font-semibold sm:text-lg">{faq.question}</span>
               <span className="text-sm text-jmuDarkGold" aria-hidden="true">
