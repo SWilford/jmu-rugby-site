@@ -54,6 +54,9 @@ const missingEnvVars = REQUIRED_ENV_VARS.filter(([, value]) => !value).map(([nam
 const s3Client = new S3Client({
   region: "auto",
   endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  // Keep presigned requests on the exact account endpoint allowed by the site's CSP.
+  // Without path-style addressing, the AWS SDK prefixes the bucket to the hostname.
+  forcePathStyle: true,
   credentials: {
     accessKeyId: R2_ACCESS_KEY_ID,
     secretAccessKey: R2_SECRET_ACCESS_KEY,
@@ -314,18 +317,19 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Force immutable caching so public media stays cheap to serve at scale.
-      const cacheControl = "public, max-age=31536000, immutable";
-
       const command = new PutObjectCommand({
         Bucket: R2_BUCKET,
         Key: objectPath,
         ContentType: uploadContentType,
-        ContentLength: Math.floor(fileSize),
-        CacheControl: cacheControl,
       });
 
-      const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 90 });
+      // Keep the signed request aligned with the only header browser clients send.
+      // Browsers control Content-Length themselves, and the bucket CORS policy allows
+      // Content-Type only, so signing extra headers makes an otherwise valid PUT fail.
+      const signedUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: 90,
+        signableHeaders: new Set(["content-type"]),
+      });
 
       return jsonResponse(
         {

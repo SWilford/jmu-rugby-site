@@ -43,6 +43,14 @@ test("R2 Edge Function bounds requests and does not return provider errors", () 
   assert.doesNotMatch(edgeFunctionSource, /jsonResponse\(\{\s*error:\s*error\.message/);
 });
 
+test("R2 presigned uploads require only the browser-supplied Content-Type header", () => {
+  assert.match(edgeFunctionSource, /forcePathStyle:\s*true/);
+  assert.match(edgeFunctionSource, /signableHeaders:\s*new Set\(\["content-type"\]\)/);
+  assert.doesNotMatch(edgeFunctionSource, /\bContentLength\s*:/);
+  assert.doesNotMatch(edgeFunctionSource, /\bCacheControl\s*:/);
+  assert.match(storageUtilsSource, /headers:\s*\{\s*"Content-Type": contentType\s*\}/);
+});
+
 test("public media downloads use a temporary browser Blob instead of signing", () => {
   assert.doesNotMatch(mediaPageSource, /getR2DownloadUrl|sign-download/);
   assert.doesNotMatch(storageUtilsSource, /getR2DownloadUrl|sign-download/);
