@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { normalizeExternalAlbumUrl } from "../../lib/externalAlbumUtils";
 import {
   MEDIA_FILE_URL_COLUMNS,
   MEDIA_HOME_CAROUSEL_COLUMNS,
@@ -53,6 +54,7 @@ const toUserFriendlyMediaError = (error, fallbackMessage) => {
 
 export default function MediaEditor() {
   const [mediaRows, setMediaRows] = useState([]);
+  const [externalAlbumRows, setExternalAlbumRows] = useState([]);
   const [seasonNames, setSeasonNames] = useState({});
   const [mediaLoading, setMediaLoading] = useState(true);
   const [mediaBusy, setMediaBusy] = useState(false);
@@ -67,6 +69,7 @@ export default function MediaEditor() {
   const [uploadAlbumMode, setUploadAlbumMode] = useState("existing");
   const [selectedAlbum, setSelectedAlbum] = useState("");
   const [newAlbum, setNewAlbum] = useState("");
+  const [externalAlbumUrl, setExternalAlbumUrl] = useState("");
   const [uploadSeasonMode, setUploadSeasonMode] = useState("existing");
   const [selectedSeason, setSelectedSeason] = useState("");
   const [newSeason, setNewSeason] = useState("");
@@ -80,6 +83,7 @@ export default function MediaEditor() {
   const [managedAlbum, setManagedAlbum] = useState("");
   const [albumEditName, setAlbumEditName] = useState("");
   const [albumEditSeason, setAlbumEditSeason] = useState("");
+  const [albumEditExternalUrl, setAlbumEditExternalUrl] = useState("");
 
   const fileInputRef = useRef(null);
 
@@ -91,6 +95,7 @@ export default function MediaEditor() {
         acc[album] = {
           album,
           rows: [],
+          externalRows: [],
           seasonIds: new Set(),
           latestUpload: null,
         };
@@ -109,11 +114,32 @@ export default function MediaEditor() {
       return acc;
     }, {});
 
+    for (const row of externalAlbumRows) {
+      const album = String(row.album || "").trim();
+      if (!album) continue;
+      if (!byAlbum[album]) {
+        byAlbum[album] = {
+          album,
+          rows: [],
+          externalRows: [],
+          seasonIds: new Set(),
+          latestUpload: null,
+        };
+      }
+
+      byAlbum[album].externalRows.push(row);
+      const seasonId = normalizeSeasonId(row.season_id);
+      if (seasonId) byAlbum[album].seasonIds.add(seasonId);
+      if (!byAlbum[album].latestUpload || row.created_at > byAlbum[album].latestUpload) {
+        byAlbum[album].latestUpload = row.created_at;
+      }
+    }
+
     return Object.values(byAlbum).sort((a, b) => a.album.localeCompare(b.album));
-  }, [mediaRows]);
+  }, [mediaRows, externalAlbumRows]);
 
   const albumOptions = useMemo(
-    () => albumGroups.map((group) => group.album),
+    () => albumGroups.filter((group) => group.rows.length > 0).map((group) => group.album),
     [albumGroups]
   );
 
@@ -121,13 +147,22 @@ export default function MediaEditor() {
     const fromMedia = mediaRows
       .map((row) => normalizeSeasonId(row.season_id))
       .filter(Boolean);
+    const fromExternalAlbums = externalAlbumRows
+      .map((row) => normalizeSeasonId(row.season_id))
+      .filter(Boolean);
     const fromMatches = Object.keys(seasonNames);
-    return sortSeasonIdsDesc(Array.from(new Set([...fromMatches, ...fromMedia])));
-  }, [mediaRows, seasonNames]);
+    return sortSeasonIdsDesc(
+      Array.from(new Set([...fromMatches, ...fromMedia, ...fromExternalAlbums]))
+    );
+  }, [mediaRows, externalAlbumRows, seasonNames]);
 
   const filteredAlbumGroups = useMemo(() => {
     if (seasonFilter === "all") return albumGroups;
-    return albumGroups.filter((group) => group.rows.some((row) => normalizeSeasonId(row.season_id) === seasonFilter));
+    return albumGroups.filter(
+      (group) =>
+        group.rows.some((row) => normalizeSeasonId(row.season_id) === seasonFilter) ||
+        group.externalRows.some((row) => normalizeSeasonId(row.season_id) === seasonFilter)
+    );
   }, [albumGroups, seasonFilter]);
 
   const activeManagedAlbum = useMemo(
@@ -164,12 +199,18 @@ export default function MediaEditor() {
       setHomeCarouselColumn(detectedCarouselColumn);
       setJoinPageColumn(detectedJoinPageColumn);
 
-      const [{ data: mediaData, error: mediaErrorRes }, { data: seasonData }] = await Promise.all([
+      const [
+        { data: mediaData, error: mediaErrorRes },
+        { data: externalAlbumData, error: externalAlbumError },
+        { data: seasonData },
+      ] = await Promise.all([
         supabase.from("media").select("*").order("id", { ascending: false }),
+        supabase.from("external_albums").select("*").order("created_at", { ascending: false }),
         supabase.from("matches").select("season_id, season_name"),
       ]);
 
       if (mediaErrorRes) throw mediaErrorRes;
+      if (externalAlbumError) throw externalAlbumError;
 
       const normalizedRows = (mediaData || []).map((row) => ({
         ...row,
@@ -177,6 +218,12 @@ export default function MediaEditor() {
       }));
 
       setMediaRows(normalizedRows);
+      setExternalAlbumRows(
+        (externalAlbumData || []).map((row) => ({
+          ...row,
+          season_id: normalizeSeasonId(row.season_id),
+        }))
+      );
 
       const seasonLookup = {};
       for (const row of seasonData || []) {
@@ -239,12 +286,14 @@ export default function MediaEditor() {
     if (!activeManagedAlbum) {
       setAlbumEditName("");
       setAlbumEditSeason("");
+      setAlbumEditExternalUrl("");
       return;
     }
 
     setAlbumEditName(activeManagedAlbum.album);
     const primarySeason = sortSeasonIdsDesc(Array.from(activeManagedAlbum.seasonIds))[0] || "";
     setAlbumEditSeason(primarySeason);
+    setAlbumEditExternalUrl(activeManagedAlbum.externalRows[0]?.external_url || "");
   }, [activeManagedAlbum]);
 
   useEffect(() => {
@@ -296,6 +345,49 @@ export default function MediaEditor() {
 
     if (!resolvedSeason) {
       setMediaError("Select an existing season or enter a season id (for example: fall-2026).");
+      return;
+    }
+
+    if (uploadAlbumMode === "external") {
+      const normalizedUrl = normalizeExternalAlbumUrl(externalAlbumUrl);
+      if (!normalizedUrl) {
+        setMediaError("Enter a complete external album link beginning with http:// or https://.");
+        return;
+      }
+
+      const duplicateAlbum = albumGroups.some(
+        (group) =>
+          group.album === resolvedAlbum &&
+          [...group.rows, ...group.externalRows].some(
+            (row) => normalizeSeasonId(row.season_id) === resolvedSeason
+          )
+      );
+      if (duplicateAlbum) {
+        setMediaError(`An album named "${resolvedAlbum}" already exists for ${resolvedSeason}.`);
+        return;
+      }
+
+      setMediaBusy(true);
+      try {
+        const { error: insertError } = await supabase.from("external_albums").insert({
+          album: resolvedAlbum,
+          external_url: normalizedUrl,
+          season_id: resolvedSeason,
+        });
+        if (insertError) throw insertError;
+
+        setMediaStatus(`Added external album link "${resolvedAlbum}".`);
+        setSelectedSeason(resolvedSeason);
+        setUploadSeasonMode("existing");
+        setNewAlbum("");
+        setNewSeason("");
+        setExternalAlbumUrl("");
+        await loadMediaData();
+      } catch (error) {
+        setMediaError(toUserFriendlyMediaError(error, "Unable to add this external album link."));
+      } finally {
+        setMediaBusy(false);
+      }
       return;
     }
 
@@ -376,6 +468,7 @@ export default function MediaEditor() {
       setUploadSeasonMode("existing");
       setNewAlbum("");
       setNewSeason("");
+      setExternalAlbumUrl("");
       await loadMediaData();
     } catch (error) {
       if (uploadedObjectPaths.length) {
@@ -421,7 +514,7 @@ export default function MediaEditor() {
     if (!activeManagedAlbum) return;
     if (
       !window.confirm(
-        `Delete album "${activeManagedAlbum.album}" and all ${activeManagedAlbum.rows.length} photo(s)?`
+        `Delete album "${activeManagedAlbum.album}", its ${activeManagedAlbum.rows.length} photo(s), and ${activeManagedAlbum.externalRows.length} external link(s)?`
       )
     ) {
       return;
@@ -449,8 +542,24 @@ export default function MediaEditor() {
         await deleteR2Objects(objectPaths);
       }
 
-      const { error: deleteError } = await supabase.from("media").delete().eq("album", activeManagedAlbum.album);
-      if (deleteError) throw deleteError;
+      if (activeManagedAlbum.rows.length) {
+        const { error: deleteError } = await supabase
+          .from("media")
+          .delete()
+          .eq("album", activeManagedAlbum.album);
+        if (deleteError) throw deleteError;
+      }
+
+      if (activeManagedAlbum.externalRows.length) {
+        const { error: externalDeleteError } = await supabase
+          .from("external_albums")
+          .delete()
+          .in(
+            "id",
+            activeManagedAlbum.externalRows.map((row) => row.id)
+          );
+        if (externalDeleteError) throw externalDeleteError;
+      }
 
       setMediaStatus(`Album "${activeManagedAlbum.album}" deleted.`);
       await loadMediaData();
@@ -466,6 +575,9 @@ export default function MediaEditor() {
 
     const nextAlbumName = sanitizeAlbumName(albumEditName);
     const nextSeasonId = normalizeSeasonId(albumEditSeason);
+    const nextExternalUrl = activeManagedAlbum.externalRows.length
+      ? normalizeExternalAlbumUrl(albumEditExternalUrl)
+      : "";
 
     if (!nextAlbumName) {
       setMediaError("Album name cannot be empty.");
@@ -474,6 +586,11 @@ export default function MediaEditor() {
 
     if (!nextSeasonId) {
       setMediaError("Season id cannot be empty.");
+      return;
+    }
+
+    if (activeManagedAlbum.externalRows.length && !nextExternalUrl) {
+      setMediaError("Enter a complete external album link beginning with http:// or https://.");
       return;
     }
 
@@ -506,6 +623,18 @@ export default function MediaEditor() {
         }
 
         const { error: updateError } = await supabase.from("media").update(payload).eq("id", row.id);
+        if (updateError) throw updateError;
+      }
+
+      for (const row of activeManagedAlbum.externalRows) {
+        const { error: updateError } = await supabase
+          .from("external_albums")
+          .update({
+            album: nextAlbumName,
+            season_id: nextSeasonId,
+            external_url: nextExternalUrl,
+          })
+          .eq("id", row.id);
         if (updateError) throw updateError;
       }
 
@@ -615,8 +744,8 @@ export default function MediaEditor() {
     <>
       <h3 className="text-xl font-semibold text-jmuGold">Media Editor</h3>
       <p className="mt-1 text-sm text-jmuLightGold/90">
-        Upload single or multiple images, create or reuse albums, edit album details, and remove
-        photos or entire albums.
+        Upload photos, add albums hosted on another site, edit album details, and remove photos or
+        entire albums.
       </p>
 
       {mediaError && (
@@ -637,9 +766,9 @@ export default function MediaEditor() {
         <div className="mt-4 space-y-6">
           <div className="grid gap-4 xl:grid-cols-2">
             <div className="rounded border border-jmuDarkGold/70 bg-jmuPurple/40 p-4">
-              <h4 className="font-semibold text-jmuGold">Upload Photos</h4>
+              <h4 className="font-semibold text-jmuGold">Add Photos or Album Link</h4>
               <p className="mt-1 text-xs text-jmuLightGold/80">
-                Choose one image for an individual upload, or select many for bulk upload.
+                Upload one or more photos, or add a link to an album hosted on another site.
               </p>
 
               <div className="mt-4 grid gap-3">
@@ -652,6 +781,7 @@ export default function MediaEditor() {
                   >
                     <option value="existing">Existing album</option>
                     <option value="new">Create new album</option>
+                    <option value="external">External album link</option>
                   </select>
                 </label>
 
@@ -681,6 +811,19 @@ export default function MediaEditor() {
                       value={newAlbum}
                       onChange={(event) => setNewAlbum(event.target.value)}
                       placeholder="camp-2026"
+                      className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2 text-sm normal-case"
+                    />
+                  </label>
+                )}
+
+                {uploadAlbumMode === "external" && (
+                  <label className="grid gap-1 text-xs uppercase tracking-wide">
+                    External Album URL
+                    <input
+                      type="url"
+                      value={externalAlbumUrl}
+                      onChange={(event) => setExternalAlbumUrl(event.target.value)}
+                      placeholder="https://photos.example.com/album"
                       className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2 text-sm normal-case"
                     />
                   </label>
@@ -729,6 +872,8 @@ export default function MediaEditor() {
                   </label>
                 )}
 
+                {uploadAlbumMode !== "external" && (
+                  <>
                 <label className="inline-flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -831,6 +976,8 @@ export default function MediaEditor() {
                     </button>
                   </div>
                 )}
+                  </>
+                )}
 
                 <button
                   type="button"
@@ -838,7 +985,13 @@ export default function MediaEditor() {
                   onClick={handleUpload}
                   className="rounded bg-jmuGold px-4 py-2 font-semibold text-jmuPurple transition hover:bg-jmuLightGold disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {mediaBusy ? "Uploading..." : "Upload photos"}
+                  {mediaBusy
+                    ? uploadAlbumMode === "external"
+                      ? "Adding..."
+                      : "Uploading..."
+                    : uploadAlbumMode === "external"
+                      ? "Add external album"
+                      : "Upload photos"}
                 </button>
               </div>
             </div>
@@ -846,7 +999,7 @@ export default function MediaEditor() {
             <div className="rounded border border-jmuDarkGold/70 bg-jmuPurple/40 p-4">
               <h4 className="font-semibold text-jmuGold">Album Details</h4>
               <p className="mt-1 text-xs text-jmuLightGold/80">
-                Rename albums, update season metadata, or delete an entire album.
+                Rename albums, update their season or external URL, or delete an entire album.
               </p>
 
               {filteredAlbumGroups.length === 0 ? (
@@ -862,11 +1015,25 @@ export default function MediaEditor() {
                     >
                       {filteredAlbumGroups.map((group) => (
                         <option key={group.album} value={group.album}>
-                          {group.album} ({group.rows.length})
+                          {group.album} ({group.rows.length} photo{group.rows.length === 1 ? "" : "s"}
+                          {group.externalRows.length ? ", external" : ""})
                         </option>
                       ))}
                     </select>
                   </label>
+
+                  {activeManagedAlbum?.externalRows.length > 0 && (
+                    <label className="grid gap-1 text-xs uppercase tracking-wide">
+                      External Album URL
+                      <input
+                        type="url"
+                        value={albumEditExternalUrl}
+                        onChange={(event) => setAlbumEditExternalUrl(event.target.value)}
+                        placeholder="https://photos.example.com/album"
+                        className="rounded border border-jmuDarkGold bg-jmuPurple px-3 py-2 text-sm normal-case"
+                      />
+                    </label>
+                  )}
 
                   <label className="grid gap-1 text-xs uppercase tracking-wide">
                     Album Name
@@ -912,7 +1079,7 @@ export default function MediaEditor() {
 
           <div className="rounded border border-jmuDarkGold/70 bg-jmuPurple/40 p-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
-              <h4 className="font-semibold text-jmuGold">Existing Albums and Photos</h4>
+              <h4 className="font-semibold text-jmuGold">Existing Albums</h4>
               <label className="grid gap-1 text-xs uppercase tracking-wide text-jmuLightGold/90">
                 Filter by season
                 <select
@@ -952,6 +1119,9 @@ export default function MediaEditor() {
                         {group.rows.length} photo{group.rows.length === 1 ? "" : "s"} -{" "}
                         {seasonList.map((seasonId) => formatSeasonLabel(seasonId, seasonNames)).join(", ")}
                       </p>
+                      {group.externalRows.length > 0 && (
+                        <p className="mt-1 text-xs font-semibold text-jmuGold">External album link</p>
+                      )}
                     </button>
                   );
                 })}
@@ -960,10 +1130,26 @@ export default function MediaEditor() {
 
             {activeManagedAlbum && (
               <div className="mt-5">
-                <h5 className="font-semibold text-jmuGold">
-                  Photos in {activeManagedAlbum.album} ({activeManagedAlbum.rows.length})
-                </h5>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {activeManagedAlbum.externalRows.length > 0 && (
+                  <div className="mb-4 rounded border border-jmuGold/60 bg-jmuGold/10 p-3 text-sm">
+                    <p className="font-semibold text-jmuGold">External album destination</p>
+                    <a
+                      href={activeManagedAlbum.externalRows[0].external_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 block break-all text-jmuLightGold underline underline-offset-2"
+                    >
+                      {activeManagedAlbum.externalRows[0].external_url}
+                    </a>
+                  </div>
+                )}
+
+                {activeManagedAlbum.rows.length > 0 && (
+                  <>
+                    <h5 className="font-semibold text-jmuGold">
+                      Photos in {activeManagedAlbum.album} ({activeManagedAlbum.rows.length})
+                    </h5>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {activeManagedAlbum.rows
                     .slice()
                     .sort((a, b) => Number(b.id) - Number(a.id))
@@ -1024,7 +1210,9 @@ export default function MediaEditor() {
                         </button>
                       </div>
                     ))}
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
