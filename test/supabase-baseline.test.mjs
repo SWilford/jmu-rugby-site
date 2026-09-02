@@ -22,7 +22,7 @@ const databaseHardeningFilename =
 const defaultPrivilegeHardeningFilename =
   '20260825131944_lock_down_default_privileges.sql'
 
-const expectedTables = [
+const baselineTables = [
   'admins',
   'coaches',
   'contact_cards',
@@ -35,6 +35,7 @@ const expectedTables = [
   'roster',
   'sponsors',
 ]
+const expectedTables = [...baselineTables, 'external_albums'].sort()
 
 const expectedColumns = {
   admins: ['user_id', 'created_at'],
@@ -57,6 +58,13 @@ const expectedColumns = {
     'description',
     'created_at',
     'updated_at',
+  ],
+  external_albums: [
+    'id',
+    'album',
+    'external_url',
+    'season_id',
+    'created_at',
   ],
   join_content_faq: [
     'id',
@@ -160,7 +168,7 @@ test('the data-free baseline precedes every remediation migration', async () => 
     /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i,
   )
 
-  for (const table of expectedTables) {
+  for (const table of baselineTables) {
     assert.match(baseline, new RegExp(`create table public\\.${table}\\b`, 'i'))
     assert.match(
       baseline,
@@ -284,7 +292,7 @@ test('the complete migration chain rebuilds an empty Supabase-shaped database', 
       order by schemaname
     `)
     assert.deepEqual(policyResult.rows, [
-      { schemaname: 'public', count: 57 },
+      { schemaname: 'public', count: 61 },
     ])
 
     const triggerResult = await database.query(`
@@ -306,6 +314,7 @@ test('the complete migration chain rebuilds an empty Supabase-shaped database', 
         'coaches',
         'contact_cards',
         'donate_content_settings',
+        'external_albums',
         'join_content_faq',
         'join_content_schedule',
         'join_content_settings',
@@ -330,6 +339,7 @@ test('the complete migration chain rebuilds an empty Supabase-shaped database', 
         'coaches',
         'contact_cards',
         'donate_content_settings',
+        'external_albums',
         'join_content_faq',
         'join_content_schedule',
         'join_content_settings',
@@ -372,6 +382,7 @@ test('the complete migration chain rebuilds an empty Supabase-shaped database', 
         'coaches',
         'contact_cards',
         'donate_content_settings',
+        'external_albums',
         'join_content_faq',
         'join_content_schedule',
         'join_content_settings',
@@ -403,6 +414,7 @@ test('the complete migration chain rebuilds an empty Supabase-shaped database', 
         'coaches',
         'contact_cards',
         'donate_content_settings',
+        'external_albums',
         'join_content_faq',
         'join_content_schedule',
         'join_content_settings',

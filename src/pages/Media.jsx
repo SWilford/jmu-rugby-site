@@ -1,7 +1,14 @@
-import React, { useEffect, useState, Fragment, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { motion as Motion, AnimatePresence } from "framer-motion";
-import { FaChevronDown, FaChevronUp, FaDownload, FaSpinner, FaTimes } from "react-icons/fa";
+import {
+  FaChevronDown,
+  FaChevronUp,
+  FaDownload,
+  FaExternalLinkAlt,
+  FaSpinner,
+  FaTimes,
+} from "react-icons/fa";
 import { useLocation } from "react-router-dom";
 import {
   extractStorageObjectPath,
@@ -13,6 +20,7 @@ const MEDIA_BUCKET = "rugby-media";
 
 export default function Media() {
   const [media, setMedia] = useState([]);
+  const [externalAlbums, setExternalAlbums] = useState([]);
   const [expandedAlbum, setExpandedAlbum] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [season, setSeason] = useState("");
@@ -87,13 +95,26 @@ export default function Media() {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase.from("media").select("*").order("id", { ascending: false });
+      const [
+        { data: mediaData, error: mediaError },
+        { data: externalAlbumData, error: externalAlbumError },
+      ] = await Promise.all([
+        supabase.from("media").select("*").order("id", { ascending: false }),
+        supabase.from("external_albums").select("*").order("created_at", { ascending: false }),
+      ]);
 
-      if (error) console.error("Media fetch error:", error);
-      else {
-        setMedia(data || []);
+      if (mediaError) console.error("Media fetch error:", mediaError);
+      if (externalAlbumError) console.error("External album fetch error:", externalAlbumError);
 
-        const seasonSet = new Set(data.map((m) => m.season_id));
+      const loadedMedia = mediaData || [];
+      const loadedExternalAlbums = externalAlbumData || [];
+      setMedia(loadedMedia);
+      setExternalAlbums(loadedExternalAlbums);
+
+      if (!mediaError || !externalAlbumError) {
+        const seasonSet = new Set(
+          [...loadedMedia, ...loadedExternalAlbums].map((item) => item.season_id).filter(Boolean)
+        );
         const sorted = Array.from(seasonSet).sort((a, b) => {
           const [aSeason, aYear] = a.split("-");
           const [bSeason, bYear] = b.split("-");
@@ -140,13 +161,30 @@ export default function Media() {
   };
 
   const filteredMedia = media.filter((m) => m.season_id === season);
+  const filteredExternalAlbums = externalAlbums.filter((album) => album.season_id === season);
+  const albumsByName = new Map();
 
-  const albums = Object.groupBy
-    ? Object.groupBy(filteredMedia, (m) => m.album)
-    : filteredMedia.reduce((acc, m) => {
-        (acc[m.album] = acc[m.album] || []).push(m);
-        return acc;
-      }, {});
+  for (const photo of filteredMedia) {
+    if (!albumsByName.has(photo.album)) {
+      albumsByName.set(photo.album, { albumName: photo.album, photos: [], externalUrl: "" });
+    }
+    albumsByName.get(photo.album).photos.push(photo);
+  }
+
+  for (const externalAlbum of filteredExternalAlbums) {
+    if (!albumsByName.has(externalAlbum.album)) {
+      albumsByName.set(externalAlbum.album, {
+        albumName: externalAlbum.album,
+        photos: [],
+        externalUrl: "",
+      });
+    }
+    albumsByName.get(externalAlbum.album).externalUrl = externalAlbum.external_url;
+  }
+
+  const albums = Array.from(albumsByName.values()).sort((a, b) =>
+    a.albumName.localeCompare(b.albumName)
+  );
 
   if (loading) return <p className="mt-12 text-center text-jmuLightGold">Loading media...</p>;
 
@@ -220,59 +258,81 @@ export default function Media() {
         </div>
       </div>
 
-      {Object.keys(albums).length === 0 ? (
-        <p className="mt-6 text-center text-jmuDarkGold">No photos uploaded for this season.</p>
+      {albums.length === 0 ? (
+        <p className="mt-6 text-center text-jmuDarkGold">No albums available for this season.</p>
       ) : (
-        Object.entries(albums).map(([albumName, photos]) => (
-          <Fragment key={albumName}>
-            <div
-              data-album={albumName}
-              onClick={() => toggleExpand(albumName)}
-              className="mt-1 flex cursor-pointer items-center justify-between border-b border-jmuDarkGold/70 py-3 transition hover:bg-jmuLightGold/40"
-            >
-              <h3 className="text-xl font-bold">{albumName}</h3>
-              <span className="text-jmuDarkGold text-base" aria-hidden="true">
-                {expandedAlbum === albumName ? <FaChevronUp /> : <FaChevronDown />}
-              </span>
-            </div>
-
-            <AnimatePresence initial={false}>
-              {expandedAlbum === albumName && (
-                <Motion.div
-                  layout
-                  initial={{ height: 0 }}
-                  animate={{ height: "auto" }}
-                  exit={{ height: 0 }}
-                  transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-                  className="overflow-hidden"
+        albums.map(({ albumName, photos, externalUrl }) => (
+          <div key={albumName}>
+            {externalUrl ? (
+              <a
+                data-album={albumName}
+                href={externalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 flex items-center justify-between border-b border-jmuDarkGold/70 py-3 transition hover:bg-jmuLightGold/40"
+                aria-label={`Open external album ${albumName}`}
+              >
+                <span>
+                  <span className="block text-xl font-bold">{albumName}</span>
+                  <span className="text-sm text-jmuSlate">External album</span>
+                </span>
+                <FaExternalLinkAlt className="text-jmuDarkGold" aria-hidden="true" />
+              </a>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  data-album={albumName}
+                  onClick={() => toggleExpand(albumName)}
+                  className="mt-1 flex w-full cursor-pointer items-center justify-between border-b border-jmuDarkGold/70 py-3 text-left transition hover:bg-jmuLightGold/40"
                 >
-                  <div className="grid grid-cols-2 gap-3 py-4 sm:grid-cols-3 md:grid-cols-4 md:gap-4">
-                    {photos.map((photo) => (
-                      <div
-                        key={photo.id}
-                        className="group relative overflow-hidden rounded-lg border border-jmuDarkGold bg-jmuLightGold/20 transition hover:-translate-y-0.5"
-                      >
-                        <img
-                          src={getMediaFilePath(photo)}
-                          alt={photo.caption || "JMU Men's Rugby Club"}
-                          loading="lazy"
-                          decoding="async"
-                          className="h-44 w-full cursor-pointer object-cover transition duration-200 group-hover:scale-[1.02]"
-                          onClick={() => {
-                            setDownloadError("");
-                            setSelectedPhoto(photo);
-                          }}
-                        />
-                        {photo.caption && (
-                          <p className="mb-2 mt-1 px-2 text-center text-sm text-jmuSlate">{photo.caption}</p>
-                        )}
+                  <h3 className="text-xl font-bold">{albumName}</h3>
+                  <span className="text-jmuDarkGold text-base" aria-hidden="true">
+                    {expandedAlbum === albumName ? <FaChevronUp /> : <FaChevronDown />}
+                  </span>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {expandedAlbum === albumName && (
+                    <Motion.div
+                      layout
+                      initial={{ height: 0 }}
+                      animate={{ height: "auto" }}
+                      exit={{ height: 0 }}
+                      transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="grid grid-cols-2 gap-3 py-4 sm:grid-cols-3 md:grid-cols-4 md:gap-4">
+                        {photos.map((photo) => (
+                          <div
+                            key={photo.id}
+                            className="group relative overflow-hidden rounded-lg border border-jmuDarkGold bg-jmuLightGold/20 transition hover:-translate-y-0.5"
+                          >
+                            <img
+                              src={getMediaFilePath(photo)}
+                              alt={photo.caption || "JMU Men's Rugby Club"}
+                              loading="lazy"
+                              decoding="async"
+                              className="h-44 w-full cursor-pointer object-cover transition duration-200 group-hover:scale-[1.02]"
+                              onClick={() => {
+                                setDownloadError("");
+                                setSelectedPhoto(photo);
+                              }}
+                            />
+                            {photo.caption && (
+                              <p className="mb-2 mt-1 px-2 text-center text-sm text-jmuSlate">
+                                {photo.caption}
+                              </p>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </Motion.div>
-              )}
-            </AnimatePresence>
-          </Fragment>
+                    </Motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            )}
+          </div>
         ))
       )}
 
